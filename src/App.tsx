@@ -1,23 +1,15 @@
-import {
-  MemoryRouter as Router,
-  Routes,
-  RouterProvider,
-} from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import { StyleProvider } from '@ant-design/cssinjs';
 
-import router from './router';
+import { AppRoutes } from 'routes';
 import './App.css';
 
 export default function App() {
   return (
     <StyleProvider hashPriority="high">
-      <RouterProvider router={router} />
-      {/* <Router>
-        <Routes>
-          <Route path="/" element={<LoginPage />} />
-          <Route path="/home" element={<HomePage />} />
-        </Routes>
-      </Router> */}
+      <MemoryRouter>
+        <AppRoutes />
+      </MemoryRouter>
     </StyleProvider>
   );
 }

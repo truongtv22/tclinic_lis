@@ -8,10 +8,29 @@
     "esModuleInterop": true,
     "noImplicitAny": true,
     "sourceMap": true,
-    "baseUrl": ".",
     "outDir": "dist",
     "moduleResolution": "node",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "components": ["./src/components"],
+      "constants": ["./src/constants"],
+      "layouts": ["./src/layouts"],
+      "pages": ["./src/pages"],
+      "routes": ["./src/routes"],
+      "services": ["./src/services"],
+      "store": ["./src/store"],
+      "utils": ["./src/utils"],
+
+      "components/*": ["./src/components/*"],
+      "constants/*": ["./src/constants/*"],
+      "layouts/*": ["./src/layouts/*"],
+      "pages/*": ["./src/pages/index", "./src/pages/*"],
+      "routes/*": ["./src/routes/*"],
+      "services/*": ["./src/services/*"],
+      "store/*": ["./src/store/*"],
+      "utils/*": ["./src/utils/*"]
+    }
   },
   "include": ["src"]
 }

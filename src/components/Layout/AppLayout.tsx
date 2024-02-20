@@ -1,9 +1,8 @@
 import { Outlet } from 'react-router-dom';
 
-export default function ProtectedLayout() {
+export default function AppLayout() {
   return (
     <div>
-      ddd
       <Outlet />
     </div>
   );

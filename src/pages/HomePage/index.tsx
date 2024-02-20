@@ -1,7 +1,7 @@
 import { Button } from 'antd';
 import { Link } from 'react-router-dom';
 
-export default function HomePage() {
+export function HomePage() {
   return (
     <div>
       <h2>Home Page</h2>
