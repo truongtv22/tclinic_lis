@@ -1,9 +1,17 @@
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Form, Input, Button } from 'antd';
 
+type FormData = {
+  taikhoan?: string;
+  matkhau?: string;
+};
+
 export function LoginPage() {
-  const onSubmit = (values) => {
+  const navigate = useNavigate();
+
+  const onSubmit = (values: FormData) => {
     console.log('onSubmit', values);
+    navigate('/', { replace: true });
   };
 
   return (
