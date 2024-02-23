@@ -7,7 +7,7 @@ export const initialState: AppState = {
   isAuth: false,
 };
 
-const appSlice = createSlice({
+export const appSlice = createSlice({
   name: 'app',
   initialState,
   reducers: {

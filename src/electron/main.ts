@@ -38,8 +38,7 @@ const createWindow = () => {
     );
   }
 
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // // Open the DevTools.
   // mainWindow.webContents.on('did-frame-finish-load', () => {
   //   // We close the DevTools so that it can be reopened and redux reconnected.
   //   // This is a workaround for a bug in redux devtools.

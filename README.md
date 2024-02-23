@@ -6,7 +6,7 @@
 # Start Electron Forge Dev Server
 npm run start
 # Build production package in /out
-npm run packege
+npm run package
 # Build and make distribution-ready achieves
 npm run make
 # Lint codes with ESLint
