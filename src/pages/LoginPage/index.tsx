@@ -1,5 +1,7 @@
-import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { Form, Input, Button } from 'antd';
+
+import { appActions } from 'store/app/slice';
 
 type FormData = {
   taikhoan?: string;
@@ -7,11 +9,11 @@ type FormData = {
 };
 
 export function LoginPage() {
-  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const onSubmit = (values: FormData) => {
     console.log('onSubmit', values);
-    navigate('/', { replace: true });
+    dispatch(appActions.setAuth(true));
   };
 
   return (

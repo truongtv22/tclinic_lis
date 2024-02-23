@@ -40,14 +40,23 @@ const createWindow = () => {
 
   // Open the DevTools.
   mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.on('did-frame-finish-load', () => {
+  //   // We close the DevTools so that it can be reopened and redux reconnected.
+  //   // This is a workaround for a bug in redux devtools.
+  //   mainWindow.webContents.closeDevTools();
+  //   mainWindow.webContents.once('devtools-opened', () => {
+  //     mainWindow.focus();
+  //   });
+  //   mainWindow.webContents.openDevTools();
+  // });
 };
 
 const loadExtension = async () => {
   try {
-    const result = await installExtension([
-      REACT_DEVELOPER_TOOLS,
-      REDUX_DEVTOOLS,
-    ]);
+    const result = await installExtension(
+      [REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS],
+      { loadExtensionOptions: { allowFileAccess: true } },
+    );
     console.log(`Added Extension:  ${result}`);
   } catch (error) {
     console.log('An error occurred: ', error);
