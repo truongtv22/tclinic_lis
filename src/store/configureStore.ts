@@ -2,6 +2,7 @@ import { configureStore, Middleware, StoreEnhancer } from '@reduxjs/toolkit';
 import { createInjectorsEnhancer } from 'redux-injectors';
 import createSagaMiddleware from 'redux-saga';
 import {
+  persistStore,
   FLUSH,
   REHYDRATE,
   PAUSE,
@@ -38,8 +39,9 @@ export function configureAppStore() {
     devTools: process.env.NODE_ENV !== 'production',
     enhancers: (getDefaultEnhancers) => getDefaultEnhancers().concat(enhancers),
   });
+  const persistor = persistStore(store);
 
   sagaMiddleware.run(rootSaga);
 
-  return store;
+  return { store, persistor };
 }

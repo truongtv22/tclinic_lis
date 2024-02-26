@@ -7,6 +7,7 @@ import createElectronStorage from 'redux-persist-electron-storage';
 import autoMergeLevel2 from 'redux-persist/lib/stateReconciler/autoMergeLevel2';
 
 import { InjectedReducersType } from 'utils/types/injector-typings';
+// import { createElectronStorage } from 'utils/electron-storage';
 import { STORAGE_KEY } from 'constants/app';
 
 import { appSlice } from './app/slice';

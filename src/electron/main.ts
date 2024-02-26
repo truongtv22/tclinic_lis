@@ -1,14 +1,28 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
 import installExtension, {
   REACT_DEVELOPER_TOOLS,
   REDUX_DEVTOOLS,
 } from 'electron-devtools-installer';
+import Store from 'electron-store';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
+
+const store = new Store();
+
+// IPC listener
+ipcMain.on('electron-store-get', async (event, key) => {
+  event.returnValue = store.get(key);
+});
+ipcMain.on('electron-store-set', async (event, key, value) => {
+  store.set(key, value);
+});
+ipcMain.on('electron-store-delete', async (event, key) => {
+  store.delete(key);
+});
 
 const createWindow = () => {
   const RESOURCES_PATH = app.isPackaged
