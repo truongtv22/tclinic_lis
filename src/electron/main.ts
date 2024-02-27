@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu } from 'electron';
 import path from 'path';
 import installExtension, {
   REACT_DEVELOPER_TOOLS,
@@ -11,9 +11,9 @@ if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
+// Electron store
 const store = new Store();
 
-// IPC listener
 ipcMain.on('electron-store-get', async (event, key) => {
   event.returnValue = store.get(key);
 });
@@ -25,23 +25,21 @@ ipcMain.on('electron-store-delete', async (event, key) => {
 });
 
 const createWindow = () => {
-  const RESOURCES_PATH = app.isPackaged
-    ? path.join(process.resourcesPath, 'assets')
-    : path.join(__dirname, '../assets');
-
-  const getAssetPath = (...paths: string[]): string => {
-    return path.join(RESOURCES_PATH, ...paths);
-  };
-
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 1270,
     height: 860,
-    icon: getAssetPath('icon.png'),
+    minWidth: 800,
+    minHeight: 600,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
   });
+
+  // Remove the linux, window menu bar
+  // mainWindow.removeMenu();
+  // Disable macOS menu bar
+  // Menu.setApplicationMenu(Menu.buildFromTemplate([]));
 
   // and load the index.html of the app.
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {

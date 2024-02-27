@@ -8,3 +8,13 @@ body {
   margin: auto;
   background-color: #fafafa;
 }
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+#root {
+  /* display: flex; */
+}
