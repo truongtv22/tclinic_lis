@@ -1,5 +1,5 @@
-import { Breadcrumb, Button, Layout, Menu, theme } from 'antd';
 import { Outlet } from 'react-router-dom';
+import { Layout, Menu, theme } from 'antd';
 
 const menus = [
   { key: 1, label: 'Hệ thống' },
@@ -12,7 +12,7 @@ export const PageLayout = () => {
   } = theme.useToken();
 
   return (
-    <Layout className="--h-full --flex-1 --flex --flex-col bg-red-300">
+    <Layout>
       <Layout.Header className="flex items-center space-x-4">
         <div className="w-8 h-8 bg-slate-400 rounded-lg" />
         <Menu
@@ -22,12 +22,11 @@ export const PageLayout = () => {
           className="flex-1 min-w-0"
         />
       </Layout.Header>
-      <Layout.Content className="--h-full --flex-1 pt-8 px-12">
+      <Layout.Content className="pt-8 px-12">
         <div
           style={{
-            // maxHeight: '100%',
-            // height: '100%',
             padding: 24,
+            minHeight: 280,
             background: colorBgContainer,
             borderRadius: borderRadiusLG,
           }}
