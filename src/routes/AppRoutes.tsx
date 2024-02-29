@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 
-import { HomePage, LoginPage, ManagePage } from 'pages';
+import { HomePage, LoginPage, ManagePage, SettingPage } from 'pages';
 import { AppLayout, PageLayout } from 'layouts';
 import { selectIsAuth } from 'store/app/selectors';
 
@@ -24,6 +24,7 @@ export const AppRoutes = () => {
       <Route element={<PageLayout />}>
         <Route path="/" element={<HomePage />} />
         <Route path="/manage" element={<ManagePage />} />
+        <Route path="/setting" element={<SettingPage />} />
       </Route>
       <Route element={<AppLayout />}>
         <Route path="/login" element={<LoginPage />} />
