@@ -45,6 +45,7 @@
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.1.0",
+    "ahooks": "^3.7.10",
     "antd": "^5.13.3",
     "dayjs": "^1.11.10",
     "electron-squirrel-startup": "^1.0.0",

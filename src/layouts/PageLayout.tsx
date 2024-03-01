@@ -1,7 +1,8 @@
 import { Outlet, useNavigate } from 'react-router-dom';
 import { Menu, Avatar, Layout, Dropdown, Typography, theme } from 'antd';
-import { useLocation } from 'react-router-dom';
 import { UserOutlined } from '@ant-design/icons';
+import { useLocation } from 'react-router-dom';
+
 const menus = [
   { key: '/', label: 'Hệ thống' },
   { key: '/manage', label: 'Quản lý kết nối' },
@@ -61,7 +62,7 @@ export const PageLayout = () => {
         </Dropdown>
       </Layout.Header>
       <Layout.Content className="pt-8 px-12">
-        <div
+        {/* <div
           style={{
             padding: 24,
             minHeight: 280,
@@ -69,8 +70,8 @@ export const PageLayout = () => {
             borderRadius: borderRadiusLG,
           }}
         >
-          <Outlet />
-        </div>
+        </div> */}
+        <Outlet />
       </Layout.Content>
       <Layout.Footer className="text-center">
         Powered By ThinkLABs JSC
