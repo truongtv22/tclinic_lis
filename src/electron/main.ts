@@ -1,33 +1,45 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu } from 'electron';
 import path from 'path';
 import installExtension, {
   REACT_DEVELOPER_TOOLS,
   REDUX_DEVTOOLS,
 } from 'electron-devtools-installer';
+import Store from 'electron-store';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
+// Electron store
+const store = new Store();
+
+ipcMain.on('electron-store-get', async (event, key) => {
+  event.returnValue = store.get(key);
+});
+ipcMain.on('electron-store-set', async (event, key, value) => {
+  store.set(key, value);
+});
+ipcMain.on('electron-store-delete', async (event, key) => {
+  store.delete(key);
+});
+
 const createWindow = () => {
-  const RESOURCES_PATH = app.isPackaged
-    ? path.join(process.resourcesPath, 'assets')
-    : path.join(__dirname, '../assets');
-
-  const getAssetPath = (...paths: string[]): string => {
-    return path.join(RESOURCES_PATH, ...paths);
-  };
-
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 1270,
     height: 860,
-    icon: getAssetPath('icon.png'),
+    minWidth: 800,
+    minHeight: 600,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
   });
+
+  // Remove the linux, window menu bar
+  // mainWindow.removeMenu();
+  // Disable macOS menu bar
+  // Menu.setApplicationMenu(Menu.buildFromTemplate([]));
 
   // and load the index.html of the app.
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
@@ -38,8 +50,7 @@ const createWindow = () => {
     );
   }
 
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // // Open the DevTools.
   // mainWindow.webContents.on('did-frame-finish-load', () => {
   //   // We close the DevTools so that it can be reopened and redux reconnected.
   //   // This is a workaround for a bug in redux devtools.

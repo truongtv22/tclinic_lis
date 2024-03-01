@@ -1,6 +1,15 @@
 import { configureStore, Middleware, StoreEnhancer } from '@reduxjs/toolkit';
 import { createInjectorsEnhancer } from 'redux-injectors';
 import createSagaMiddleware from 'redux-saga';
+import {
+  persistStore,
+  FLUSH,
+  REHYDRATE,
+  PAUSE,
+  PERSIST,
+  PURGE,
+  REGISTER,
+} from 'redux-persist';
 
 import { rootSaga } from './sagas';
 import { createReducer } from './reducers';
@@ -22,12 +31,17 @@ export function configureAppStore() {
   const store = configureStore({
     reducer: createReducer(),
     middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(middlewares),
+      getDefaultMiddleware({
+        serializableCheck: {
+          ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+        },
+      }).concat(middlewares),
     devTools: process.env.NODE_ENV !== 'production',
     enhancers: (getDefaultEnhancers) => getDefaultEnhancers().concat(enhancers),
   });
+  const persistor = persistStore(store);
 
   sagaMiddleware.run(rootSaga);
 
-  return store;
+  return { store, persistor };
 }
