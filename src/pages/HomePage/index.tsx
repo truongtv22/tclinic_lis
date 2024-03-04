@@ -9,6 +9,8 @@ import {
   Input,
   InputNumber,
   Typography,
+  Row,
+  Col,
 } from 'antd';
 import { StarOutlined, StarFilled } from '@ant-design/icons';
 
@@ -57,54 +59,92 @@ export function HomePage() {
           <Form.Item name="connType" label="Kết nối" initialValue="SerialPort">
             <Select options={[{ value: 'SerialPort', label: 'SerialPort' }]} />
           </Form.Item>
-          <Form.Item name="path" label="ComPort" initialValue="COM1">
-            <Select
-              options={[
-                { value: 'COM1', label: 'COM1' },
-                { value: 'COM2', label: 'COM2' },
-              ]}
-            />
-          </Form.Item>
-          <Form.Item name="baudRate" label="BaudRate" initialValue={9600}>
-            <Select
-              options={[
-                110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600,
-                115200,
-              ].map((v) => ({ value: v, label: v }))}
-            />
-          </Form.Item>
-          <Form.Item name="dataBits" label="DataBits" initialValue={8}>
-            <Select
-              options={[5, 6, 7, 8].map((v) => ({ value: v, label: v }))}
-            />
-          </Form.Item>
-          <Form.Item name="stopBits" label="StopBits" initialValue={1}>
-            <Select
-              options={[1, 1.5, 2].map((v) => ({ value: v, label: v }))}
-            />
-          </Form.Item>
-          <Form.Item name="rtsMode" label="RtsMode" initialValue="handshake">
-            <Select
-              options={['handshake', 'enable', 'toggle'].map((v) => ({
-                value: v,
-                label: v,
-              }))}
-            />
-          </Form.Item>
-          <Form.Item name="parity" label="Parity" initialValue="none">
-            <Select
-              options={['none', 'even', 'odd', 'mark', 'space'].map((v) => ({
-                value: v,
-                label: v,
-              }))}
-            />
-          </Form.Item>
-          <Form.Item name="readTimeout" label="ReadTimeout" initialValue="-1">
-            <InputNumber min={-1} />
-          </Form.Item>
-          <Form.Item name="writeTimeout" label="WriteTimeout" initialValue="-1">
-            <InputNumber min={-1} />
-          </Form.Item>
+          <Row gutter={8}>
+            <Col sm={24} md={12}>
+              <Form.Item name="path" label="ComPort" initialValue="COM1">
+                <Select
+                  options={[
+                    { value: 'COM1', label: 'COM1' },
+                    { value: 'COM2', label: 'COM2' },
+                  ]}
+                />
+              </Form.Item>
+            </Col>
+            <Col sm={24} md={12}>
+              <Form.Item name="baudRate" label="BaudRate" initialValue={9600}>
+                <Select
+                  options={[
+                    110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400,
+                    57600, 115200,
+                  ].map((v) => ({ value: v, label: v }))}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={8}>
+            <Col sm={24} md={12}>
+              <Form.Item name="dataBits" label="DataBits" initialValue={8}>
+                <Select
+                  options={[5, 6, 7, 8].map((v) => ({ value: v, label: v }))}
+                />
+              </Form.Item>
+            </Col>
+            <Col sm={24} md={12}>
+              <Form.Item name="stopBits" label="StopBits" initialValue={1}>
+                <Select
+                  options={[1, 1.5, 2].map((v) => ({ value: v, label: v }))}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={8}>
+            <Col sm={24} md={12}>
+              <Form.Item
+                name="rtsMode"
+                label="RtsMode"
+                initialValue="handshake"
+              >
+                <Select
+                  options={['handshake', 'enable', 'toggle'].map((v) => ({
+                    value: v,
+                    label: v,
+                  }))}
+                />
+              </Form.Item>
+            </Col>
+            <Col sm={24} md={12}>
+              <Form.Item name="parity" label="Parity" initialValue="none">
+                <Select
+                  options={['none', 'even', 'odd', 'mark', 'space'].map(
+                    (v) => ({
+                      value: v,
+                      label: v,
+                    }),
+                  )}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={8}>
+            <Col sm={24} md={12}>
+              <Form.Item
+                name="readTimeout"
+                label="ReadTimeout"
+                initialValue="-1"
+              >
+                <InputNumber min={-1} className="w-full" />
+              </Form.Item>
+            </Col>
+            <Col sm={24} md={12}>
+              <Form.Item
+                name="writeTimeout"
+                label="WriteTimeout"
+                initialValue="-1"
+              >
+                <InputNumber min={-1} className="w-full" />
+              </Form.Item>
+            </Col>
+          </Row>
           <Space>
             <Button type="primary" size="small">
               Mở cổng
