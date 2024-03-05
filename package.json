@@ -45,6 +45,7 @@
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.1.0",
+    "ahooks": "^3.7.10",
     "antd": "^5.13.3",
     "dayjs": "^1.11.10",
     "electron-squirrel-startup": "^1.0.0",
@@ -57,6 +58,7 @@
     "redux-injectors": "^2.1.0",
     "redux-persist": "^6.0.0",
     "redux-persist-electron-storage": "^2.1.0",
-    "redux-saga": "^1.3.0"
+    "redux-saga": "^1.3.0",
+    "serialport": "^12.0.0"
   }
 }

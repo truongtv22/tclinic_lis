@@ -5,6 +5,7 @@ import installExtension, {
   REDUX_DEVTOOLS,
 } from 'electron-devtools-installer';
 import Store from 'electron-store';
+import { SerialPort } from 'serialport';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -74,12 +75,40 @@ const loadExtension = async () => {
   }
 };
 
+const listSerialPorts = async () => {
+  try {
+    const ports = await SerialPort.list();
+    console.log('SerialPort:ports', ports);
+  } catch (error) {
+    console.log('[Error] SerialPort', error);
+  }
+};
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
   loadExtension();
   createWindow();
+  // listSerialPorts();
+
+  // https://stackoverflow.com/a/19733677
+  // socat -d -d pty,raw,echo=0 pty,raw,echo=0
+  // cat < /dev/ttys003
+  // echo "Test" > /dev/ttys004
+  // const port = new SerialPort({ path: '/dev/ttys004', baudRate: 9600 });
+
+  // port.write('main screen turn on', function(err) {
+  //   if (err) {
+  //     return console.log('Error on write: ', err.message)
+  //   }
+  //   console.log('message written')
+  // })
+
+  // // Open errors will be emitted as an error event
+  // port.on('error', function (err) {
+  //   console.log('Error: ', err.message);
+  // });
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
