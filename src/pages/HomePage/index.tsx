@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   Row,
   Col,
@@ -12,48 +13,61 @@ import {
   InputNumber,
   Typography,
   AutoComplete,
+  Popconfirm,
 } from 'antd';
 import range from 'lodash/range';
 import { StarOutlined, StarFilled } from '@ant-design/icons';
 import Split from '@uiw/react-split';
-
-const MyInput = ({ value = '', ...props }) => {
-  console.log('value', value);
-  return <Input value={value} {...props} />;
-};
+import { selectDevices } from 'store/devices/selectors';
+import { deviceActions } from 'store/devices/slice';
 
 export function HomePage() {
   const [form] = Form.useForm();
+  const dispatch = useDispatch();
 
-  const [devices, setDevices] = useState([]);
-  const [selected, setSelected] = useState(0);
+  const devices = useSelector(selectDevices);
+  const [selected, setSelected] = useState(-1);
 
   useEffect(() => {
-    const data = [
-      {
-        id: 1,
-        name: 'Máy xét nghiệm nước tiểu',
-        connType: 'SerialPort',
-        path: 'COM1',
-        baudRate: 9600,
-      },
-    ];
-    setDevices(data);
-    form.setFieldsValue(data[0]);
-  }, []);
+    if (selected === -1) {
+      setSelected(0);
+    }
+  }, [selected]);
+
+  useEffect(() => {
+    if (selected > -1) {
+      const data = devices[selected];
+      form.setFieldsValue({
+        id: data?.id || null,
+        name: data?.name || '',
+        connType: data?.connType || 'SerialPort',
+        path: data?.path || 'COM1',
+        baudRate: data?.baudRate || 9600,
+        dataBits: data?.dataBits || 8,
+        stopBits: data?.stopBits || 1,
+        rtsMode: data?.rtsMode || 'handshake',
+        parity: data?.parity || 'none',
+        readTimeout: data?.readTimeout || -1,
+        writeTimeout: data?.writeTimeout || -1,
+      });
+    }
+  }, [selected, devices]);
 
   const onSelect = (index) => {
-    const data = devices[index];
     setSelected(index);
-    form.setFieldsValue({
-      ...data,
-      name: data?.name || '',
-      connType: data?.connType || 'SerialPort',
-    });
+  };
+
+  const onDelete = () => {
+    dispatch(deviceActions.deleteDevice(devices[selected]));
   };
 
   const onSubmit = (values) => {
     console.log('onSubmit', values);
+    if (values.id) {
+      dispatch(deviceActions.updateDevice(values));
+    } else {
+      dispatch(deviceActions.createDevice(values));
+    }
   };
 
   return (
@@ -85,9 +99,41 @@ export function HomePage() {
         </Card>
         <Card className="flex-1 rounded" size="small">
           <Form form={form} layout="vertical" onFinish={onSubmit}>
-            <Typography.Title level={4}>Thông tin thiết bị</Typography.Title>
+            <Row
+              gutter={8}
+              align="middle"
+              justify="space-between"
+              className="mb-2"
+            >
+              <Col>
+                <p className="text-2xl font-semibold">Thông tin thiết bị</p>
+              </Col>
+              <Row gutter={4}>
+                {devices[selected] && (
+                  <Col>
+                    <Popconfirm
+                      title="Xoá thiết bị"
+                      description="Bạn muốn xóa thiết bị này không?"
+                      okText="Xoá"
+                      cancelText="Không"
+                      onConfirm={onDelete}
+                    >
+                      <Button size="small" danger>
+                        Xoá
+                      </Button>
+                    </Popconfirm>
+                  </Col>
+                )}
+                <Col>
+                  <Button htmlType="submit" type="primary" size="small">
+                    Lưu lại
+                  </Button>
+                </Col>
+              </Row>
+            </Row>
+            <Form.Item name="id" hidden />
             <Form.Item name="name" label="Tên thiết bị" shouldUpdate>
-              <MyInput />
+              <Input />
             </Form.Item>
             <Form.Item
               name="connType"
@@ -180,7 +226,7 @@ export function HomePage() {
                 <Form.Item
                   name="readTimeout"
                   label="ReadTimeout"
-                  initialValue="-1"
+                  initialValue={-1}
                 >
                   <InputNumber min={-1} className="w-full" />
                 </Form.Item>
@@ -189,7 +235,7 @@ export function HomePage() {
                 <Form.Item
                   name="writeTimeout"
                   label="WriteTimeout"
-                  initialValue="-1"
+                  initialValue={-1}
                 >
                   <InputNumber min={-1} className="w-full" />
                 </Form.Item>
@@ -201,9 +247,6 @@ export function HomePage() {
               </Button>
               <Button size="small" disabled>
                 Đóng cổng
-              </Button>
-              <Button htmlType="submit" type="primary" size="small">
-                Lưu lại
               </Button>
             </Space>
           </Form>

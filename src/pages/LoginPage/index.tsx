@@ -11,6 +11,8 @@ type FormData = {
 export function LoginPage() {
   const dispatch = useDispatch();
 
+  const [form] = Form.useForm();
+
   const onSubmit = (values: FormData) => {
     console.log('onSubmit', values);
     dispatch(appActions.setAuth(true));
@@ -23,7 +25,11 @@ export function LoginPage() {
           <div className="w-8 h-8 bg-slate-400 rounded-lg" />
           <h2 className="text-xl">tClinic LIS</h2>
         </div>
-        <Form onFinish={onSubmit}>
+        <Form
+          form={form}
+          onFinish={onSubmit}
+          initialValues={{ taikhoan: 'admin', matkhau: 'admin@123' }}
+        >
           <Form.Item
             name="taikhoan"
             rules={[{ required: true, message: 'Không được để trống' }]}

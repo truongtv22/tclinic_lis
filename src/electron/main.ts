@@ -15,6 +15,7 @@ if (require('electron-squirrel-startup')) {
 // Electron store
 const store = new Store();
 
+// Handle electron store
 ipcMain.on('electron-store-get', async (event, key) => {
   event.returnValue = store.get(key);
 });
@@ -24,6 +25,9 @@ ipcMain.on('electron-store-set', async (event, key, value) => {
 ipcMain.on('electron-store-delete', async (event, key) => {
   store.delete(key);
 });
+
+// Handle SerialPort
+// ipcMain.on('', () => {})
 
 const createWindow = () => {
   // Create the browser window.

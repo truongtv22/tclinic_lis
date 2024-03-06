@@ -11,6 +11,7 @@ import { createElectronStorage } from 'utils/electron-storage';
 import { STORAGE_KEY } from 'constants/app';
 
 import { appSlice } from './app/slice';
+import { deviceSlice } from './devices/slice';
 
 /**
  * Merges the main reducer with the router state and dynamically injected reducers
@@ -21,12 +22,13 @@ export function createReducer(injectedReducers: InjectedReducersType = {}) {
     version: 1,
     timeout: 30000,
     storage: createElectronStorage(),
-    whitelist: [appSlice.name],
+    whitelist: [appSlice.name, deviceSlice.name],
     stateReconciler: autoMergeLevel2,
   };
 
   const rootReducer = combineReducers({
     [appSlice.name]: appSlice.reducer,
+    [deviceSlice.name]: deviceSlice.reducer,
     ...injectedReducers,
   });
   return persistReducer(persistConfig, rootReducer);

@@ -1,4 +1,5 @@
 import { AppState } from 'store/app/types';
+import { DeviceState } from 'store/devices/types';
 
 /* 
   Because the redux-injectors injects your reducers asynchronously somewhere in your code
@@ -8,4 +9,5 @@ import { AppState } from 'store/app/types';
 */
 export interface RootState {
   app: AppState;
+  device: DeviceState;
 }
