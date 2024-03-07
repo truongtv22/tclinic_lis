@@ -5,17 +5,18 @@ import installExtension, {
   REDUX_DEVTOOLS,
 } from 'electron-devtools-installer';
 import Store from 'electron-store';
-import { SerialPort } from 'serialport';
+import { SerialPort, ReadlineParser } from 'serialport';
+import { initDatabase } from './database';
+import { ByteLengthParser } from '@serialport/parser-byte-length'
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
-// Electron store
+// IPC Electron Store
 const store = new Store();
 
-// Handle electron store
 ipcMain.on('electron-store-get', async (event, key) => {
   event.returnValue = store.get(key);
 });
@@ -26,8 +27,44 @@ ipcMain.on('electron-store-delete', async (event, key) => {
   store.delete(key);
 });
 
-// Handle SerialPort
-// ipcMain.on('', () => {})
+// IPC SerialPort
+let port: any = null;
+
+ipcMain.on('serialport-connect', (event, options) => {
+  port = new SerialPort({ path: options.path, baudRate: options.baudRate });
+  const parser = new ReadlineParser({ delimiter: '\r\n' });
+  port.pipe(parser);
+
+  // parser: SerialPort.parsers.byteDelimiter([[0x02], [0x0D]])
+
+  port.on('open', () => {
+    console.log('serial port open');
+  });
+
+  port.on('error', (error) => {
+    console.log('serial port error', error);
+  });
+
+  port.on('close', () => {
+    console.log('serial port close');
+  });
+
+  port.on('data', (data) => {
+    console.log(
+      'serial port data',
+      data,
+      JSON.stringify(data.toString()),
+      JSON.stringify(data.toString('hex')),
+    );
+    event.reply('serialport-data', data.toString());
+  });
+});
+
+ipcMain.on('serialport-disconnect', (event, options) => {
+  if (port) {
+    port.close();
+  }
+});
 
 const createWindow = () => {
   // Create the browser window.
@@ -93,6 +130,7 @@ const listSerialPorts = async () => {
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
   loadExtension();
+  initDatabase();
   createWindow();
   // listSerialPorts();
 

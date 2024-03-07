@@ -9,7 +9,15 @@ export default defineConfig({
   },
   build: {
     rollupOptions: {
-      external: ['serialport'],
+      external: ['better-sqlite3', 'serialport'],
     },
   },
+  plugins: [
+    {
+      name: 'restart',
+      closeBundle() {
+        process.stdin.emit('data', 'rs');
+      },
+    },
+  ],
 });

@@ -14,4 +14,18 @@ contextBridge.exposeInMainWorld('electron', {
       ipcRenderer.send('electron-store-delete', key);
     },
   },
+  serialport: {
+    connect: (options) => {
+      ipcRenderer.send('serialport-connect', options);
+    },
+    disconnect: () => {
+      ipcRenderer.send('serialport-disconnect');
+    },
+  },
+});
+
+document.addEventListener('DOMContentLoaded', async () => {
+  ipcRenderer.on('serialport-data', (event, data) => {
+    console.log('serialport-data', data);
+  });
 });

@@ -70,6 +70,15 @@ export function HomePage() {
     }
   };
 
+  const onOpen = () => {
+    const device = devices[selected];
+    window.electron.serialport.connect(device);
+  };
+
+  const onClose = () => {
+    window.electron.serialport.disconnect();
+  };
+
   return (
     <div className="-flex -space-x-2">
       <Split lineBar className="space-x-2">
@@ -242,10 +251,10 @@ export function HomePage() {
               </Col>
             </Row>
             <Space>
-              <Button type="primary" size="small">
+              <Button type="primary" size="small" onClick={onOpen}>
                 Mở cổng
               </Button>
-              <Button size="small" disabled>
+              <Button size="small" onClick={onClose}>
                 Đóng cổng
               </Button>
             </Space>
