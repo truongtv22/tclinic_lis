@@ -1,10 +1,10 @@
-import { useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { Route, Routes, useNavigate } from 'react-router-dom';
+import { useEffect } from "react";
+import { useSelector } from "react-redux";
+import { Route, Routes, useNavigate } from "react-router-dom";
 
-import { HomePage, LoginPage, ManagePage, SettingPage } from 'pages';
-import { AppLayout, PageLayout } from 'layouts';
-import { selectIsAuth } from 'store/app/selectors';
+import { HomePage, LoginPage, ManagePage, SettingPage, ResultPage } from "pages";
+import { AppLayout, PageLayout } from "layouts";
+import { selectIsAuth } from "store/app/selectors";
 
 export const AppRoutes = () => {
   const isAuth = useSelector(selectIsAuth);
@@ -13,9 +13,9 @@ export const AppRoutes = () => {
 
   useEffect(() => {
     if (isAuth) {
-      navigate('/', { replace: true });
+      navigate("/", { replace: true });
     } else {
-      navigate('/login', { replace: true });
+      navigate("/login", { replace: true });
     }
   }, [isAuth]);
 
@@ -25,6 +25,7 @@ export const AppRoutes = () => {
         <Route path="/" element={<HomePage />} />
         <Route path="/manage" element={<ManagePage />} />
         <Route path="/setting" element={<SettingPage />} />
+        <Route path="/result" element={<ResultPage />} />
       </Route>
       <Route element={<AppLayout />}>
         <Route path="/login" element={<LoginPage />} />

@@ -7,7 +7,7 @@ import Split from "@uiw/react-split";
 import { selectDevices } from "store/devices/selectors";
 import { deviceActions } from "store/devices/slice";
 
-export function ManagePage() {
+export function ResultPage() {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
 

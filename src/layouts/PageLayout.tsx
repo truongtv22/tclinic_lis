@@ -6,7 +6,8 @@ import { useLocation } from 'react-router-dom';
 const menus = [
   { key: '/', label: 'Hệ thống' },
   { key: '/manage', label: 'Quản lý kết nối' },
-  { key: '/setting', label: 'Kết quả từ xa' },
+  { key: '/result', label: 'Kết quả xét nghiệm' },
+  { key: '/setting', label: 'Cài đặt chỉ số' },  
 ];
 
 export const PageLayout = () => {
