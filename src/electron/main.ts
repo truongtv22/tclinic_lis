@@ -1,97 +1,93 @@
-import { app, BrowserWindow, ipcMain, Menu } from "electron";
-import path from "path";
-import installExtension, { REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } from "electron-devtools-installer";
-import Store from "electron-store";
-import { SerialPort, ReadlineParser } from "serialport";
-import { initDatabase } from "./database";
-import { ByteLengthParser } from "@serialport/parser-byte-length";
-import categoryApi from "./database/categoryApi";
+import { app, BrowserWindow, ipcMain, Menu } from 'electron';
+import path from 'path';
+import installExtension, {
+  REACT_DEVELOPER_TOOLS,
+  REDUX_DEVTOOLS,
+} from 'electron-devtools-installer';
+import Store from 'electron-store';
+import { SerialPort, ReadlineParser } from 'serialport';
+import { initDatabase } from './database';
+import { ByteLengthParser } from '@serialport/parser-byte-length';
+import connectmanageApi from './database/connectmanageApi';
+import { StatefullBrowserWindow } from 'stateful-electron-window';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
-if (require("electron-squirrel-startup")) {
+if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
 // IPC Electron Store
 const store = new Store();
 
-ipcMain.on("electron-store-get", async (event, key) => {
+ipcMain.on('electron-store-get', async (event, key) => {
   event.returnValue = store.get(key);
 });
-ipcMain.on("electron-store-set", async (event, key, value) => {
+ipcMain.on('electron-store-set', async (event, key, value) => {
   store.set(key, value);
 });
-ipcMain.on("electron-store-delete", async (event, key) => {
+ipcMain.on('electron-store-delete', async (event, key) => {
   store.delete(key);
 });
-
-const mainWindow: BrowserWindow | null = null;
-
-const ipcFunc = () => {
-  ipcMain.handle("add-category", async (event, message) => {
-    const result = categoryApi.addCategory(message);
-    mainWindow?.webContents.send("updateCategory");
-    return result;
-  });
-  ipcMain.handle("get-category", async () => {
-    const result = categoryApi.getCategory();
-    return result;
-  });
-  ipcMain.handle("update-category", async (event, message) => {
-    const result = categoryApi.updateCategory(message);
-    mainWindow?.webContents.send("updateCategory");
-    return result;
-  });
-  ipcMain.handle("delete-category", async (event, message) => {
-    const result = categoryApi.delCategory(message);
-    mainWindow?.webContents.send("updateCategory");
-    return result;
-  });
-};
 
 // IPC SerialPort
 let port: any = null;
 
-ipcMain.on("serialport-connect", (event, options) => {
+ipcMain.on('serialport-connect', (event, options) => {
   port = new SerialPort({ path: options.path, baudRate: options.baudRate });
-  const parser = new ReadlineParser({ delimiter: "\r\n" });
+  const parser = new ReadlineParser({ delimiter: '\r\n' });
   port.pipe(parser);
 
   // parser: SerialPort.parsers.byteDelimiter([[0x02], [0x0D]])
 
-  port.on("open", () => {
-    console.log("serial port open");
+  port.on('open', () => {
+    console.log('serial port open');
   });
 
-  port.on("error", (error: any) => {
-    console.log("serial port error", error);
+  port.on('error', (error) => {
+    console.log('serial port error', error);
   });
 
-  port.on("close", () => {
-    console.log("serial port close");
+  port.on('close', () => {
+    console.log('serial port close');
   });
 
-  port.on("data", (data: any) => {
-    console.log("serial port data", data, JSON.stringify(data.toString()), JSON.stringify(data.toString("hex")));
-    event.reply("serialport-data", data.toString());
+  port.on('data', (data) => {
+    console.log(
+      'serial port data',
+      data,
+      JSON.stringify(data.toString()),
+      JSON.stringify(data.toString('hex')),
+    );
+    event.reply('serialport-data', data.toString());
   });
 });
 
-ipcMain.on("serialport-disconnect", (event, options) => {
+ipcMain.on('serialport-disconnect', (event, options) => {
   if (port) {
     port.close();
   }
 });
 
+// IPC Connect manage
+ipcMain.handle('connectmanage-get', async (event) => {
+  const result = connectmanageApi.getAll();
+  return result;
+});
+
+ipcMain.handle('connectmanage-create', async (event, values) => {
+  const result = connectmanageApi.create(values);
+  return result;
+});
+
 const createWindow = () => {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  const mainWindow = new StatefullBrowserWindow({
     width: 1270,
     height: 860,
     minWidth: 800,
     minHeight: 600,
     webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
+      preload: path.join(__dirname, 'preload.js'),
     },
   });
 
@@ -104,47 +100,51 @@ const createWindow = () => {
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
   } else {
-    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
+    mainWindow.loadFile(
+      path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`),
+    );
   }
 
-  // // Open the DevTools.
-  // mainWindow.webContents.on('did-frame-finish-load', () => {
+  // Open the DevTools.
+  mainWindow.webContents.on('did-finish-load', () => {
   //   // We close the DevTools so that it can be reopened and redux reconnected.
   //   // This is a workaround for a bug in redux devtools.
   //   mainWindow.webContents.closeDevTools();
   //   mainWindow.webContents.once('devtools-opened', () => {
   //     mainWindow.focus();
   //   });
-  //   mainWindow.webContents.openDevTools();
-  // });
+    mainWindow.webContents.openDevTools();
+  });
 };
 
 const loadExtension = async () => {
   try {
-    const result = await installExtension([REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS], { loadExtensionOptions: { allowFileAccess: true } });
+    const result = await installExtension(
+      [REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS],
+      { loadExtensionOptions: { allowFileAccess: true } },
+    );
     console.log(`Added Extension:  ${result}`);
   } catch (error) {
-    console.log("An error occurred: ", error);
+    console.log('An error occurred: ', error);
   }
 };
 
 const listSerialPorts = async () => {
   try {
     const ports = await SerialPort.list();
-    console.log("SerialPort:ports", ports);
+    console.log('SerialPort:ports', ports);
   } catch (error) {
-    console.log("[Error] SerialPort", error);
+    console.log('[Error] SerialPort', error);
   }
 };
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on("ready", () => {
+app.on('ready', () => {
   loadExtension();
   initDatabase();
   createWindow();
-  ipcFunc();
   // listSerialPorts();
 
   // https://stackoverflow.com/a/19733677
@@ -169,13 +169,13 @@ app.on("ready", () => {
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
     app.quit();
   }
 });
 
-app.on("activate", () => {
+app.on('activate', () => {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {

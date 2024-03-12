@@ -11,6 +11,11 @@ declare global {
         disconnect: () => void;
       };
     };
+
+    dbApi: {
+      getConnect: () => Promise<any>;
+      createConnect: (values: any) => Promise<any>;
+    };
   }
 }
 
