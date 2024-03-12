@@ -7,7 +7,9 @@ import installExtension, {
 import Store from 'electron-store';
 import { SerialPort, ReadlineParser } from 'serialport';
 import { initDatabase } from './database';
-import { ByteLengthParser } from '@serialport/parser-byte-length'
+import { ByteLengthParser } from '@serialport/parser-byte-length';
+import connectmanageApi from './database/connectmanageApi';
+import { StatefullBrowserWindow } from 'stateful-electron-window';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -66,9 +68,20 @@ ipcMain.on('serialport-disconnect', (event, options) => {
   }
 });
 
+// IPC Connect manage
+ipcMain.handle('connectmanage-get', async (event) => {
+  const result = connectmanageApi.getAll();
+  return result;
+});
+
+ipcMain.handle('connectmanage-create', async (event, values) => {
+  const result = connectmanageApi.create(values);
+  return result;
+});
+
 const createWindow = () => {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  const mainWindow = new StatefullBrowserWindow({
     width: 1270,
     height: 860,
     minWidth: 800,
@@ -92,16 +105,16 @@ const createWindow = () => {
     );
   }
 
-  // // Open the DevTools.
-  // mainWindow.webContents.on('did-frame-finish-load', () => {
+  // Open the DevTools.
+  mainWindow.webContents.on('did-finish-load', () => {
   //   // We close the DevTools so that it can be reopened and redux reconnected.
   //   // This is a workaround for a bug in redux devtools.
   //   mainWindow.webContents.closeDevTools();
   //   mainWindow.webContents.once('devtools-opened', () => {
   //     mainWindow.focus();
   //   });
-  //   mainWindow.webContents.openDevTools();
-  // });
+    mainWindow.webContents.openDevTools();
+  });
 };
 
 const loadExtension = async () => {

@@ -15,13 +15,22 @@ contextBridge.exposeInMainWorld('electron', {
     },
   },
   serialport: {
-    connect: (options) => {
+    connect: (options: any) => {
       ipcRenderer.send('serialport-connect', options);
     },
     disconnect: () => {
       ipcRenderer.send('serialport-disconnect');
     },
   },
+});
+
+contextBridge.exposeInMainWorld('dbApi', {
+  getConnect: async () => {
+    return ipcRenderer.invoke('connectmanage-get');
+  },
+  createConnect: async (values: any) => {
+    return ipcRenderer.invoke('connectmanage-create', values);
+  }
 });
 
 document.addEventListener('DOMContentLoaded', async () => {

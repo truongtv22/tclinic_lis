@@ -25,58 +25,79 @@ export function HomePage() {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
 
-  const devices = useSelector(selectDevices);
-  const [selected, setSelected] = useState(-1);
+  // const devices = useSelector(selectDevices);
+  const [devices, setDevices] = useState([]);
+  const [selected, setSelected] = useState(null);
+
+  const getData = async () => {
+    const result = await window.dbApi.getConnect();
+    if (result.success) {
+      return result.data;
+    }
+    return null;
+  };
 
   useEffect(() => {
-    if (selected === -1) {
-      setSelected(0);
-    }
-  }, [selected]);
+    (async () => {
+      const data = await getData();
+      if (data && data.length > 0) {
+        setDevices(data);
+        setSelected(data[0].id);
+      }
+    })();
+  }, []);
 
-  useEffect(() => {
-    if (selected > -1) {
-      const data = devices[selected];
-      form.setFieldsValue({
-        id: data?.id || null,
-        name: data?.name || '',
-        connType: data?.connType || 'SerialPort',
-        path: data?.path || 'COM1',
-        baudRate: data?.baudRate || 9600,
-        dataBits: data?.dataBits || 8,
-        stopBits: data?.stopBits || 1,
-        rtsMode: data?.rtsMode || 'handshake',
-        parity: data?.parity || 'none',
-        readTimeout: data?.readTimeout || -1,
-        writeTimeout: data?.writeTimeout || -1,
-      });
-    }
-  }, [selected, devices]);
+  // useEffect(() => {
+  //   if (selected === -1) {
+  //     setSelected(0);
+  //   }
+  // }, [selected]);
 
-  const onSelect = (index) => {
-    setSelected(index);
+  // useEffect(() => {
+  //   if (selected > -1) {
+  //     const data = devices[selected];
+  //     form.setFieldsValue({
+  //       id: data?.id || null,
+  //       lab: data?.lab || '',
+  //       kieuketnoi: data?.kieuketnoi || 'SerialPort',
+  //       comport: data?.comport || 'COM1',
+  //       baudrate: data?.baudrate || 9600,
+  //       databits: data?.databits || 8,
+  //       stopbits: data?.stopbits || 1,
+  //       rtsmode: data?.rtsmode || 'handshake',
+  //       parity: data?.parity || 'none',
+  //       readtimeout: data?.readtimeout || -1,
+  //       writetimeout: data?.writetimeout || -1,
+  //     });
+  //   }
+  // }, [selected, devices]);
+
+  const onSelect = (item: any) => {
+    setSelected(item);
+  };
+
+  const onSave = async (values: any) => {
+    console.log('onSubmit', values);
+    if (values.id) {
+      //   dispatch(deviceActions.updateDevice(values));
+    } else {
+      const result = await window.dbApi.createConnect(values);
+      console.log('result', result);
+      //   dispatch(deviceActions.createDevice(values));
+    }
   };
 
   const onDelete = () => {
-    dispatch(deviceActions.deleteDevice(devices[selected]));
-  };
-
-  const onSubmit = (values) => {
-    console.log('onSubmit', values);
-    if (values.id) {
-      dispatch(deviceActions.updateDevice(values));
-    } else {
-      dispatch(deviceActions.createDevice(values));
-    }
+    // dispatch(deviceActions.deleteDevice(devices[selected]));
   };
 
   const onOpen = () => {
-    const device = devices[selected];
-    window.electron.serialport.connect(device);
+    // const device = devices[selected];
+    // window.electron.serialport.connect(device);
   };
 
   const onClose = () => {
-    window.electron.serialport.disconnect();
+    // window.electron.serialport.disconnect();
   };
 
   return (
@@ -84,30 +105,28 @@ export function HomePage() {
       <Split lineBar className="space-x-2">
         <Card className="min-w-60 max-w-[50%] rounded" size="small">
           <div className="space-y-2">
-            {range(10).map((index) => (
-              <div key={index} className="flex space-x-2">
-                {devices[index] ? (
+            {devices.map((item) => (
+              <div key={item.id} className="flex space-x-2">
+                {/* devices[index] ? (
                   <StarFilled className="text-yellow-400" />
                 ) : (
                   <StarOutlined />
-                )}
+                ) */}
                 <Radio
                   value={1}
-                  checked={selected === index}
+                  checked={item.id === selected?.id}
                   onChange={() => {
-                    onSelect(index);
+                    onSelect(item);
                   }}
                 >
-                  <span className="line-clamp-2">
-                    {devices[index]?.name || '...'}
-                  </span>
+                  <span className="line-clamp-2">{item.name}</span>
                 </Radio>
               </div>
             ))}
           </div>
         </Card>
         <Card className="flex-1 rounded" size="small">
-          <Form form={form} layout="vertical" onFinish={onSubmit}>
+          <Form form={form} layout="vertical" onFinish={onSave}>
             <Row
               gutter={8}
               align="middle"
@@ -118,7 +137,7 @@ export function HomePage() {
                 <p className="text-2xl font-semibold">Thông tin thiết bị</p>
               </Col>
               <Row gutter={4}>
-                {devices[selected] && (
+                {selected?.id && (
                   <Col>
                     <Popconfirm
                       title="Xoá thiết bị"
@@ -141,11 +160,11 @@ export function HomePage() {
               </Row>
             </Row>
             <Form.Item name="id" hidden />
-            <Form.Item name="name" label="Tên thiết bị" shouldUpdate>
+            <Form.Item name="lab" label="Tên thiết bị" shouldUpdate>
               <Input />
             </Form.Item>
             <Form.Item
-              name="connType"
+              name="kieuketnoi"
               label="Kết nối"
               initialValue="SerialPort"
             >
@@ -155,7 +174,7 @@ export function HomePage() {
             </Form.Item>
             <Row gutter={8}>
               <Col sm={24} md={12}>
-                <Form.Item name="path" label="ComPort" initialValue="COM1">
+                <Form.Item name="comport" label="ComPort" initialValue="COM1">
                   <AutoComplete
                     options={[
                       'COM1',
@@ -176,7 +195,7 @@ export function HomePage() {
                 </Form.Item>
               </Col>
               <Col sm={24} md={12}>
-                <Form.Item name="baudRate" label="BaudRate" initialValue={9600}>
+                <Form.Item name="baudrate" label="BaudRate" initialValue={9600}>
                   <AutoComplete
                     options={[
                       110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400,
@@ -188,14 +207,14 @@ export function HomePage() {
             </Row>
             <Row gutter={8}>
               <Col sm={24} md={12}>
-                <Form.Item name="dataBits" label="DataBits" initialValue={8}>
+                <Form.Item name="databits" label="DataBits" initialValue={8}>
                   <Select
                     options={[5, 6, 7, 8].map((v) => ({ value: v, label: v }))}
                   />
                 </Form.Item>
               </Col>
               <Col sm={24} md={12}>
-                <Form.Item name="stopBits" label="StopBits" initialValue={1}>
+                <Form.Item name="stopbits" label="StopBits" initialValue={1}>
                   <Select
                     options={[1, 1.5, 2].map((v) => ({ value: v, label: v }))}
                   />
@@ -205,7 +224,7 @@ export function HomePage() {
             <Row gutter={8}>
               <Col sm={24} md={12}>
                 <Form.Item
-                  name="rtsMode"
+                  name="rtsmode"
                   label="RtsMode"
                   initialValue="handshake"
                 >
@@ -233,7 +252,7 @@ export function HomePage() {
             <Row gutter={8}>
               <Col sm={24} md={12}>
                 <Form.Item
-                  name="readTimeout"
+                  name="readtimeout"
                   label="ReadTimeout"
                   initialValue={-1}
                 >
@@ -242,7 +261,7 @@ export function HomePage() {
               </Col>
               <Col sm={24} md={12}>
                 <Form.Item
-                  name="writeTimeout"
+                  name="writetimeout"
                   label="WriteTimeout"
                   initialValue={-1}
                 >
