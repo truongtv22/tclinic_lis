@@ -15,11 +15,22 @@ contextBridge.exposeInMainWorld('electron', {
     },
   },
   serialport: {
-    connect: (options: any) => {
-      ipcRenderer.send('serialport-connect', options);
+    connect: (params: any) => {
+      ipcRenderer.send('serialport-connect', params);
     },
     disconnect: () => {
       ipcRenderer.send('serialport-disconnect');
+    },
+    on: (event: any, listener: (...args: unknown[]) => void) => {
+      const subscription = (_event: any, ...args: unknown[]) =>
+        listener(...args);
+      ipcRenderer.on(`serialport-${event}`, subscription);
+      return () => {
+        ipcRenderer.removeListener(`serialport-${event}`, subscription);
+      };
+    },
+    once: (event: any, listener: (...args: unknown[]) => void) => {
+      ipcRenderer.once(event, (_event, ...args) => listener(...args));
     },
   },
 });
@@ -37,10 +48,4 @@ contextBridge.exposeInMainWorld('dbApi', {
   deleteConnect: async (id: any) => {
     return ipcRenderer.invoke('connectmanage-delete', id);
   },
-});
-
-document.addEventListener('DOMContentLoaded', async () => {
-  ipcRenderer.on('serialport-data', (event, data) => {
-    console.log('serialport-data', data);
-  });
 });

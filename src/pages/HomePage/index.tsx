@@ -34,6 +34,7 @@ export function HomePage() {
   const dispatch = useDispatch();
 
   const [loading, setLoading] = useState(false);
+  const [connected, setConnected] = useState(false);
 
   // const devices = useSelector(selectDevices);
   const [devices, setDevices] = useState([]);
@@ -68,6 +69,27 @@ export function HomePage() {
       form.resetFields();
     }
   }, [selected]);
+
+  useEffect(() => {
+    const subscription = window.electron.serialport.on('open', () => {
+      setConnected(true);
+    });
+    return () => subscription();
+  }, []);
+
+  useEffect(() => {
+    const subscription = window.electron.serialport.on('close', () => {
+      setConnected(false);
+    });
+    return () => subscription();
+  }, []);
+
+  useEffect(() => {
+    const subscription = window.electron.serialport.on('data', (data) => {
+      console.log('HomePage->data', data);
+    });
+    return () => subscription();
+  }, []);
 
   const onAdd = () => {
     setSelected(null);
@@ -143,15 +165,15 @@ export function HomePage() {
   };
 
   const onOpen = () => {
-    const values = form.getFieldsValue();
-    // const device = devices[selected];
-    // window.electron.serialport.connect(device);
+    const params = form.getFieldsValue();
+    window.electron.serialport.connect(params);
   };
 
   const onClose = () => {
-    const values = form.getFieldsValue();
-    // window.electron.serialport.disconnect();
+    window.electron.serialport.disconnect();
   };
+
+  const onViewLog = () => {};
 
   return (
     <Spin spinning={loading} tip="Đang tải">
@@ -207,8 +229,8 @@ export function HomePage() {
                     type="primary"
                     size="small"
                     icon={<PlusOutlined />}
-                    onClick={onAdd}
                     disabled={!selected}
+                    onClick={onAdd}
                   >
                     Thêm
                   </Button>
@@ -358,11 +380,19 @@ export function HomePage() {
               </Col>
             </Row>
             <Space>
-              <Button type="primary" size="small" onClick={onOpen}>
+              <Button
+                type="primary"
+                size="small"
+                disabled={connected}
+                onClick={onOpen}
+              >
                 Mở cổng
               </Button>
-              <Button size="small" onClick={onClose}>
+              <Button type="primary" size="small" disabled={!connected} onClick={onClose}>
                 Đóng cổng
+              </Button>
+              <Button size="small" onClick={onViewLog}>
+                Xem nhật ký
               </Button>
             </Space>
           </Form>

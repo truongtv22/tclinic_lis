@@ -34,8 +34,18 @@ ipcMain.on('electron-store-delete', async (event, key) => {
 // IPC SerialPort
 let port: any = null;
 
-ipcMain.on('serialport-connect', (event, options) => {
-  port = new SerialPort({ path: options.path, baudRate: options.baudRate });
+ipcMain.on('serialport-connect', (event, params) => {
+  const options: any = {
+    path: params.comport,
+    baudRate: params.baudrate,
+    dataBits: params.databits,
+    stopBits: params.stopbits,
+    parity: params.parity,
+  };
+  if (process.platform === 'win32') {
+    options.rtsMode = params.rtsmode;
+  }
+  port = new SerialPort(options);
   const parser = new ReadlineParser({ delimiter: '\r\n' });
   port.pipe(parser);
 
@@ -43,14 +53,17 @@ ipcMain.on('serialport-connect', (event, options) => {
 
   port.on('open', () => {
     console.log('serial port open');
+    event.reply('serialport-open');
   });
 
   port.on('error', (error: any) => {
     console.log('serial port error', error);
+    event.reply('serialport-error', error);
   });
 
   port.on('close', () => {
     console.log('serial port close');
+    event.reply('serialport-close');
   });
 
   port.on('data', (data: any) => {
@@ -64,7 +77,7 @@ ipcMain.on('serialport-connect', (event, options) => {
   });
 });
 
-ipcMain.on('serialport-disconnect', (event, options) => {
+ipcMain.on('serialport-disconnect', (event) => {
   if (port) {
     port.close();
   }

@@ -7,8 +7,10 @@ declare global {
         delete: (key) => void;
       };
       serialport: {
-        connect: (options: any) => void;
+        connect: (params: any) => void;
         disconnect: () => void;
+        on: (event: any, listener: (...args: unknown[]) => void) => () => void;
+        one: (event: any, listener: (...args: unknown[]) => void) => void;
       };
     };
 
