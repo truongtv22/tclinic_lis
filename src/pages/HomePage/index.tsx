@@ -78,6 +78,13 @@ export function HomePage() {
   }, []);
 
   useEffect(() => {
+    const subscription = window.electron.serialport.on('error', (error: any) => {
+      notificationApi.error({ message: 'SerialPort', description: error.message });
+    });
+    return () => subscription();
+  }, []);
+
+  useEffect(() => {
     const subscription = window.electron.serialport.on('close', () => {
       setConnected(false);
     });
@@ -388,7 +395,12 @@ export function HomePage() {
               >
                 Mở cổng
               </Button>
-              <Button type="primary" size="small" disabled={!connected} onClick={onClose}>
+              <Button
+                type="primary"
+                size="small"
+                disabled={!connected}
+                onClick={onClose}
+              >
                 Đóng cổng
               </Button>
               <Button size="small" onClick={onViewLog}>

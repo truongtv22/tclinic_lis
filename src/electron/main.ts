@@ -32,7 +32,7 @@ ipcMain.on('electron-store-delete', async (event, key) => {
 });
 
 // IPC SerialPort
-let port: any = null;
+let port: SerialPort = null;
 
 ipcMain.on('serialport-connect', (event, params) => {
   const options: any = {
