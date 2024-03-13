@@ -30,7 +30,13 @@ contextBridge.exposeInMainWorld('dbApi', {
   },
   createConnect: async (values: any) => {
     return ipcRenderer.invoke('connectmanage-create', values);
-  }
+  },
+  updateConnect: async (values: any) => {
+    return ipcRenderer.invoke('connectmanage-update', values);
+  },
+  deleteConnect: async (id: any) => {
+    return ipcRenderer.invoke('connectmanage-delete', id);
+  },
 });
 
 document.addEventListener('DOMContentLoaded', async () => {

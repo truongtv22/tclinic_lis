@@ -1,22 +1,30 @@
 import { useEffect, useMemo, useState } from 'react';
+import { produce } from 'immer';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Row,
   Col,
-  Button,
+  Spin,
   Card,
   Form,
   Radio,
-  Select,
-  Space,
   Input,
-  InputNumber,
-  Typography,
-  AutoComplete,
+  Space,
+  Select,
+  Button,
   Popconfirm,
+  InputNumber,
+  AutoComplete,
+  notification,
 } from 'antd';
 import range from 'lodash/range';
-import { StarOutlined, StarFilled } from '@ant-design/icons';
+import {
+  StarOutlined,
+  StarFilled,
+  PlusOutlined,
+  SaveOutlined,
+  DeleteOutlined,
+} from '@ant-design/icons';
 import Split from '@uiw/react-split';
 import { selectDevices } from 'store/devices/selectors';
 import { deviceActions } from 'store/devices/slice';
@@ -25,9 +33,15 @@ export function HomePage() {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
 
+  const [loading, setLoading] = useState(false);
+
   // const devices = useSelector(selectDevices);
   const [devices, setDevices] = useState([]);
   const [selected, setSelected] = useState(null);
+
+  const [notificationApi, contextHolder] = notification.useNotification({
+    stack: true,
+  });
 
   const getData = async () => {
     const result = await window.dbApi.getConnect();
@@ -42,35 +56,22 @@ export function HomePage() {
       const data = await getData();
       if (data && data.length > 0) {
         setDevices(data);
-        setSelected(data[0].id);
+        setSelected(data[0]);
       }
     })();
   }, []);
 
-  // useEffect(() => {
-  //   if (selected === -1) {
-  //     setSelected(0);
-  //   }
-  // }, [selected]);
+  useEffect(() => {
+    if (selected) {
+      form.setFieldsValue(selected);
+    } else {
+      form.resetFields();
+    }
+  }, [selected]);
 
-  // useEffect(() => {
-  //   if (selected > -1) {
-  //     const data = devices[selected];
-  //     form.setFieldsValue({
-  //       id: data?.id || null,
-  //       lab: data?.lab || '',
-  //       kieuketnoi: data?.kieuketnoi || 'SerialPort',
-  //       comport: data?.comport || 'COM1',
-  //       baudrate: data?.baudrate || 9600,
-  //       databits: data?.databits || 8,
-  //       stopbits: data?.stopbits || 1,
-  //       rtsmode: data?.rtsmode || 'handshake',
-  //       parity: data?.parity || 'none',
-  //       readtimeout: data?.readtimeout || -1,
-  //       writetimeout: data?.writetimeout || -1,
-  //     });
-  //   }
-  // }, [selected, devices]);
+  const onAdd = () => {
+    setSelected(null);
+  };
 
   const onSelect = (item: any) => {
     setSelected(item);
@@ -78,51 +79,111 @@ export function HomePage() {
 
   const onSave = async (values: any) => {
     console.log('onSubmit', values);
+    setLoading(true);
     if (values.id) {
-      //   dispatch(deviceActions.updateDevice(values));
+      const result = await window.dbApi.updateConnect(values);
+      console.log('result', result);
+      if (result.success) {
+        const newDevices = produce(devices, (draft) => {
+          const index = draft.findIndex((item) => item.id === values.id);
+          if (index > -1) {
+            draft.splice(index, 1, result.data);
+          }
+        });
+        setDevices(newDevices);
+        notificationApi.success({
+          message: 'Thành công',
+          description: 'Cập nhật kết nối thành công',
+        });
+      }
+      // dispatch(deviceActions.updateDevice(values));
     } else {
       const result = await window.dbApi.createConnect(values);
       console.log('result', result);
-      //   dispatch(deviceActions.createDevice(values));
+      if (result.success) {
+        const newDevices = produce(devices, (draft) => {
+          draft.push(result.data);
+        });
+        setDevices(newDevices);
+        setSelected(result.data);
+        notificationApi.success({
+          message: 'Thành công',
+          description: 'Thêm mới kết nối thành công',
+        });
+      }
+      // dispatch(deviceActions.createDevice(values));
     }
+    setLoading(false);
   };
 
-  const onDelete = () => {
+  const onDelete = async (id: any) => {
+    setLoading(true);
+    const result = await window.dbApi.deleteConnect(id);
+    console.log('result', result);
+    if (result.success) {
+      const newDevices = produce(devices, (draft) => {
+        const index = draft.findIndex((item) => item.id === id);
+        if (index > -1) {
+          draft.splice(index, 1);
+        }
+      });
+      setDevices(newDevices);
+      if (newDevices.length > 0) {
+        setSelected(newDevices[0]);
+      } else {
+        setSelected(null);
+      }
+      notificationApi.success({
+        message: 'Thành công',
+        description: 'Xoá kết nối thành công',
+      });
+    }
     // dispatch(deviceActions.deleteDevice(devices[selected]));
+    setLoading(false);
   };
 
   const onOpen = () => {
+    const values = form.getFieldsValue();
     // const device = devices[selected];
     // window.electron.serialport.connect(device);
   };
 
   const onClose = () => {
+    const values = form.getFieldsValue();
     // window.electron.serialport.disconnect();
   };
 
   return (
-    <div className="-flex -space-x-2">
+    <Spin spinning={loading} tip="Đang tải">
+      {contextHolder}
       <Split lineBar className="space-x-2">
         <Card className="min-w-60 max-w-[50%] rounded" size="small">
           <div className="space-y-2">
-            {devices.map((item) => (
-              <div key={item.id} className="flex space-x-2">
-                {/* devices[index] ? (
+            <p className="text-xl font-semibold">Danh sách kết nối</p>
+            {devices.length > 0 ? (
+              <div className="space-y-2">
+                {devices.map((item) => (
+                  <div key={item.id} className="flex space-x-2">
+                    {/* devices[index] ? (
                   <StarFilled className="text-yellow-400" />
                 ) : (
                   <StarOutlined />
                 ) */}
-                <Radio
-                  value={1}
-                  checked={item.id === selected?.id}
-                  onChange={() => {
-                    onSelect(item);
-                  }}
-                >
-                  <span className="line-clamp-2">{item.name}</span>
-                </Radio>
+                    <Radio
+                      value={1}
+                      checked={item.id === selected?.id}
+                      onChange={() => {
+                        onSelect(item);
+                      }}
+                    >
+                      <span className="line-clamp-2">{item.lab}</span>
+                    </Radio>
+                  </div>
+                ))}
               </div>
-            ))}
+            ) : (
+              <p className="text-gray-400">Danh sách trống</p>
+            )}
           </div>
         </Card>
         <Card className="flex-1 rounded" size="small">
@@ -134,33 +195,57 @@ export function HomePage() {
               className="mb-2"
             >
               <Col>
-                <p className="text-2xl font-semibold">Thông tin thiết bị</p>
+                <p className="text-xl font-semibold">
+                  {selected
+                    ? 'Thông tin kết nối'
+                    : 'Thêm mới thông tin kết nối'}
+                </p>
               </Col>
               <Row gutter={4}>
-                {selected?.id && (
-                  <Col>
-                    <Popconfirm
-                      title="Xoá thiết bị"
-                      description="Bạn muốn xóa thiết bị này không?"
-                      okText="Xoá"
-                      cancelText="Không"
-                      onConfirm={onDelete}
-                    >
-                      <Button size="small" danger>
-                        Xoá
-                      </Button>
-                    </Popconfirm>
-                  </Col>
-                )}
                 <Col>
-                  <Button htmlType="submit" type="primary" size="small">
+                  <Button
+                    type="primary"
+                    size="small"
+                    icon={<PlusOutlined />}
+                    onClick={onAdd}
+                    disabled={!selected}
+                  >
+                    Thêm
+                  </Button>
+                </Col>
+                <Col>
+                  <Button
+                    htmlType="submit"
+                    type="primary"
+                    size="small"
+                    icon={<SaveOutlined />}
+                  >
                     Lưu lại
                   </Button>
+                </Col>
+                <Col>
+                  <Popconfirm
+                    title="Xoá kết nối"
+                    description="Bạn muốn xóa kết nối này không?"
+                    okText="Xoá"
+                    cancelText="Không"
+                    onConfirm={() => onDelete(selected.id)}
+                  >
+                    <Button
+                      size="small"
+                      type="primary"
+                      danger
+                      icon={<DeleteOutlined />}
+                      disabled={!selected}
+                    >
+                      Xoá
+                    </Button>
+                  </Popconfirm>
                 </Col>
               </Row>
             </Row>
             <Form.Item name="id" hidden />
-            <Form.Item name="lab" label="Tên thiết bị" shouldUpdate>
+            <Form.Item name="lab" label="Tên thiết bị">
               <Input />
             </Form.Item>
             <Form.Item
@@ -169,7 +254,10 @@ export function HomePage() {
               initialValue="SerialPort"
             >
               <Select
-                options={[{ value: 'SerialPort', label: 'SerialPort' }]}
+                options={['SerialPort', 'Foder'].map((v) => ({
+                  value: v,
+                  label: v,
+                }))}
               />
             </Form.Item>
             <Row gutter={8}>
@@ -280,6 +368,6 @@ export function HomePage() {
           </Form>
         </Card>
       </Split>
-    </div>
+    </Spin>
   );
 }

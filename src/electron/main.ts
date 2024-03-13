@@ -16,6 +16,8 @@ if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
+let mainWindow: BrowserWindow | null = null;
+
 // IPC Electron Store
 const store = new Store();
 
@@ -43,7 +45,7 @@ ipcMain.on('serialport-connect', (event, options) => {
     console.log('serial port open');
   });
 
-  port.on('error', (error) => {
+  port.on('error', (error: any) => {
     console.log('serial port error', error);
   });
 
@@ -51,7 +53,7 @@ ipcMain.on('serialport-connect', (event, options) => {
     console.log('serial port close');
   });
 
-  port.on('data', (data) => {
+  port.on('data', (data: any) => {
     console.log(
       'serial port data',
       data,
@@ -79,9 +81,19 @@ ipcMain.handle('connectmanage-create', async (event, values) => {
   return result;
 });
 
+ipcMain.handle('connectmanage-update', async (event, values) => {
+  const result = connectmanageApi.update(values);
+  return result;
+});
+
+ipcMain.handle('connectmanage-delete', async (event, id) => {
+  const result = connectmanageApi.delete(id);
+  return result;
+});
+
 const createWindow = () => {
   // Create the browser window.
-  const mainWindow = new StatefullBrowserWindow({
+  mainWindow = new StatefullBrowserWindow({
     width: 1270,
     height: 860,
     minWidth: 800,
@@ -105,15 +117,19 @@ const createWindow = () => {
     );
   }
 
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
+
   // Open the DevTools.
-  mainWindow.webContents.on('did-finish-load', () => {
-  //   // We close the DevTools so that it can be reopened and redux reconnected.
-  //   // This is a workaround for a bug in redux devtools.
-  //   mainWindow.webContents.closeDevTools();
-  //   mainWindow.webContents.once('devtools-opened', () => {
-  //     mainWindow.focus();
-  //   });
-    mainWindow.webContents.openDevTools();
+  mainWindow?.webContents.on('did-finish-load', () => {
+    // We close the DevTools so that it can be reopened and redux reconnected.
+    // This is a workaround for a bug in redux devtools.
+    // mainWindow?.webContents.closeDevTools();
+    // mainWindow?.webContents.once('devtools-opened', () => {
+    //   mainWindow?.focus();
+    // });
+    mainWindow?.webContents.openDevTools();
   });
 };
 
@@ -178,10 +194,8 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
+  if (mainWindow === null) createWindow();
+  // if (BrowserWindow.getAllWindows().length === 0) {
+  //   createWindow();
+  // }
 });
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.

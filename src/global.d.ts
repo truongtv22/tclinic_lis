@@ -15,6 +15,8 @@ declare global {
     dbApi: {
       getConnect: () => Promise<any>;
       createConnect: (values: any) => Promise<any>;
+      updateConnect: (values: any) => Promise<any>;
+      deleteConnect: (id: any) => Promise<any>;
     };
   }
 }
