@@ -1,6 +1,10 @@
 declare global {
   interface Window {
     electron: {
+      ipcRenderer: {
+        send(channel: string, ...args: any[]): void;
+        invoke: (channel: string, ...args: any[]) => Promise<any>;
+      };
       store: {
         get: (key: string) => any;
         set: (key: string, val: any) => void;

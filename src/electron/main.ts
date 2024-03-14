@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, Menu } from 'electron';
 import path from 'path';
-import installExtension, {
+import installExtensions, {
   REACT_DEVELOPER_TOOLS,
   REDUX_DEVTOOLS,
 } from 'electron-devtools-installer';
@@ -17,6 +17,16 @@ if (require('electron-squirrel-startup')) {
 }
 
 let mainWindow: BrowserWindow | null = null;
+let viewWindow: BrowserWindow | null = null;
+
+// IPC Window
+ipcMain.on('main-window-reload', () => {
+  mainWindow?.reload();
+});
+
+ipcMain.on('open-view-window', () => {
+  openViewWindow();
+});
 
 // IPC Electron Store
 const store = new Store();
@@ -146,9 +156,41 @@ const createWindow = () => {
   });
 };
 
-const loadExtension = async () => {
+const openViewWindow = () => {
+  if (viewWindow) {
+    viewWindow.focus();
+    return;
+  }
+
+  viewWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    autoHideMenuBar: true,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+    },
+  });
+
+  // and load the index.html of the app.
+  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+    viewWindow.loadURL(`${MAIN_WINDOW_VITE_DEV_SERVER_URL}/#/view`);
+  } else {
+    viewWindow.loadFile(
+      path.join(
+        __dirname,
+        `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html/#/view`,
+      ),
+    );
+  }
+
+  viewWindow.on('close', () => {
+    viewWindow = null;
+  });
+};
+
+const loadExtensions = async () => {
   try {
-    const result = await installExtension(
+    const result = await installExtensions(
       [REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS],
       { loadExtensionOptions: { allowFileAccess: true } },
     );
@@ -171,7 +213,7 @@ const listSerialPorts = async () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
-  loadExtension();
+  loadExtensions();
   initDatabase();
   createWindow();
   // listSerialPorts();

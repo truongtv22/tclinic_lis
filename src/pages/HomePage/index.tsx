@@ -71,31 +71,31 @@ export function HomePage() {
   }, [selected]);
 
   useEffect(() => {
-    const subscription = window.electron.serialport.on('open', () => {
+    const openSub = window.electron.serialport.on('open', () => {
       setConnected(true);
     });
-    return () => subscription();
-  }, []);
 
-  useEffect(() => {
-    const subscription = window.electron.serialport.on('error', (error: any) => {
-      notificationApi.error({ message: 'SerialPort', description: error.message });
+    const errorSub = window.electron.serialport.on('error', (error: any) => {
+      notificationApi.error({
+        message: 'SerialPort',
+        description: error.message,
+      });
     });
-    return () => subscription();
-  }, []);
 
-  useEffect(() => {
-    const subscription = window.electron.serialport.on('close', () => {
-      setConnected(false);
-    });
-    return () => subscription();
-  }, []);
-
-  useEffect(() => {
-    const subscription = window.electron.serialport.on('data', (data) => {
+    const dataSubs = window.electron.serialport.on('data', (data) => {
       console.log('HomePage->data', data);
     });
-    return () => subscription();
+
+    const closeSub = window.electron.serialport.on('close', () => {
+      setConnected(false);
+    });
+
+    return () => {
+      openSub();
+      errorSub();
+      dataSubs();
+      closeSub();
+    };
   }, []);
 
   const onAdd = () => {
@@ -180,7 +180,9 @@ export function HomePage() {
     window.electron.serialport.disconnect();
   };
 
-  const onViewLog = () => {};
+  const onViewLog = () => {
+    window.electron.ipcRenderer.send('open-view-window');
+  };
 
   return (
     <Spin spinning={loading} tip="Đang tải">

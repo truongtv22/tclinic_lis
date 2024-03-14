@@ -3,6 +3,15 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
 contextBridge.exposeInMainWorld('electron', {
+  ipcRenderer: {
+    send(channel: string, ...args: any[]) {
+      ipcRenderer.send(channel, ...args);
+    },
+    invoke: async (channel: string, ...args: any[]) => {
+      const result = await ipcRenderer.invoke(channel, ...args);
+      return result;
+    },
+  },
   store: {
     get(key: string) {
       return ipcRenderer.sendSync('electron-store-get', key);
