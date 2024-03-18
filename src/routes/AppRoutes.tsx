@@ -1,6 +1,6 @@
 import { Route, Routes } from 'react-router-dom';
 
-import { HomePage, LoginPage, ManagePage, SettingPage, ViewPage } from 'pages';
+import { HomePage, LoginPage, ManagePage, SettingPage, ViewPage, ResultPage } from 'pages';
 import { AppLayout, PageLayout } from 'layouts';
 
 export const AppRoutes = () => {
@@ -10,6 +10,7 @@ export const AppRoutes = () => {
         <Route path="/" element={<HomePage />} />
         <Route path="/manage" element={<ManagePage />} />
         <Route path="/setting" element={<SettingPage />} />
+        <Route path="/result" element={<ResultPage />} />
       </Route>
       <Route element={<AppLayout />}>
         <Route path="/login" element={<LoginPage />} />
