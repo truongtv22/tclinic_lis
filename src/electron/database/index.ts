@@ -24,6 +24,15 @@ export function initDatabase() {
     )`);
   }
 
+  if (!tables.includes("dbo.dmkhopma")) {
+    db.exec(`create table if not exists [dbo.dmkhopma] (
+      lab TEXT NOT NULL,
+      macs TEXT NOT NULL,
+      maxn TEXT NOT NULL,
+      PRIMARY KEY (lab, macs, maxn)
+    )`);
+  }
+
   if (!tables.includes('dbo.connectmanage')) {
     db.exec(`create table if not exists [dbo.connectmanage] (
       id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,

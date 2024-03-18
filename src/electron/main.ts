@@ -5,9 +5,9 @@ import installExtensions, {
   REDUX_DEVTOOLS,
 } from 'electron-devtools-installer';
 import Store from 'electron-store';
-import { SerialPort, ReadlineParser } from 'serialport';
+import { SerialPort } from 'serialport';
 import { initDatabase } from './database';
-import { ByteLengthParser } from '@serialport/parser-byte-length';
+import { Transform, TransformCallback, TransformOptions } from 'stream';
 import connectmanageApi from './database/connectmanageApi';
 import { StatefullBrowserWindow } from 'stateful-electron-window';
 
@@ -44,6 +44,37 @@ ipcMain.on('electron-store-delete', async (event, key) => {
 // IPC SerialPort
 let port: SerialPort = null;
 
+// https://github.com/serialport/node-serialport/issues/1178
+class SlipParser extends Transform {
+  buffer: Buffer;
+
+  constructor(options = {}) {
+    super(options);
+    this.buffer = Buffer.alloc(0);
+  }
+
+  _transform(chunk: Buffer, encoding: BufferEncoding, cb: TransformCallback) {
+    const chunkLength = chunk.length
+    for (let i = 0; i < chunkLength; i++) {
+      if (chunk[i] === 0x03) {
+        this.push(this.buffer);
+        this.buffer = Buffer.alloc(0);
+      } else if (chunk[i] === 0x02) {
+        this.buffer = Buffer.alloc(0);
+      } else {
+        this.buffer = Buffer.concat([this.buffer, Buffer.from([chunk[i]])]);
+      }
+    }
+    cb();
+  }
+
+  _flush(cb: TransformCallback) {
+    this.push(this.buffer);
+    this.buffer = Buffer.alloc(0);
+    cb();
+  }
+}
+
 ipcMain.on('serialport-connect', (event, params) => {
   const options: any = {
     path: params.comport,
@@ -56,10 +87,15 @@ ipcMain.on('serialport-connect', (event, params) => {
     options.rtsMode = params.rtsmode;
   }
   port = new SerialPort(options);
-  const parser = new ReadlineParser({ delimiter: '\r\n' });
+  // const parser = new ReadlineParser({ delimiter: '\r\n' });
+  // port.pipe(parser);
+
+  const parser = new SlipParser();
   port.pipe(parser);
 
-  // parser: SerialPort.parsers.byteDelimiter([[0x02], [0x0D]])
+  // parser.on('data', (data) => {
+  //   console.log('serial port data->parser');
+  // });
 
   port.on('open', () => {
     console.log('serial port open');
@@ -76,7 +112,7 @@ ipcMain.on('serialport-connect', (event, params) => {
     event.reply('serialport-close');
   });
 
-  port.on('data', (data: any) => {
+  parser.on('data', (data: any) => {
     console.log(
       'serial port data',
       data,
