@@ -1,7 +1,11 @@
-import { Outlet, useNavigate } from 'react-router-dom';
-import { Menu, Avatar, Layout, Dropdown, Typography, theme } from 'antd';
+import { useDispatch, useSelector } from 'react-redux';
+import { Navigate, Outlet, useNavigate } from 'react-router-dom';
+import { Menu, Avatar, Layout, Dropdown, Typography } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 import { useLocation } from 'react-router-dom';
+
+import { selectIsAuth } from 'store/app/selectors';
+import { appActions } from 'store/app/slice';
 
 const menus = [
   { key: '/', label: 'Hệ thống' },
@@ -11,12 +15,15 @@ const menus = [
 ];
 
 export const PageLayout = () => {
-  const {
-    token: { colorBgContainer, borderRadiusLG },
-  } = theme.useToken();
+  const dispatch = useDispatch();
 
   const navigate = useNavigate();
   const { pathname } = useLocation();
+
+  const isAuth = useSelector(selectIsAuth);
+  if (!isAuth) {
+    return <Navigate to="/login" replace />;
+  }
 
   return (
     <Layout>
@@ -49,6 +56,7 @@ export const PageLayout = () => {
               {
                 key: 'logout',
                 label: 'Đăng xuất',
+                onClick: () => dispatch(appActions.setAuth(false)),
               },
             ],
           }}
@@ -63,15 +71,6 @@ export const PageLayout = () => {
         </Dropdown>
       </Layout.Header>
       <Layout.Content className="pt-8 px-12">
-        {/* <div
-          style={{
-            padding: 24,
-            minHeight: 280,
-            background: colorBgContainer,
-            borderRadius: borderRadiusLG,
-          }}
-        >
-        </div> */}
         <Outlet />
       </Layout.Content>
       <Layout.Footer className="text-center">

@@ -3,6 +3,15 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
 contextBridge.exposeInMainWorld('electron', {
+  ipcRenderer: {
+    send(channel: string, ...args: any[]) {
+      ipcRenderer.send(channel, ...args);
+    },
+    invoke: async (channel: string, ...args: any[]) => {
+      const result = await ipcRenderer.invoke(channel, ...args);
+      return result;
+    },
+  },
   store: {
     get(key: string) {
       return ipcRenderer.sendSync('electron-store-get', key);
@@ -15,11 +24,22 @@ contextBridge.exposeInMainWorld('electron', {
     },
   },
   serialport: {
-    connect: (options: any) => {
-      ipcRenderer.send('serialport-connect', options);
+    connect: (params: any) => {
+      ipcRenderer.send('serialport-connect', params);
     },
     disconnect: () => {
       ipcRenderer.send('serialport-disconnect');
+    },
+    on: (event: any, listener: (...args: unknown[]) => void) => {
+      const subscription = (_event: any, ...args: unknown[]) =>
+        listener(...args);
+      ipcRenderer.on(`serialport-${event}`, subscription);
+      return () => {
+        ipcRenderer.removeListener(`serialport-${event}`, subscription);
+      };
+    },
+    once: (event: any, listener: (...args: unknown[]) => void) => {
+      ipcRenderer.once(event, (_event, ...args) => listener(...args));
     },
   },
 });
@@ -30,11 +50,11 @@ contextBridge.exposeInMainWorld('dbApi', {
   },
   createConnect: async (values: any) => {
     return ipcRenderer.invoke('connectmanage-create', values);
-  }
-});
-
-document.addEventListener('DOMContentLoaded', async () => {
-  ipcRenderer.on('serialport-data', (event, data) => {
-    console.log('serialport-data', data);
-  });
+  },
+  updateConnect: async (values: any) => {
+    return ipcRenderer.invoke('connectmanage-update', values);
+  },
+  deleteConnect: async (id: any) => {
+    return ipcRenderer.invoke('connectmanage-delete', id);
+  },
 });

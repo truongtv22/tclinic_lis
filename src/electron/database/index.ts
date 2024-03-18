@@ -3,7 +3,7 @@ import Sqlite from 'better-sqlite3';
 let db: Sqlite.Database;
 
 export default function connect() {
-  const conn = new Sqlite('tclinic-lis.db', { verbose: console.log });
+  const conn = new Sqlite('tcliniclis.db', { verbose: console.log });
   return conn
 }
 
@@ -27,21 +27,20 @@ export function initDatabase() {
   if (!tables.includes('dbo.connectmanage')) {
     db.exec(`create table if not exists [dbo.connectmanage] (
       id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-      cong TEXT NOT NULL, /* tên kết nối */
-      comp TEXT NOT NULL, /* tên máy tính */
-      lab TEXT NOT NULL,
+      cong TEXT, /* tên kết nối */
+      comp TEXT, /* tên máy tính */
+      lab TEXT,
       functionname TEXT,
       kieuketnoi TEXT,
       comport TEXT,
-      baudrate TEXT,
-      /* handshake TEXT, */
+      baudrate INTEGER,
       rtsmode TEXT,
-      stopbits TEXT,
-      databits TEXT,
+      stopbits INTEGER,
+      databits INTEGER,
       parity TEXT,
-      readtimeout TEXT,
-      writetimeout TEXT,
-      connect INTEGER NOT NULL,
+      readtimeout INTEGER,
+      writetimeout INTEGER,
+      connect INTEGER,
       ipport TEXT,
       autosendhis INTEGER,
       folder TEXT,
@@ -50,9 +49,9 @@ export function initDatabase() {
       client INTEGER,
       closeport INTEGER,
       bantd INTEGER,
-      sokytubarcode INTEGER NOT NULL DEFAULT 4,
+      sokytubarcode INTEGER DEFAULT 4,
       nhapbarcode INTEGER,
-      decimalsymbol TEXT NOT NULL DEFAULT ",",
+      decimalsymbol TEXT DEFAULT ",",
       createtime int,
       updatetime int
     )`);

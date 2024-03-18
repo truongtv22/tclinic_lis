@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, Menu } from 'electron';
 import path from 'path';
-import installExtension, {
+import installExtensions, {
   REACT_DEVELOPER_TOOLS,
   REDUX_DEVTOOLS,
 } from 'electron-devtools-installer';
@@ -16,6 +16,18 @@ if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
+let mainWindow: BrowserWindow | null = null;
+let viewWindow: BrowserWindow | null = null;
+
+// IPC Window
+ipcMain.on('main-window-reload', () => {
+  mainWindow?.reload();
+});
+
+ipcMain.on('open-view-window', () => {
+  openViewWindow();
+});
+
 // IPC Electron Store
 const store = new Store();
 
@@ -30,10 +42,20 @@ ipcMain.on('electron-store-delete', async (event, key) => {
 });
 
 // IPC SerialPort
-let port: any = null;
+let port: SerialPort = null;
 
-ipcMain.on('serialport-connect', (event, options) => {
-  port = new SerialPort({ path: options.path, baudRate: options.baudRate });
+ipcMain.on('serialport-connect', (event, params) => {
+  const options: any = {
+    path: params.comport,
+    baudRate: params.baudrate,
+    dataBits: params.databits,
+    stopBits: params.stopbits,
+    parity: params.parity,
+  };
+  if (process.platform === 'win32') {
+    options.rtsMode = params.rtsmode;
+  }
+  port = new SerialPort(options);
   const parser = new ReadlineParser({ delimiter: '\r\n' });
   port.pipe(parser);
 
@@ -41,17 +63,20 @@ ipcMain.on('serialport-connect', (event, options) => {
 
   port.on('open', () => {
     console.log('serial port open');
+    event.reply('serialport-open');
   });
 
-  port.on('error', (error) => {
+  port.on('error', (error: any) => {
     console.log('serial port error', error);
+    event.reply('serialport-error', error);
   });
 
   port.on('close', () => {
     console.log('serial port close');
+    event.reply('serialport-close');
   });
 
-  port.on('data', (data) => {
+  port.on('data', (data: any) => {
     console.log(
       'serial port data',
       data,
@@ -62,7 +87,7 @@ ipcMain.on('serialport-connect', (event, options) => {
   });
 });
 
-ipcMain.on('serialport-disconnect', (event, options) => {
+ipcMain.on('serialport-disconnect', (event) => {
   if (port) {
     port.close();
   }
@@ -79,9 +104,19 @@ ipcMain.handle('connectmanage-create', async (event, values) => {
   return result;
 });
 
+ipcMain.handle('connectmanage-update', async (event, values) => {
+  const result = connectmanageApi.update(values);
+  return result;
+});
+
+ipcMain.handle('connectmanage-delete', async (event, id) => {
+  const result = connectmanageApi.delete(id);
+  return result;
+});
+
 const createWindow = () => {
   // Create the browser window.
-  const mainWindow = new StatefullBrowserWindow({
+  mainWindow = new StatefullBrowserWindow({
     width: 1270,
     height: 860,
     minWidth: 800,
@@ -105,21 +140,57 @@ const createWindow = () => {
     );
   }
 
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
+
   // Open the DevTools.
-  mainWindow.webContents.on('did-finish-load', () => {
-  //   // We close the DevTools so that it can be reopened and redux reconnected.
-  //   // This is a workaround for a bug in redux devtools.
-  //   mainWindow.webContents.closeDevTools();
-  //   mainWindow.webContents.once('devtools-opened', () => {
-  //     mainWindow.focus();
-  //   });
-    mainWindow.webContents.openDevTools();
+  mainWindow?.webContents.on('did-finish-load', () => {
+    // We close the DevTools so that it can be reopened and redux reconnected.
+    // This is a workaround for a bug in redux devtools.
+    // mainWindow?.webContents.closeDevTools();
+    // mainWindow?.webContents.once('devtools-opened', () => {
+    //   mainWindow?.focus();
+    // });
+    mainWindow?.webContents.openDevTools();
   });
 };
 
-const loadExtension = async () => {
+const openViewWindow = () => {
+  if (viewWindow) {
+    viewWindow.focus();
+    return;
+  }
+
+  viewWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    autoHideMenuBar: true,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+    },
+  });
+
+  // and load the index.html of the app.
+  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+    viewWindow.loadURL(`${MAIN_WINDOW_VITE_DEV_SERVER_URL}/#/view`);
+  } else {
+    viewWindow.loadFile(
+      path.join(
+        __dirname,
+        `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html/#/view`,
+      ),
+    );
+  }
+
+  viewWindow.on('close', () => {
+    viewWindow = null;
+  });
+};
+
+const loadExtensions = async () => {
   try {
-    const result = await installExtension(
+    const result = await installExtensions(
       [REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS],
       { loadExtensionOptions: { allowFileAccess: true } },
     );
@@ -142,7 +213,7 @@ const listSerialPorts = async () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
-  loadExtension();
+  loadExtensions();
   initDatabase();
   createWindow();
   // listSerialPorts();
@@ -178,10 +249,8 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
+  if (mainWindow === null) createWindow();
+  // if (BrowserWindow.getAllWindows().length === 0) {
+  //   createWindow();
+  // }
 });
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.
