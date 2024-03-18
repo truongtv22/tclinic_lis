@@ -3,7 +3,7 @@ import Sqlite from 'better-sqlite3';
 let db: Sqlite.Database;
 
 export default function connect() {
-  const conn = new Sqlite('tcliniclis.db', { verbose: console.log });
+  const conn = new Sqlite('tclinic-lis.db', { verbose: console.log });
   return conn
 }
 
