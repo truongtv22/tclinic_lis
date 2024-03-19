@@ -54,23 +54,17 @@ class SlipParser extends Transform {
   }
 
   _transform(chunk: Buffer, encoding: BufferEncoding, cb: TransformCallback) {
-    const chunkLength = chunk.length
+    const chunkLength = chunk.length;
     for (let i = 0; i < chunkLength; i++) {
-      if (chunk[i] === 0x03) {
-        this.push(this.buffer);
+      if (chunk[i] === 0x03 /* ETX */) {
+        if (this.buffer[0] === 0x02) this.push(this.buffer);
         this.buffer = Buffer.alloc(0);
-      } else if (chunk[i] === 0x02) {
-        this.buffer = Buffer.alloc(0);
-      } else {
+      } else if (chunk[i] === 0x02 /* STX */) {
+        this.buffer = Buffer.from([0x02]);
+      } else if (this.buffer[0] === 0x02) {
         this.buffer = Buffer.concat([this.buffer, Buffer.from([chunk[i]])]);
       }
     }
-    cb();
-  }
-
-  _flush(cb: TransformCallback) {
-    this.push(this.buffer);
-    this.buffer = Buffer.alloc(0);
     cb();
   }
 }
@@ -87,15 +81,21 @@ ipcMain.on('serialport-connect', (event, params) => {
     options.rtsMode = params.rtsmode;
   }
   port = new SerialPort(options);
-  // const parser = new ReadlineParser({ delimiter: '\r\n' });
-  // port.pipe(parser);
 
   const parser = new SlipParser();
   port.pipe(parser);
 
-  // parser.on('data', (data) => {
-  //   console.log('serial port data->parser');
-  // });
+  parser.on('data', (data: Buffer) => {
+    // Use regex to match Control characters in Unicode and replace them with an empty string
+    // https://en.wikipedia.org/wiki/Control_character#In_Unicode
+    const str = data
+      .toString()
+      .replace(/[\u0000-\u001F\u007F-\u009F]/g, '') // Use regex to match Control characters in Unicode and replace them with an empty string
+      .replace(/^\s+|\s+$/g, '') // Remove leading and trailing whitespace
+      .replace(/\r\n/g, '\n') // Replace "\r\n" with "\n"
+      .replace(/\n{2,}/g, '\n'); // Remove duplicate newline characters
+    event.reply('serialport-data', str);
+  });
 
   port.on('open', () => {
     console.log('serial port open');
@@ -112,15 +112,9 @@ ipcMain.on('serialport-connect', (event, params) => {
     event.reply('serialport-close');
   });
 
-  parser.on('data', (data: any) => {
-    console.log(
-      'serial port data',
-      data,
-      JSON.stringify(data.toString()),
-      JSON.stringify(data.toString('hex')),
-    );
-    event.reply('serialport-data', data.toString());
-  });
+  // parser.on('data', (data: any) => {
+  //   event.reply('serialport-data', data.toString());
+  // });
 });
 
 ipcMain.on('serialport-disconnect', (event) => {
