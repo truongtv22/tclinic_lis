@@ -90,11 +90,31 @@ ipcMain.on('serialport-connect', (event, params) => {
     // https://en.wikipedia.org/wiki/Control_character#In_Unicode
     const str = data
       .toString()
-      .replace(/[\u0000-\u001F\u007F-\u009F]/g, '') // Use regex to match Control characters in Unicode and replace them with an empty string
+      .replace(/[\u0000-\u001F\u007F-\u009F]/g, '\n') // Use regex to match Control characters in Unicode and replace them with newline
       .replace(/^\s+|\s+$/g, '') // Remove leading and trailing whitespace
       .replace(/\r\n/g, '\n') // Replace "\r\n" with "\n"
       .replace(/\n{2,}/g, '\n'); // Remove duplicate newline characters
-    event.reply('serialport-data', str);
+    const lines = str.split('\n');
+    const result: any = { date: new Date().toISOString() };
+
+    // Extract computer and barcode
+    result.barcode = lines[0].split('-').at(-1);
+
+    // Extract other indexes
+    for (let i = 1; i < lines.length; i++) {
+      const dataIndex = lines[i]
+        .replace(/^\s+|\s+$/g, '') // Remove leading and trailing whitespace
+        .replace(/\s{2,}/g, ' '); // Remove duplicate whitespace
+      const parts = dataIndex.split(' ');
+      const len = parts.length;
+      if (len > 1) {
+        result[parts.slice(0, -1).join(' ')] = parts.at(-1);
+      } else if (len > 0) {
+        result[parts[0]] = null;
+      }
+    }
+
+    event.reply('serialport-data', result);
   });
 
   port.on('open', () => {
