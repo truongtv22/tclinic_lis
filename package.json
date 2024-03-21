@@ -51,6 +51,7 @@
     "@uiw/react-split": "^5.9.3",
     "ahooks": "^3.7.10",
     "antd": "^5.13.3",
+    "axios": "^1.6.8",
     "better-sqlite3": "^9.4.3",
     "dayjs": "^1.11.10",
     "electron-squirrel-startup": "^1.0.0",

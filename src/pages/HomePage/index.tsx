@@ -82,8 +82,9 @@ export function HomePage() {
       });
     });
 
-    const dataSubs = window.electron.serialport.on('data', (data) => {
+    const dataSub = window.electron.serialport.on('data', (data) => {
       console.log('HomePage->data', data);
+
     });
 
     const closeSub = window.electron.serialport.on('close', () => {
@@ -93,7 +94,7 @@ export function HomePage() {
     return () => {
       openSub();
       errorSub();
-      dataSubs();
+      dataSub();
       closeSub();
     };
   }, []);
@@ -207,7 +208,7 @@ export function HomePage() {
                         onSelect(item);
                       }}
                     >
-                      <span className="line-clamp-2">{item.lab}</span>
+                      <span className="line-clamp-2">{item.comp}</span>
                     </Radio>
                   </div>
                 ))}
@@ -276,7 +277,7 @@ export function HomePage() {
               </Row>
             </Row>
             <Form.Item name="id" hidden />
-            <Form.Item name="lab" label="Tên thiết bị">
+            <Form.Item name="comp" label="Tên thiết bị">
               <Input />
             </Form.Item>
             <Form.Item

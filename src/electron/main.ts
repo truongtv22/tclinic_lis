@@ -61,7 +61,7 @@ class SlipParser extends Transform {
         this.buffer = Buffer.alloc(0);
       } else if (chunk[i] === 0x02 /* STX */) {
         this.buffer = Buffer.from([0x02]);
-      } else if (this.buffer[0] === 0x02) {
+      } else if (this.buffer[0] === 0x02 /* STX */) {
         this.buffer = Buffer.concat([this.buffer, Buffer.from([chunk[i]])]);
       }
     }
@@ -98,7 +98,10 @@ ipcMain.on('serialport-connect', (event, params) => {
     const result: any = { date: new Date().toISOString() };
 
     // Extract computer and barcode
-    result.barcode = lines[0].split('-').at(-1);
+    result.barcode = lines[0] // BIOWAY B-11  001-001
+      .split('-') // split string with separator -
+      .at(-1) // get last string
+      .padStart(4, '0'); // fill zero at start
 
     // Extract other indexes
     for (let i = 1; i < lines.length; i++) {
@@ -108,9 +111,11 @@ ipcMain.on('serialport-connect', (event, params) => {
       const parts = dataIndex.split(' ');
       const len = parts.length;
       if (len > 1) {
-        result[parts.slice(0, -1).join(' ')] = parts.at(-1);
+        const index = parts.slice(0, -1).join(' ');
+        result[index] = parts.at(-1) === '-' ? 'Âm tính' : parts.at(-1);
       } else if (len > 0) {
-        result[parts[0]] = null;
+        const index = parts[0];
+        result[index] = null;
       }
     }
 

@@ -4,7 +4,7 @@ let db: Sqlite.Database;
 
 export default function connect() {
   const conn = new Sqlite('tclinic-lis.db', { verbose: console.log });
-  return conn
+  return conn;
 }
 
 export function initDatabase() {
@@ -24,7 +24,7 @@ export function initDatabase() {
     )`);
   }
 
-  if (!tables.includes("dbo.dmkhopma")) {
+  if (!tables.includes('dbo.dmkhopma')) {
     db.exec(`create table if not exists [dbo.dmkhopma] (
       lab TEXT NOT NULL,
       macs TEXT NOT NULL,
@@ -61,8 +61,30 @@ export function initDatabase() {
       sokytubarcode INTEGER DEFAULT 4,
       nhapbarcode INTEGER,
       decimalsymbol TEXT DEFAULT ",",
-      createtime int,
-      updatetime int
+      loaidongbo INTEGER DEFAULT 0,
+      createtime INTEGER,
+      updatetime INTEGER
+    )`);
+  }
+
+  if (!tables.includes('dbo.KQ_BW200')) {
+    db.exec(`create table if not exists [dbo.KQ_BW200] (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      barcode TEXT, /* mã barcode */
+      sendhis INTEGER DEFAULT 0, /* flag send HIS */
+      barcode_edit TEXT,
+      URO TEXT,
+      BIL TEXT,
+      KET TEXT,
+      BLD TEXT,
+      PRO TEXT,
+      NIT TEXT,
+      LEU TEXT,
+      GLU TEXT,
+      SG TEXT,
+      PH TEXT,
+      VC TEXT,
+      datetime INTEGER
     )`);
   }
 }
