@@ -1,30 +1,42 @@
 import connect from './index';
 
 export default {
-  getDevice() {
-    const db = connect();
-
-    const stmTotal = db.prepare('select count(*) total from device');
-    const stmList = db.prepare('select * from device ORDER BY createTime ASC');
-
+  create(values: any = {}) {
     try {
-      const total = stmTotal.all();
-      const data = stmList.all();
-      return { success: true, data, total };
-    } catch (error) {
-      return { success: false, msg: error };
-    }
-  },
-  addDevice({ name }: any) {
-    const db = connect();
-    const createTime = Date.now();
+      const db = connect();
 
-    const stmAdd = db.prepare(
-      `INSERT INTO device (name, createTime, updateTime) values (@name, @createTime, @updateTime)`,
-    );
-
-    try {
-      stmAdd.run({ name, createTime, updateTime: createTime });
+      const stmAdd = db.prepare(
+        `INSERT INTO [dbo.KQ_BW200] (
+          barcode,
+          URO,
+          BIL,
+          KET,
+          BLD,
+          PRO,
+          NIT,
+          LEU,
+          GLU,
+          SG,
+          PH,
+          VC,
+          datetime
+        ) VALUES (
+          @barcode,
+          @URO,
+          @BIL,
+          @KET,
+          @BLD,
+          @PRO,
+          @NIT,
+          @LEU,
+          @GLU,
+          @SG,
+          @PH,
+          @VC,
+          @datetime
+        )`,
+      );
+      stmAdd.run(values);
       return { success: true };
     } catch (error) {
       return { success: false, msg: error };

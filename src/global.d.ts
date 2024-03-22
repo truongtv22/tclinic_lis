@@ -12,7 +12,7 @@ declare global {
       };
       serialport: {
         connect: (params: any) => void;
-        disconnect: () => void;
+        disconnect: (params?: any) => void;
         on: (event: any, listener: (...args: unknown[]) => void) => () => void;
         one: (event: any, listener: (...args: unknown[]) => void) => void;
       };

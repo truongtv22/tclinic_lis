@@ -1,5 +1,7 @@
 import { app, BrowserWindow, ipcMain, Menu } from 'electron';
+import fs from 'fs';
 import path from 'path';
+import dayjs from 'dayjs';
 import installExtensions, {
   REACT_DEVELOPER_TOOLS,
   REDUX_DEVTOOLS,
@@ -8,6 +10,8 @@ import Store from 'electron-store';
 import { SerialPort } from 'serialport';
 import { initDatabase } from './database';
 import { Transform, TransformCallback, TransformOptions } from 'stream';
+import kqBW200Api from './database/kqBW200Api';
+import dmkhopmaApi from './database/dmkhopma';
 import connectmanageApi from './database/connectmanageApi';
 import { StatefullBrowserWindow } from 'stateful-electron-window';
 
@@ -42,7 +46,8 @@ ipcMain.on('electron-store-delete', async (event, key) => {
 });
 
 // IPC SerialPort
-let port: SerialPort = null;
+const portManager: { [key: string]: SerialPort } = {};
+// let port: SerialPort = null;
 
 // https://github.com/serialport/node-serialport/issues/1178
 class SlipParser extends Transform {
@@ -69,7 +74,7 @@ class SlipParser extends Transform {
   }
 }
 
-ipcMain.on('serialport-connect', (event, params) => {
+ipcMain.on('serialport-connect', async (event, { id, lab, ...params }) => {
   const options: any = {
     path: params.comport,
     baudRate: params.baudrate,
@@ -80,12 +85,23 @@ ipcMain.on('serialport-connect', (event, params) => {
   if (process.platform === 'win32') {
     options.rtsMode = params.rtsmode;
   }
-  port = new SerialPort(options);
+  portManager[id] = new SerialPort(options);
+
+  // Create folder if doesnt exist
+  const folderBackup = path.join(process.cwd(), 'backup/BW200');
+  const fileName = `${dayjs().format('YYYYMMDD')}.txt`;
+  const filePath = path.join(folderBackup, fileName);
+
+  if (!fs.existsSync(folderBackup)) {
+    fs.mkdirSync(folderBackup, { recursive: true });
+  }
 
   const parser = new SlipParser();
-  port.pipe(parser);
+  portManager[id].pipe(parser);
 
-  parser.on('data', (data: Buffer) => {
+  const connDevice: any = connectmanageApi.getById(id)?.data;
+
+  parser.on('data', async (data: Buffer) => {
     // Use regex to match Control characters in Unicode and replace them with an empty string
     // https://en.wikipedia.org/wiki/Control_character#In_Unicode
     const str = data
@@ -94,8 +110,18 @@ ipcMain.on('serialport-connect', (event, params) => {
       .replace(/^\s+|\s+$/g, '') // Remove leading and trailing whitespace
       .replace(/\r\n/g, '\n') // Replace "\r\n" with "\n"
       .replace(/\n{2,}/g, '\n'); // Remove duplicate newline characters
+
+    // Write data to backup file
+    fs.appendFile(filePath, `${str}\n`, (error) => {
+      if (error) {
+        console.log('Error write backup file', error);
+      } else {
+        console.log('Write backup file successfully:', filePath);
+      }
+    });
+
     const lines = str.split('\n');
-    const result: any = { date: new Date().toISOString() };
+    const result: any = { datetime: Date.now() };
 
     // Extract computer and barcode
     result.barcode = lines[0] // BIOWAY B-11  001-001
@@ -111,28 +137,39 @@ ipcMain.on('serialport-connect', (event, params) => {
       const parts = dataIndex.split(' ');
       const len = parts.length;
       if (len > 1) {
-        const index = parts.slice(0, -1).join(' ');
-        result[index] = parts.at(-1) === '-' ? 'Âm tính' : parts.at(-1);
+        const chiso = parts.slice(0, -1).join(' ');
+        const value = parts.at(-1) === '-' ? 'Âm tính' : parts.at(-1);
+        result[chiso] = value;
       } else if (len > 0) {
-        const index = parts[0];
-        result[index] = null;
+        const chiso = parts[0];
+        result[chiso] = null;
       }
+    }
+
+    // Save into result table
+    kqBW200Api.create(result);
+
+    const dmchiso = dmkhopmaApi.getByLab(connDevice?.lab)?.data;
+    const chisoById: any = {};
+    for (let i = 0; i < dmchiso.length; i++) {
+      const chiso: any = dmchiso[i];
+      chisoById[chiso.maxn] = chiso.macs;
     }
 
     event.reply('serialport-data', result);
   });
 
-  port.on('open', () => {
+  portManager[id].on('open', () => {
     console.log('serial port open');
     event.reply('serialport-open');
   });
 
-  port.on('error', (error: any) => {
+  portManager[id].on('error', (error: any) => {
     console.log('serial port error', error);
     event.reply('serialport-error', error);
   });
 
-  port.on('close', () => {
+  portManager[id].on('close', () => {
     console.log('serial port close');
     event.reply('serialport-close');
   });
@@ -142,9 +179,9 @@ ipcMain.on('serialport-connect', (event, params) => {
   // });
 });
 
-ipcMain.on('serialport-disconnect', (event) => {
-  if (port) {
-    port.close();
+ipcMain.on('serialport-disconnect', (event, { id }) => {
+  if (portManager[id] && portManager[id].isOpen) {
+    portManager[id].close();
   }
 });
 

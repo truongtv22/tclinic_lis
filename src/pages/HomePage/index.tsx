@@ -84,7 +84,6 @@ export function HomePage() {
 
     const dataSub = window.electron.serialport.on('data', (data) => {
       console.log('HomePage->data', data);
-
     });
 
     const closeSub = window.electron.serialport.on('close', () => {
@@ -178,7 +177,8 @@ export function HomePage() {
   };
 
   const onClose = () => {
-    window.electron.serialport.disconnect();
+    const params = form.getFieldsValue();
+    window.electron.serialport.disconnect({ id: params.id });
   };
 
   const onViewLog = () => {
