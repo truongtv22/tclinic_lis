@@ -84,6 +84,7 @@ export function HomePage() {
 
     const dataSub = window.electron.serialport.on('data', (data) => {
       console.log('HomePage->data', data);
+      window.electron.ipcRenderer.send('open-view-window');
     });
 
     const closeSub = window.electron.serialport.on('close', () => {

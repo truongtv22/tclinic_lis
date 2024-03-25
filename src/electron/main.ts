@@ -124,10 +124,11 @@ ipcMain.on('serialport-connect', async (event, { id, lab, ...params }) => {
     const result: any = { datetime: Date.now() };
 
     // Extract computer and barcode
-    result.barcode = lines[0] // BIOWAY B-11  001-001
+    const barcode = lines[0] // BIOWAY B-11  001-001
       .split('-') // split string with separator -
       .at(-1) // get last string
       .padStart(4, '0'); // fill zero at start
+    result.barcode = barcode;
 
     // Extract other indexes
     for (let i = 1; i < lines.length; i++) {
@@ -155,6 +156,22 @@ ipcMain.on('serialport-connect', async (event, { id, lab, ...params }) => {
       const chiso: any = dmchiso[i];
       chisoById[chiso.maxn] = chiso.macs;
     }
+
+    // const payload: any = {};
+    // payload.mamay = connDevice?.lab;
+    // payload.barcode = barcode;
+    // payload.kqxetnghiem = [];
+    // payload.loaidongbo = connDevice?.loaidongbo === 1 ? 'ONE' : '';
+    // payload.ngaythuchien = new Date(result.datetime).toISOString();
+
+    // for (const chiso in chisoById) {
+    //   const chiso_id = chisoById[chiso];
+    //   payload.kqxetnghiem.push({
+    //     chiso_id,
+    //     maxn: chiso,
+    //     ketqua: result[chiso],
+    //   });
+    // }
 
     event.reply('serialport-data', result);
   });
