@@ -24,11 +24,11 @@ let mainWindow: BrowserWindow | null = null;
 let viewWindow: BrowserWindow | null = null;
 
 // IPC Window
-ipcMain.on('main-window-reload', () => {
+ipcMain.on('main-window-reload', (event) => {
   mainWindow?.reload();
 });
 
-ipcMain.on('open-view-window', () => {
+ipcMain.on('open-view-window', (event) => {
   openViewWindow();
 });
 
@@ -88,7 +88,7 @@ ipcMain.on('serialport-connect', async (event, { id, lab, ...params }) => {
   portManager[id] = new SerialPort(options);
 
   // Create folder if doesnt exist
-  const folderBackup = path.join(process.cwd(), 'backup/BW200');
+  const folderBackup = path.join(process.cwd(), 'backup', lab);
   const fileName = `${dayjs().format('YYYYMMDD')}.txt`;
   const filePath = path.join(folderBackup, fileName);
 
@@ -99,12 +99,12 @@ ipcMain.on('serialport-connect', async (event, { id, lab, ...params }) => {
   const parser = new SlipParser();
   portManager[id].pipe(parser);
 
-  const connDevice: any = connectmanageApi.getById(id)?.data;
+  // const connDevice: any = connectmanageApi.getById(id)?.data;
 
-  parser.on('data', async (data: Buffer) => {
+  parser.on('data', async (buffer: Buffer) => {
     // Use regex to match Control characters in Unicode and replace them with an empty string
     // https://en.wikipedia.org/wiki/Control_character#In_Unicode
-    const str = data
+    const str = buffer
       .toString()
       .replace(/[\u0000-\u001F\u007F-\u009F]/g, '\n') // Use regex to match Control characters in Unicode and replace them with newline
       .replace(/^\s+|\s+$/g, '') // Remove leading and trailing whitespace
@@ -132,15 +132,15 @@ ipcMain.on('serialport-connect', async (event, { id, lab, ...params }) => {
 
     // Extract other indexes
     for (let i = 1; i < lines.length; i++) {
-      const dataIndex = lines[i]
+      const chisoStr = lines[i]
         .replace(/^\s+|\s+$/g, '') // Remove leading and trailing whitespace
         .replace(/\s{2,}/g, ' '); // Remove duplicate whitespace
-      const parts = dataIndex.split(' ');
+      const parts = chisoStr.split(' ');
       const len = parts.length;
       if (len > 1) {
         const chiso = parts.slice(0, -1).join(' ');
-        const value = parts.at(-1) === '-' ? 'Âm tính' : parts.at(-1);
-        result[chiso] = value;
+        const ketqua = parts.at(-1) === '-' ? 'Âm tính' : parts.at(-1);
+        result[chiso] = ketqua;
       } else if (len > 0) {
         const chiso = parts[0];
         result[chiso] = null;
@@ -148,14 +148,14 @@ ipcMain.on('serialport-connect', async (event, { id, lab, ...params }) => {
     }
 
     // Save into result table
-    kqBW200Api.create(result);
+    const data = kqBW200Api.create(result);
 
-    const dmchiso = dmkhopmaApi.getByLab(connDevice?.lab)?.data;
-    const chisoById: any = {};
-    for (let i = 0; i < dmchiso.length; i++) {
-      const chiso: any = dmchiso[i];
-      chisoById[chiso.maxn] = chiso.macs;
-    }
+    // const dmchiso = dmkhopmaApi.getByLab(connDevice?.lab)?.data;
+    // const chisoById: any = {};
+    // for (let i = 0; i < dmchiso.length; i++) {
+    //   const chiso: any = dmchiso[i];
+    //   chisoById[chiso.maxn] = chiso.macs;
+    // }
 
     // const payload: any = {};
     // payload.mamay = connDevice?.lab;
@@ -173,7 +173,7 @@ ipcMain.on('serialport-connect', async (event, { id, lab, ...params }) => {
     //   });
     // }
 
-    event.reply('serialport-data', result);
+    event.reply('serialport-data', data);
   });
 
   portManager[id].on('open', () => {

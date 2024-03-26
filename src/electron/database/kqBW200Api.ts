@@ -36,8 +36,15 @@ export default {
           @datetime
         )`,
       );
-      stmAdd.run(values);
-      return { success: true };
+      const result = stmAdd.run(values);
+
+      const id = result.lastInsertRowid;
+      const stmQueryById = db.prepare(
+        `SELECT * FROM [dbo.KQ_BW200] WHERE id = @id`,
+      );
+      const item = stmQueryById.get({ id });
+
+      return { success: true, data: item };
     } catch (error) {
       return { success: false, msg: error };
     }

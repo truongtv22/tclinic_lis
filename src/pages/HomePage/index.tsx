@@ -16,6 +16,7 @@ import {
   InputNumber,
   AutoComplete,
   notification,
+  Modal,
 } from 'antd';
 import range from 'lodash/range';
 import {
@@ -83,8 +84,8 @@ export function HomePage() {
     });
 
     const dataSub = window.electron.serialport.on('data', (data) => {
-      console.log('HomePage->data', data);
-      window.electron.ipcRenderer.send('open-view-window');
+      // console.log('HomePage->data', data);
+      // window.electron.ipcRenderer.send('open-view-window');
     });
 
     const closeSub = window.electron.serialport.on('close', () => {
@@ -281,18 +282,32 @@ export function HomePage() {
             <Form.Item name="comp" label="Tên thiết bị">
               <Input />
             </Form.Item>
-            <Form.Item
-              name="kieuketnoi"
-              label="Kết nối"
-              initialValue="SerialPort"
-            >
-              <Select
-                options={['SerialPort', 'Foder'].map((v) => ({
-                  value: v,
-                  label: v,
-                }))}
-              />
-            </Form.Item>
+            <Row gutter={8}>
+              <Col sm={24} md={12}>
+                <Form.Item name="lab" label="Loại máy" initialValue="BW200">
+                  <Select
+                    options={['BW200'].map((v) => ({
+                      value: v,
+                      label: v,
+                    }))}
+                  />
+                </Form.Item>
+              </Col>
+              <Col sm={24} md={12}>
+                <Form.Item
+                  name="kieuketnoi"
+                  label="Kết nối"
+                  initialValue="SerialPort"
+                >
+                  <Select
+                    options={['SerialPort', 'Foder'].map((v) => ({
+                      value: v,
+                      label: v,
+                    }))}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
             <Row gutter={8}>
               <Col sm={24} md={12}>
                 <Form.Item name="comport" label="ComPort" initialValue="COM1">
