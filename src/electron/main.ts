@@ -14,6 +14,7 @@ import kqBW200Api from './database/kqBW200Api';
 import dmkhopmaApi from './database/dmkhopma';
 import connectmanageApi from './database/connectmanageApi';
 import { StatefullBrowserWindow } from 'stateful-electron-window';
+import axios from 'axios';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -148,7 +149,7 @@ ipcMain.on('serialport-connect', async (event, { id, lab, ...params }) => {
     }
 
     // Save into result table
-    const data = kqBW200Api.create(result);
+    const data = kqBW200Api.create(result)?.data;
 
     // const dmchiso = dmkhopmaApi.getByLab(connDevice?.lab)?.data;
     // const chisoById: any = {};
@@ -221,6 +222,50 @@ ipcMain.handle('connectmanage-update', async (event, values) => {
 ipcMain.handle('connectmanage-delete', async (event, id) => {
   const result = connectmanageApi.delete(id);
   return result;
+});
+
+ipcMain.handle('dong-bo-his', async (event: any, data) => {
+  console.log('dong-bo-his->data', data);
+
+  const dmchiso = dmkhopmaApi.getByLab('BW200')?.data;
+  const chisoById: any = {};
+  for (let i = 0; i < dmchiso.length; i++) {
+    const chiso: any = dmchiso[i];
+    chisoById[chiso.maxn] = chiso.macs;
+  }
+
+  const postData: any = {
+    mamay: 'BW200',
+    barcode: data.barcode,
+    kqxetnghiem: [],
+    ngaythuchien: new Date(data.datetime).toISOString(),
+    loaidongbo: 'ONE',
+  };
+  for (const chiso in chisoById) {
+    const chiso_id = chisoById[chiso];
+    postData.kqxetnghiem.push({
+      chiso_id,
+      maxn: chiso,
+      ketqua: data[chiso],
+    });
+  }
+
+  const result = await axios.post(
+    'https://demo.tclinic.io/api/xetnghiem/lis-sync',
+    postData,
+  );
+  if (result.data && result.data.success) {
+    kqBW200Api.patch(data.id, { sendhis: 1 });
+    event.returnValue = {
+      success: true,
+      message: result.data.message,
+    };
+  } else {
+    event.returnValue = {
+      success: false,
+      message: 'Đông bộ kết quả không thành công',
+    };
+  }
 });
 
 const createWindow = () => {

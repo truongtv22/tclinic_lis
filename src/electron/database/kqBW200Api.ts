@@ -46,7 +46,31 @@ export default {
 
       return { success: true, data: item };
     } catch (error) {
-      return { success: false, msg: error };
+      return { success: false, message: error };
+    }
+  },
+  patch(id: number, values: any) {
+    try {
+      const db = connect();
+
+      const stmUpdate = db.prepare(
+        `UPDATE [dbo.KQ_BW200] SET
+          sendhis = @sendhis,
+        WHERE id = @id`,
+      );
+      stmUpdate.run({
+        id,
+        sendhis: values.sendhis,
+      });
+
+      const stmQueryById = db.prepare(
+        `SELECT * FROM [dbo.KQ_BW200] WHERE id = @id`,
+      );
+      const item = stmQueryById.get({ id });
+
+      return { success: true, data: item };
+    } catch (error) {
+      return { success: false, message: error };
     }
   },
 };
