@@ -1,3 +1,5 @@
+import type { PreloadReduxBridgeReturn } from 'reduxtron/types';
+
 declare global {
   interface Window {
     electron: {
@@ -24,6 +26,8 @@ declare global {
       updateConnect: (values: any) => Promise<any>;
       deleteConnect: (id: any) => Promise<any>;
     };
+
+    reduxtron: PreloadReduxBridgeReturn<State, Action>['handlers'];
   }
 }
 

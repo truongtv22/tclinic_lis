@@ -5695,6 +5695,11 @@ redux@^5.0.1:
   resolved "https://registry.yarnpkg.com/redux/-/redux-5.0.1.tgz#97fa26881ce5746500125585d5642c77b6e9447b"
   integrity sha512-M9/ELqF6fy8FwmkpnF0S3YKOqMyoWJ4+CS5Efg2ct3oY9daQvd/Pc71FpGZsVsbl3Cpb+IIcjBDUnnyBdQbq4w==
 
+reduxtron@^0.0.16:
+  version "0.0.16"
+  resolved "https://registry.yarnpkg.com/reduxtron/-/reduxtron-0.0.16.tgz#b5aeaad571f22ebdb59f3b44fa7985b3d95f6a2e"
+  integrity sha512-74twkbDchh34AhObWn4E0BJOMTfzmRqtO+L2+URsZy5ZpnGvn2MDuOn3VpSwVHltIKC07ATmdaEZLfNziBPyNA==
+
 regenerator-runtime@^0.14.0:
   version "0.14.1"
   resolved "https://registry.yarnpkg.com/regenerator-runtime/-/regenerator-runtime-0.14.1.tgz#356ade10263f685dda125100cd862c1db895327f"

@@ -423,7 +423,9 @@ export function HomePage() {
                     icon={<PlusOutlined />}
                     disabled={!selected}
                     // onClick={onAdd}
-                    onClick={() => {
+                    onClick={async () => {
+                      const state = await window.reduxtron.getState();
+                      console.log('state', state);
                       // setIsModalOpen(true);
                     }}
                   >

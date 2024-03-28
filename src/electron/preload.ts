@@ -1,6 +1,9 @@
 // See the Electron documentation for details on how to use preload scripts:
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 import { contextBridge, ipcRenderer } from 'electron';
+import { preloadReduxBridge } from 'reduxtron/preload';
+
+import type { State, Action } from '../shared/reducers';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
@@ -58,3 +61,7 @@ contextBridge.exposeInMainWorld('dbApi', {
     return ipcRenderer.invoke('connectmanage-delete', id);
   },
 });
+
+const { handlers } = preloadReduxBridge<Partial<State>, Action>(ipcRenderer);
+
+contextBridge.exposeInMainWorld('reduxtron', handlers);

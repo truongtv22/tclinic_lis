@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Menu } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu, Notification } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import dayjs from 'dayjs';
@@ -15,6 +15,10 @@ import dmkhopmaApi from './database/dmkhopma';
 import connectmanageApi from './database/connectmanageApi';
 import { StatefullBrowserWindow } from 'stateful-electron-window';
 import axios from 'axios';
+import { mainReduxBridge } from 'reduxtron/main'
+import { store } from './store'
+
+const { unsubscribe } = mainReduxBridge(ipcMain, store)
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -34,16 +38,16 @@ ipcMain.on('open-view-window', (event) => {
 });
 
 // IPC Electron Store
-const store = new Store();
+const storage = new Store();
 
 ipcMain.on('electron-store-get', async (event, key) => {
-  event.returnValue = store.get(key);
+  event.returnValue = storage.get(key);
 });
 ipcMain.on('electron-store-set', async (event, key, value) => {
-  store.set(key, value);
+  storage.set(key, value);
 });
 ipcMain.on('electron-store-delete', async (event, key) => {
-  store.delete(key);
+  storage.delete(key);
 });
 
 // IPC SerialPort
@@ -173,7 +177,21 @@ ipcMain.on('serialport-connect', async (event, { id, lab, ...params }) => {
     //     ketqua: result[chiso],
     //   });
     // }
-
+console.log('mainWindow.isVisible()', mainWindow.isVisible())
+    const notification = new Notification({
+      title: 'Kết quả xét nghiệm',
+      body: 'Nhận được kết quả từ Máy xét nghiệm nước tiểu, bạn muốn xem kết quả này không?',
+    });
+    notification.on('click', () => {
+      
+      if (!mainWindow.isMinimized()) {
+        mainWindow.restore();
+      }
+      if (!mainWindow.isFocused()) {
+        mainWindow.focus();
+      }
+    });
+    notification.show();
     event.reply('serialport-data', data);
   });
 
@@ -225,8 +243,6 @@ ipcMain.handle('connectmanage-delete', async (event, id) => {
 });
 
 ipcMain.handle('dong-bo-his', async (event: any, data) => {
-  console.log('dong-bo-his->data', data);
-
   const dmchiso = dmkhopmaApi.getByLab('BW200')?.data;
   const chisoById: any = {};
   for (let i = 0; i < dmchiso.length; i++) {
@@ -236,7 +252,7 @@ ipcMain.handle('dong-bo-his', async (event: any, data) => {
 
   const postData: any = {
     mamay: 'BW200',
-    barcode: data.barcode,
+    barcode: data.barcode_edit || data.barcode,
     kqxetnghiem: [],
     ngaythuchien: new Date(data.datetime).toISOString(),
     loaidongbo: 'ONE',
@@ -250,20 +266,27 @@ ipcMain.handle('dong-bo-his', async (event: any, data) => {
     });
   }
 
-  const result = await axios.post(
-    'https://demo.tclinic.io/api/xetnghiem/lis-sync',
-    postData,
-  );
-  if (result.data && result.data.success) {
-    kqBW200Api.patch(data.id, { sendhis: 1 });
-    event.returnValue = {
-      success: true,
-      message: result.data.message,
-    };
-  } else {
-    event.returnValue = {
+  try {
+    const result = await axios.post(
+      'https://demo.tclinic.io/api/xetnghiem/lis-sync',
+      postData,
+    );
+    if (result.data && result.data.success) {
+      kqBW200Api.patch(data.id, { sendhis: 1 });
+      return {
+        success: true,
+        message: result.data.message,
+      };
+    } else {
+      return {
+        success: false,
+        message: 'Đông bộ kết quả không thành công',
+      };
+    }
+  } catch (error) {
+    return {
       success: false,
-      message: 'Đông bộ kết quả không thành công',
+      message: error?.response?.data?.message || error?.message,
     };
   }
 });
@@ -408,3 +431,5 @@ app.on('activate', () => {
   //   createWindow();
   // }
 });
+
+app.on('quit', unsubscribe)
