@@ -1,6 +1,13 @@
 import { Route, Routes } from 'react-router-dom';
 
-import { HomePage, LoginPage, ManagePage, SettingPage, ViewPage, ResultPage } from 'pages';
+import {
+  HomePage,
+  LoginPage,
+  ManagePage,
+  SettingPage,
+  ResultPage,
+  LogPage,
+} from 'pages';
 import { AppLayout, PageLayout } from 'layouts';
 
 export const AppRoutes = () => {
@@ -15,7 +22,9 @@ export const AppRoutes = () => {
       <Route element={<AppLayout />}>
         <Route path="/login" element={<LoginPage />} />
       </Route>
-      <Route path="/view" element={<ViewPage />} />
+      <Route path="/view">
+        <Route index element={<LogPage />} />
+      </Route>
     </Routes>
   );
 };

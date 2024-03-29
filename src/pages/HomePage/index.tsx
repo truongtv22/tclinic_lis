@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { produce } from 'immer';
+import dayjs from 'dayjs';
 import { useDispatch, useSelector } from 'react-redux';
 import {
+  App,
   Row,
   Col,
   Spin,
   Card,
   Form,
   Radio,
+  Modal,
   Input,
   Space,
   Select,
@@ -15,15 +18,12 @@ import {
   Popconfirm,
   InputNumber,
   AutoComplete,
-  notification,
 } from 'antd';
-import range from 'lodash/range';
 import {
-  StarOutlined,
-  StarFilled,
   PlusOutlined,
   SaveOutlined,
   DeleteOutlined,
+  CloudUploadOutlined,
 } from '@ant-design/icons';
 import Split from '@uiw/react-split';
 import { selectDevices } from 'store/devices/selectors';
@@ -36,13 +36,15 @@ export function HomePage() {
   const [loading, setLoading] = useState(false);
   const [connected, setConnected] = useState(false);
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [testResult, setTestResult] = useState<any>({});
+  const [globalLoading, setGlobalLoading] = useState(false);
+
   // const devices = useSelector(selectDevices);
   const [devices, setDevices] = useState([]);
   const [selected, setSelected] = useState(null);
 
-  const [notificationApi, contextHolder] = notification.useNotification({
-    stack: true,
-  });
+  const { modal, notification } = App.useApp();
 
   const getData = async () => {
     const result = await window.dbApi.getConnect();
@@ -71,19 +73,54 @@ export function HomePage() {
   }, [selected]);
 
   useEffect(() => {
+    if (!isModalOpen) {
+      setTestResult({});
+    }
+  }, [isModalOpen]);
+
+  useEffect(() => {
     const openSub = window.electron.serialport.on('open', () => {
       setConnected(true);
     });
 
     const errorSub = window.electron.serialport.on('error', (error: any) => {
-      notificationApi.error({
+      notification.error({
         message: 'SerialPort',
         description: error.message,
       });
     });
 
-    const dataSubs = window.electron.serialport.on('data', (data) => {
-      console.log('HomePage->data', data);
+    const dataSub = window.electron.serialport.on('data', (data) => {
+      const notifyKey = `open-${Date.now()}`;
+
+      notification.open({
+        key: notifyKey,
+        message: 'Thông báo đồng bộ',
+        description:
+          'Bạn nhận được kết quả từ Máy xét nghiệm nước tiểu, bạn muốn xem kết quả trước khi đồng bộ tới HIS không?',
+        btn: (
+          <Space>
+            <Button
+              type="link"
+              size="small"
+              onClick={() => notification.destroy(notifyKey)}
+            >
+              Đóng
+            </Button>
+            <Button
+              size="small"
+              type="primary"
+              onClick={() => {
+                notification.destroy(notifyKey);
+                setIsModalOpen(true);
+                setTestResult(data);
+              }}
+            >
+              Kết quả xét nghiệm
+            </Button>
+          </Space>
+        ),
+      });
     });
 
     const closeSub = window.electron.serialport.on('close', () => {
@@ -93,9 +130,29 @@ export function HomePage() {
     return () => {
       openSub();
       errorSub();
-      dataSubs();
+      dataSub();
       closeSub();
     };
+  }, []);
+
+  useEffect(() => {
+    const notifySub = window.electron.ipcRenderer.on(
+      'notification-data',
+      async (data) => {
+        const confirmed = await modal.confirm({
+          title: 'Kết quả xét nghiệm',
+          content:
+            'Bạn nhận được kết quả từ Máy xét nghiệm nước tiểu, bạn muốn xem kết quả xét nghiệm này không?',
+          okText: 'Đồng ý',
+          cancelText: 'Đóng',
+        });
+        if (confirmed) {
+          setIsModalOpen(true);
+          setTestResult(data);
+        }
+      },
+    );
+    return () => notifySub();
   }, []);
 
   const onAdd = () => {
@@ -120,7 +177,7 @@ export function HomePage() {
           }
         });
         setDevices(newDevices);
-        notificationApi.success({
+        notification.success({
           message: 'Thành công',
           description: 'Cập nhật kết nối thành công',
         });
@@ -135,7 +192,7 @@ export function HomePage() {
         });
         setDevices(newDevices);
         setSelected(result.data);
-        notificationApi.success({
+        notification.success({
           message: 'Thành công',
           description: 'Thêm mới kết nối thành công',
         });
@@ -162,7 +219,7 @@ export function HomePage() {
       } else {
         setSelected(null);
       }
-      notificationApi.success({
+      notification.success({
         message: 'Thành công',
         description: 'Xoá kết nối thành công',
       });
@@ -177,7 +234,8 @@ export function HomePage() {
   };
 
   const onClose = () => {
-    window.electron.serialport.disconnect();
+    const params = form.getFieldsValue();
+    window.electron.serialport.disconnect({ id: params.id });
   };
 
   const onViewLog = () => {
@@ -186,28 +244,169 @@ export function HomePage() {
 
   return (
     <Spin spinning={loading} tip="Đang tải">
-      {contextHolder}
+      <Modal
+        title="Kết quả xét nghiệm"
+        open={isModalOpen}
+        width={800}
+        onOk={() => setIsModalOpen(false)}
+        onCancel={() => setIsModalOpen(false)}
+        footer={[
+          <Button
+            key="cancel"
+            size="small"
+            disabled={globalLoading}
+            onClick={() => setIsModalOpen(false)}
+          >
+            Đóng
+          </Button>,
+          <Button
+            key="sync"
+            size="small"
+            type="primary"
+            icon={<CloudUploadOutlined />}
+            loading={globalLoading}
+            onClick={async () => {
+              try {
+                setGlobalLoading(true);
+                const result = await window.electron.ipcRenderer.invoke(
+                  'dong-bo-his',
+                  testResult,
+                );
+                setIsModalOpen(false);
+                setGlobalLoading(false);
+                if (result.success) {
+                  notification.success({
+                    message: 'Đồng bộ HIS',
+                    description: result.message,
+                  });
+                } else {
+                  notification.error({
+                    message: 'Đồng bộ HIS',
+                    description: result.message,
+                  });
+                }
+              } catch (error) {
+                setGlobalLoading(false);
+                notification.error({
+                  message: 'Đồng bộ HIS',
+                  description: error.message,
+                });
+              }
+            }}
+          >
+            Đồng bộ HIS
+          </Button>,
+        ]}
+      >
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <div className="text-base font-semibold">Thông tin thiết bị</div>
+            <div className="space-y-1">
+              <Row>
+                <Col span={12}>
+                  <p className="font-semibold">Thiết bị:</p>
+                  <p>Máy xét nghiệm nước tiểu</p>
+                </Col>
+                <Col span={12}>
+                  <p className="font-semibold">Loại máy:</p>
+                  <p>BW200</p>
+                </Col>
+              </Row>
+              <Row>
+                <Col span={12}>
+                  <p className="font-semibold">Mã Barcode:</p>
+                  <p>{testResult.barcode}</p>
+                </Col>
+                <Col span={12}>
+                  <p className="font-semibold">Chỉnh sửa Barcode:</p>
+                  <Input
+                    value={testResult.barcode_edit || ''}
+                    placeholder="Nhập mã barcode chỉnh sửa"
+                    onChange={(e) =>
+                      setTestResult(
+                        produce((draft: any) => {
+                          draft.barcode_edit = e.target.value;
+                        }),
+                      )
+                    }
+                  />
+                </Col>
+              </Row>
+              <Row>
+                <Col span={12}>
+                  <p className="font-semibold">Thời gian xét nghiệm:</p>
+                  <p>{dayjs(testResult.datetime).format('HH:mm DD-MM-YYYY')}</p>
+                </Col>
+              </Row>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <div className="text-base font-semibold">Kết quả xét nghiệm</div>
+            <Row gutter={4}>
+              <Col span={12}>
+                <Row className="p-1 bg-gray-100">
+                  <Col span={6}>
+                    <p className="font-semibold">Chỉ số</p>
+                  </Col>
+                  <Col span={18}>
+                    <p className="font-semibold">Kết quả</p>
+                  </Col>
+                </Row>
+              </Col>
+              <Col span={12}>
+                <Row className="p-1 bg-gray-100">
+                  <Col span={6}>
+                    <p className="font-semibold">Chỉ số</p>
+                  </Col>
+                  <Col span={18}>
+                    <p className="font-semibold">Kết quả</p>
+                  </Col>
+                </Row>
+              </Col>
+            </Row>
+            <Row gutter={[4, 4]}>
+              {[
+                { index: 'URO', name: 'URO' },
+                { index: 'BIL', name: 'BIL' },
+                { index: 'KET', name: 'KET' },
+                { index: 'BLD', name: 'BLD' },
+                { index: 'PRO', name: 'PRO' },
+                { index: 'NIT', name: 'NIT' },
+                { index: 'LEU', name: 'LEU' },
+                { index: 'GLU', name: 'GLU' },
+                { index: 'SG', name: 'SG' },
+                { index: 'PH', name: 'PH' },
+                { index: 'VC', name: 'VC' },
+              ].map((item) => (
+                <Col key={item.index} span={12}>
+                  <Row className="px-1">
+                    <Col span={6}>
+                      <p>{item.name}</p>
+                    </Col>
+                    <Col span={18}>
+                      <p>{testResult[item.index] ?? '-'}</p>
+                    </Col>
+                  </Row>
+                </Col>
+              ))}
+            </Row>
+          </div>
+        </div>
+      </Modal>
       <Split lineBar className="space-x-2">
-        <Card className="min-w-60 max-w-[50%] rounded" size="small">
+        <Card className="min-w-60 max-w-[50%]" size="small">
           <div className="space-y-2">
-            <p className="text-xl font-semibold">Danh sách kết nối</p>
+            <p className="text-lg font-semibold">Danh sách kết nối</p>
             {devices.length > 0 ? (
               <div className="space-y-2">
                 {devices.map((item) => (
                   <div key={item.id} className="flex space-x-2">
-                    {/* devices[index] ? (
-                  <StarFilled className="text-yellow-400" />
-                ) : (
-                  <StarOutlined />
-                ) */}
                     <Radio
                       value={1}
                       checked={item.id === selected?.id}
-                      onChange={() => {
-                        onSelect(item);
-                      }}
+                      onChange={() => onSelect(item)}
                     >
-                      <span className="line-clamp-2">{item.lab}</span>
+                      <span className="line-clamp-2">{item.comp}</span>
                     </Radio>
                   </div>
                 ))}
@@ -217,7 +416,7 @@ export function HomePage() {
             )}
           </div>
         </Card>
-        <Card className="flex-1 rounded" size="small">
+        <Card className="flex-1" size="small">
           <Form form={form} layout="vertical" onFinish={onSave}>
             <Row
               gutter={8}
@@ -226,7 +425,7 @@ export function HomePage() {
               className="mb-2"
             >
               <Col>
-                <p className="text-xl font-semibold">
+                <p className="text-lg font-semibold">
                   {selected
                     ? 'Thông tin kết nối'
                     : 'Thêm mới thông tin kết nối'}
@@ -276,21 +475,35 @@ export function HomePage() {
               </Row>
             </Row>
             <Form.Item name="id" hidden />
-            <Form.Item name="lab" label="Tên thiết bị">
+            <Form.Item name="comp" label="Tên thiết bị">
               <Input />
             </Form.Item>
-            <Form.Item
-              name="kieuketnoi"
-              label="Kết nối"
-              initialValue="SerialPort"
-            >
-              <Select
-                options={['SerialPort', 'Foder'].map((v) => ({
-                  value: v,
-                  label: v,
-                }))}
-              />
-            </Form.Item>
+            <Row gutter={8}>
+              <Col sm={24} md={12}>
+                <Form.Item name="lab" label="Loại máy" initialValue="BW200">
+                  <Select
+                    options={['BW200'].map((v) => ({
+                      value: v,
+                      label: v,
+                    }))}
+                  />
+                </Form.Item>
+              </Col>
+              <Col sm={24} md={12}>
+                <Form.Item
+                  name="kieuketnoi"
+                  label="Kết nối"
+                  initialValue="SerialPort"
+                >
+                  <Select
+                    options={['SerialPort', 'Foder'].map((v) => ({
+                      value: v,
+                      label: v,
+                    }))}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
             <Row gutter={8}>
               <Col sm={24} md={12}>
                 <Form.Item name="comport" label="ComPort" initialValue="COM1">

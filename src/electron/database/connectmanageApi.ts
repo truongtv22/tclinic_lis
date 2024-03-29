@@ -11,17 +11,30 @@ export default {
         'SELECT * FROM [dbo.connectmanage] ORDER BY cong ASC',
       );
 
-      const total = stmTotal.all();
+      const total: any = stmTotal.all();
       const data = stmList.all();
       return { success: true, data, total: total[0].total };
     } catch (error) {
       return { success: false, message: error };
     }
   },
-  create(values: any) {
+  getById(id: number) {
     try {
       const db = connect();
-      const currenttime = Date.now();
+      const stmQueryById = db.prepare(
+        'SELECT * FROM [dbo.connectmanage] WHERE id = @id',
+      );
+
+      const item = stmQueryById.get({ id });
+      return { success: true, data: item };
+    } catch (error) {
+      return { success: false, message: error };
+    }
+  },
+  create(values: any = {}) {
+    try {
+      const db = connect();
+      const currentTime = Date.now();
 
       const stmAdd = db.prepare(
         `INSERT INTO [dbo.connectmanage] (
@@ -52,8 +65,7 @@ export default {
           decimalsymbol,
           createtime,
           updatetime
-        )
-        VALUES (
+        ) VALUES (
           @cong,
           @comp,
           @lab,
@@ -85,7 +97,7 @@ export default {
       );
       const result = stmAdd.run({
         cong: values.cong,
-        comp: values.comp || 'ADMINCOMPUTER',
+        comp: values.comp,
         lab: values.lab,
         functionname: values.functionname,
         kieuketnoi: values.kieuketnoi,
@@ -109,8 +121,8 @@ export default {
         sokytubarcode: values.sokytubarcode || 4,
         nhapbarcode: values.nhapbarcode,
         decimalsymbol: values.decimalsymbol || ',',
-        createtime: currenttime,
-        updatetime: currenttime,
+        createtime: currentTime,
+        updatetime: currentTime,
       });
 
       const id = result.lastInsertRowid;
@@ -127,7 +139,7 @@ export default {
   update(values: any) {
     try {
       const db = connect();
-      const currenttime = Date.now();
+      const currentTime = Date.now();
 
       const stmUpdate = db.prepare(
         `UPDATE [dbo.connectmanage] SET
@@ -162,7 +174,7 @@ export default {
       stmUpdate.run({
         id: values.id,
         cong: values.cong,
-        comp: values.comp || 'ADMINCOMPUTER',
+        comp: values.comp,
         lab: values.lab,
         functionname: values.functionname,
         kieuketnoi: values.kieuketnoi,
@@ -186,7 +198,7 @@ export default {
         sokytubarcode: values.sokytubarcode || 4,
         nhapbarcode: values.nhapbarcode,
         decimalsymbol: values.decimalsymbol || ',',
-        updatetime: currenttime,
+        updatetime: currentTime,
       });
 
       const stmQueryById = db.prepare(
