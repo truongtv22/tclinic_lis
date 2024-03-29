@@ -44,7 +44,7 @@ export function HomePage() {
   const [devices, setDevices] = useState([]);
   const [selected, setSelected] = useState(null);
 
-  const { notification } = App.useApp();
+  const { modal, notification } = App.useApp();
 
   const getData = async () => {
     const result = await window.dbApi.getConnect();
@@ -91,9 +91,6 @@ export function HomePage() {
     });
 
     const dataSub = window.electron.serialport.on('data', (data) => {
-      // console.log('HomePage->data', data);
-      // window.electron.ipcRenderer.send('open-view-window');
-
       const notifyKey = `open-${Date.now()}`;
 
       notification.open({
@@ -123,7 +120,6 @@ export function HomePage() {
             </Button>
           </Space>
         ),
-        duration: 10,
       });
     });
 
@@ -137,6 +133,26 @@ export function HomePage() {
       dataSub();
       closeSub();
     };
+  }, []);
+
+  useEffect(() => {
+    const notifySub = window.electron.ipcRenderer.on(
+      'notification-data',
+      async (data) => {
+        const confirmed = await modal.confirm({
+          title: 'Kết quả xét nghiệm',
+          content:
+            'Bạn nhận được kết quả từ Máy xét nghiệm nước tiểu, bạn muốn xem kết quả xét nghiệm này không?',
+          okText: 'Đồng ý',
+          cancelText: 'Đóng',
+        });
+        if (confirmed) {
+          setIsModalOpen(true);
+          setTestResult(data);
+        }
+      },
+    );
+    return () => notifySub();
   }, []);
 
   const onAdd = () => {
@@ -422,12 +438,7 @@ export function HomePage() {
                     size="small"
                     icon={<PlusOutlined />}
                     disabled={!selected}
-                    // onClick={onAdd}
-                    onClick={async () => {
-                      const state = await window.reduxtron.getState();
-                      console.log('state', state);
-                      // setIsModalOpen(true);
-                    }}
+                    onClick={onAdd}
                   >
                     Thêm
                   </Button>

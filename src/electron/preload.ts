@@ -3,7 +3,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { preloadReduxBridge } from 'reduxtron/preload';
 
-import type { State, Action } from '../shared/reducers';
+import type { State, Action } from 'shared/reducers';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
@@ -13,6 +13,16 @@ contextBridge.exposeInMainWorld('electron', {
     invoke: async (channel: string, ...args: any[]) => {
       const result = await ipcRenderer.invoke(channel, ...args);
       return result;
+    },
+    on(channel: string, func: (...args: any[]) => void) {
+      const subscription = (_event: any, ...args: any[]) => func(...args);
+      ipcRenderer.on(channel, subscription);
+      return () => {
+        ipcRenderer.removeListener(channel, subscription);
+      };
+    },
+    once(channel: string, func: (...args: any[]) => void) {
+      ipcRenderer.once(channel, (_event, ...args) => func(...args));
     },
   },
   store: {
@@ -63,5 +73,4 @@ contextBridge.exposeInMainWorld('dbApi', {
 });
 
 const { handlers } = preloadReduxBridge<Partial<State>, Action>(ipcRenderer);
-
 contextBridge.exposeInMainWorld('reduxtron', handlers);

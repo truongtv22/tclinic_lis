@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "commonjs",
+    "module": "nodenext",
     "jsx": "react-jsx",
     "allowJs": true,
     "skipLibCheck": true,
@@ -9,10 +9,11 @@
     "noImplicitAny": true,
     "sourceMap": true,
     "outDir": "dist",
-    "moduleResolution": "node",
+    "moduleResolution": "nodenext",
     "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
+      "shared": ["./src/shared"],
       "components": ["./src/components"],
       "constants": ["./src/constants"],
       "layouts": ["./src/layouts"],
@@ -23,6 +24,7 @@
       "types": ["./src/types"],
       "utils": ["./src/utils"],
 
+      "shared/*": ["./src/shared/*"],
       "components/*": ["./src/components/*"],
       "constants/*": ["./src/constants/*"],
       "layouts/*": ["./src/layouts/*"],

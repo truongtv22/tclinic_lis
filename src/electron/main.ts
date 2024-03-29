@@ -15,10 +15,9 @@ import dmkhopmaApi from './database/dmkhopma';
 import connectmanageApi from './database/connectmanageApi';
 import { StatefullBrowserWindow } from 'stateful-electron-window';
 import axios from 'axios';
-import { mainReduxBridge } from 'reduxtron/main'
-import { store } from './store'
-
-const { unsubscribe } = mainReduxBridge(ipcMain, store)
+import { mainReduxBridge } from 'reduxtron/main';
+import { ipcMain as sharedIpcMain } from 'shared/ipcs';
+import { store } from './store';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -27,6 +26,8 @@ if (require('electron-squirrel-startup')) {
 
 let mainWindow: BrowserWindow | null = null;
 let viewWindow: BrowserWindow | null = null;
+
+const { unsubscribe } = mainReduxBridge(ipcMain, store);
 
 // IPC Window
 ipcMain.on('main-window-reload', (event) => {
@@ -79,141 +80,123 @@ class SlipParser extends Transform {
   }
 }
 
-ipcMain.on('serialport-connect', async (event, { id, lab, ...params }) => {
-  const options: any = {
-    path: params.comport,
-    baudRate: params.baudrate,
-    dataBits: params.databits,
-    stopBits: params.stopbits,
-    parity: params.parity,
-  };
-  if (process.platform === 'win32') {
-    options.rtsMode = params.rtsmode;
-  }
-  portManager[id] = new SerialPort(options);
-
-  // Create folder if doesnt exist
-  const folderBackup = path.join(process.cwd(), 'backup', lab);
-  const fileName = `${dayjs().format('YYYYMMDD')}.txt`;
-  const filePath = path.join(folderBackup, fileName);
-
-  if (!fs.existsSync(folderBackup)) {
-    fs.mkdirSync(folderBackup, { recursive: true });
-  }
-
-  const parser = new SlipParser();
-  portManager[id].pipe(parser);
-
-  // const connDevice: any = connectmanageApi.getById(id)?.data;
-
-  parser.on('data', async (buffer: Buffer) => {
-    // Use regex to match Control characters in Unicode and replace them with an empty string
-    // https://en.wikipedia.org/wiki/Control_character#In_Unicode
-    const str = buffer
-      .toString()
-      .replace(/[\u0000-\u001F\u007F-\u009F]/g, '\n') // Use regex to match Control characters in Unicode and replace them with newline
-      .replace(/^\s+|\s+$/g, '') // Remove leading and trailing whitespace
-      .replace(/\r\n/g, '\n') // Replace "\r\n" with "\n"
-      .replace(/\n{2,}/g, '\n'); // Remove duplicate newline characters
-
-    // Write data to backup file
-    fs.appendFile(filePath, `${str}\n`, (error) => {
-      if (error) {
-        console.log('Error write backup file', error);
-      } else {
-        console.log('Write backup file successfully:', filePath);
-      }
-    });
-
-    const lines = str.split('\n');
-    const result: any = { datetime: Date.now() };
-
-    // Extract computer and barcode
-    const barcode = lines[0] // BIOWAY B-11  001-001
-      .split('-') // split string with separator -
-      .at(-1) // get last string
-      .padStart(4, '0'); // fill zero at start
-    result.barcode = barcode;
-
-    // Extract other indexes
-    for (let i = 1; i < lines.length; i++) {
-      const chisoStr = lines[i]
-        .replace(/^\s+|\s+$/g, '') // Remove leading and trailing whitespace
-        .replace(/\s{2,}/g, ' '); // Remove duplicate whitespace
-      const parts = chisoStr.split(' ');
-      const len = parts.length;
-      if (len > 1) {
-        const chiso = parts.slice(0, -1).join(' ');
-        const ketqua = parts.at(-1) === '-' ? 'Âm tính' : parts.at(-1);
-        result[chiso] = ketqua;
-      } else if (len > 0) {
-        const chiso = parts[0];
-        result[chiso] = null;
-      }
+ipcMain.on(
+  'serialport-connect',
+  async (event, { id, lab, comp, ...params }) => {
+    const options: any = {
+      path: params.comport,
+      baudRate: params.baudrate,
+      dataBits: params.databits,
+      stopBits: params.stopbits,
+      parity: params.parity,
+    };
+    if (process.platform === 'win32') {
+      options.rtsMode = params.rtsmode;
     }
 
-    // Save into result table
-    const data = kqBW200Api.create(result)?.data;
+    if (!portManager[id]) {
+      portManager[id] = new SerialPort(options);
+    }
 
-    // const dmchiso = dmkhopmaApi.getByLab(connDevice?.lab)?.data;
-    // const chisoById: any = {};
-    // for (let i = 0; i < dmchiso.length; i++) {
-    //   const chiso: any = dmchiso[i];
-    //   chisoById[chiso.maxn] = chiso.macs;
-    // }
+    // Create folder if doesnt exist
+    const folderBackup = path.join(process.cwd(), 'backup', lab);
+    const fileName = `${dayjs().format('YYYYMMDD')}.txt`;
+    const filePath = path.join(folderBackup, fileName);
 
-    // const payload: any = {};
-    // payload.mamay = connDevice?.lab;
-    // payload.barcode = barcode;
-    // payload.kqxetnghiem = [];
-    // payload.loaidongbo = connDevice?.loaidongbo === 1 ? 'ONE' : '';
-    // payload.ngaythuchien = new Date(result.datetime).toISOString();
+    if (!fs.existsSync(folderBackup)) {
+      fs.mkdirSync(folderBackup, { recursive: true });
+    }
 
-    // for (const chiso in chisoById) {
-    //   const chiso_id = chisoById[chiso];
-    //   payload.kqxetnghiem.push({
-    //     chiso_id,
-    //     maxn: chiso,
-    //     ketqua: result[chiso],
-    //   });
-    // }
-console.log('mainWindow.isVisible()', mainWindow.isVisible())
-    const notification = new Notification({
-      title: 'Kết quả xét nghiệm',
-      body: 'Nhận được kết quả từ Máy xét nghiệm nước tiểu, bạn muốn xem kết quả này không?',
-    });
-    notification.on('click', () => {
-      
-      if (!mainWindow.isMinimized()) {
-        mainWindow.restore();
+    const parser = new SlipParser();
+    portManager[id].pipe(parser);
+
+    // const connDevice: any = connectmanageApi.getById(id)?.data;
+
+    parser.on('data', async (buffer: Buffer) => {
+      // Use regex to match Control characters in Unicode and replace them with an empty string
+      // https://en.wikipedia.org/wiki/Control_character#In_Unicode
+      const str = buffer
+        .toString()
+        .replace(/[\u0000-\u001F\u007F-\u009F]/g, '\n') // Use regex to match Control characters in Unicode and replace them with newline
+        .replace(/^\s+|\s+$/g, '') // Remove leading and trailing whitespace
+        .replace(/\r\n/g, '\n') // Replace "\r\n" with "\n"
+        .replace(/\n{2,}/g, '\n'); // Remove duplicate newline characters
+
+      // Write data to backup file
+      fs.appendFile(filePath, `${str}\n`, (error) => {
+        if (error) {
+          console.log('Error write backup file', error);
+        } else {
+          console.log('Write backup file successfully:', filePath);
+        }
+      });
+
+      const lines = str.split('\n');
+      const result: any = { datetime: Date.now() };
+
+      // Extract computer and barcode
+      const barcode = lines[0] // BIOWAY B-11  001-001
+        .split('-') // split string with separator -
+        .at(-1) // get last string
+        .padStart(4, '0'); // fill zero at start
+      result.barcode = barcode;
+
+      // Extract other indexes
+      for (let i = 1; i < lines.length; i++) {
+        const chisoStr = lines[i]
+          .replace(/^\s+|\s+$/g, '') // Remove leading and trailing whitespace
+          .replace(/\s{2,}/g, ' '); // Remove duplicate whitespace
+        const parts = chisoStr.split(' ');
+        const len = parts.length;
+        if (len > 1) {
+          const chiso = parts.slice(0, -1).join(' ');
+          const ketqua = parts.at(-1) === '-' ? 'Âm tính' : parts.at(-1);
+          result[chiso] = ketqua;
+        } else if (len > 0) {
+          const chiso = parts[0];
+          result[chiso] = null;
+        }
       }
+
+      // Save into result table
+      const data = kqBW200Api.create(result)?.data;
+      event.reply('serialport-data', data);
+
       if (!mainWindow.isFocused()) {
-        mainWindow.focus();
+        const notification = new Notification({
+          title: 'Kết quả xét nghiệm',
+          body: `Nhận được kết quả từ ${comp}, bạn muốn xem kết quả này không?`,
+        });
+        notification.on('click', () => {
+          if (!mainWindow.isFocused()) {
+            if (!mainWindow.isMinimized()) {
+              mainWindow.restore();
+            }
+            mainWindow.focus();
+          }
+          event.reply('notification-data', data);
+        });
+        notification.show();
       }
     });
-    notification.show();
-    event.reply('serialport-data', data);
-  });
 
-  portManager[id].on('open', () => {
-    console.log('serial port open');
-    event.reply('serialport-open');
-  });
+    portManager[id].on('open', () => {
+      console.log('serial port open');
+      event.reply('serialport-open');
+    });
 
-  portManager[id].on('error', (error: any) => {
-    console.log('serial port error', error);
-    event.reply('serialport-error', error);
-  });
+    portManager[id].on('error', (error: any) => {
+      console.log('serial port error', error);
+      event.reply('serialport-error', error);
+    });
 
-  portManager[id].on('close', () => {
-    console.log('serial port close');
-    event.reply('serialport-close');
-  });
-
-  // parser.on('data', (data: any) => {
-  //   event.reply('serialport-data', data.toString());
-  // });
-});
+    portManager[id].on('close', () => {
+      console.log('serial port close');
+      event.reply('serialport-close');
+      portManager[id] = null;
+    });
+  },
+);
 
 ipcMain.on('serialport-disconnect', (event, { id }) => {
   if (portManager[id] && portManager[id].isOpen) {
@@ -303,6 +286,11 @@ const createWindow = () => {
     },
   });
 
+  ipcMain.on('subscribe', async (state: unknown) => {
+    if (mainWindow?.isDestroyed()) return;
+    mainWindow?.webContents?.send('subscribe', state);
+  });
+
   // Remove the linux, window menu bar
   // mainWindow.removeMenu();
   // Disable macOS menu bar
@@ -345,6 +333,7 @@ const openViewWindow = () => {
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
+      sandbox: false,
     },
   });
 
@@ -432,4 +421,4 @@ app.on('activate', () => {
   // }
 });
 
-app.on('quit', unsubscribe)
+app.on('quit', unsubscribe);
