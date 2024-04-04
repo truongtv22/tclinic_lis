@@ -34,7 +34,7 @@ export default {
   create(values: any = {}) {
     try {
       const db = connect();
-      const currentTime = Date.now();
+      const currentTime = new Date().toISOString();
 
       const stmAdd = db.prepare(
         `INSERT INTO [dbo.connectmanage] (
@@ -139,7 +139,7 @@ export default {
   update(values: any) {
     try {
       const db = connect();
-      const currentTime = Date.now();
+      const currentTime = new Date().toISOString();
 
       const stmUpdate = db.prepare(
         `UPDATE [dbo.connectmanage] SET

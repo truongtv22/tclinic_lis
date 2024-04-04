@@ -15,24 +15,6 @@ export function initDatabase() {
   );
   const tables = stmAllTable.all()?.map((item: any) => item.name);
 
-  if (!tables.includes('device')) {
-    db.exec(`create table if not exists device (
-      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-      name varchar(500),
-      createTime int,
-      updateTime int
-    )`);
-  }
-
-  if (!tables.includes('dbo.dmkhopma')) {
-    db.exec(`create table if not exists [dbo.dmkhopma] (
-      lab TEXT NOT NULL,
-      macs TEXT NOT NULL,
-      maxn TEXT NOT NULL,
-      PRIMARY KEY (lab, macs, maxn)
-    )`);
-  }
-
   if (!tables.includes('dbo.connectmanage')) {
     db.exec(`create table if not exists [dbo.connectmanage] (
       id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -62,8 +44,17 @@ export function initDatabase() {
       nhapbarcode INTEGER,
       decimalsymbol TEXT DEFAULT ",",
       loaidongbo INTEGER DEFAULT 0,
-      createtime INTEGER,
-      updatetime INTEGER
+      createtime TEXT,
+      updatetime TEXT
+    )`);
+  }
+
+  if (!tables.includes('dbo.dmkhopma')) {
+    db.exec(`create table if not exists [dbo.dmkhopma] (
+      lab TEXT NOT NULL,
+      macs TEXT NOT NULL,
+      maxn TEXT NOT NULL,
+      PRIMARY KEY (lab, macs, maxn)
     )`);
   }
 
@@ -84,7 +75,7 @@ export function initDatabase() {
       SG TEXT,
       PH TEXT,
       VC TEXT,
-      datetime INTEGER
+      datetime TEXT
     )`);
   }
 }

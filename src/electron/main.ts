@@ -55,24 +55,64 @@ ipcMain.on('electron-store-delete', async (event, key) => {
 const portManager: { [key: string]: SerialPort } = {};
 // let port: SerialPort = null;
 
+const ASCII = {
+  STX: 0x02,
+  ETX: 0x03,
+  EOT: 0x04,
+  ENQ: 0x05,
+  ACK: 0x06,
+};
+
 // https://github.com/serialport/node-serialport/issues/1178
-class SlipParser extends Transform {
+class BW200Parser extends Transform {
   buffer: Buffer;
 
   constructor(options = {}) {
     super(options);
+    // buffer = [ASCII.STX...ASCII.ETX]
     this.buffer = Buffer.alloc(0);
   }
 
   _transform(chunk: Buffer, encoding: BufferEncoding, cb: TransformCallback) {
     const chunkLength = chunk.length;
     for (let i = 0; i < chunkLength; i++) {
-      if (chunk[i] === 0x03 /* ETX */) {
-        if (this.buffer[0] === 0x02) this.push(this.buffer);
+      if (chunk[i] === ASCII.ETX) {
+        // buffer = [ASCII.STX...]
+        if (this.buffer[0] === ASCII.STX) this.push(this.buffer);
         this.buffer = Buffer.alloc(0);
-      } else if (chunk[i] === 0x02 /* STX */) {
-        this.buffer = Buffer.from([0x02]);
-      } else if (this.buffer[0] === 0x02 /* STX */) {
+      } else if (chunk[i] === ASCII.STX) {
+        // buffer = [ASCII.STX]
+        this.buffer = Buffer.from([ASCII.STX]);
+      } else if (this.buffer[0] === ASCII.STX) {
+        // buffer = [ASCII.STX...chunk[i] ]
+        this.buffer = Buffer.concat([this.buffer, Buffer.from([chunk[i]])]);
+      }
+    }
+    cb();
+  }
+}
+
+class Access2Parser extends Transform {
+  buffer: Buffer;
+
+  constructor(options = {}) {
+    super(options);
+    // buffer = [ASCII.ENQ...ASCII.EOT]
+    this.buffer = Buffer.alloc(0);
+  }
+
+  _transform(chunk: Buffer, encoding: BufferEncoding, cb: TransformCallback) {
+    const chunkLength = chunk.length;
+    for (let i = 0; i < chunkLength; i++) {
+      if (chunk[i] === ASCII.EOT) {
+        // buffer = [ASCII.ENQ...]
+        if (this.buffer[0] === ASCII.ENQ) this.push(this.buffer);
+        this.buffer = Buffer.alloc(0);
+      } else if (chunk[i] === ASCII.ENQ) {
+        // buffer = [ASCII.ENQ]
+        this.buffer = Buffer.from([ASCII.ENQ]);
+      } else if (this.buffer[0] === ASCII.ENQ) {
+        // buffer = [ASCII.ENQ...chunk[i] ]
         this.buffer = Buffer.concat([this.buffer, Buffer.from([chunk[i]])]);
       }
     }
@@ -99,7 +139,7 @@ ipcMain.on(
     }
 
     // Create folder if doesnt exist
-    const folderBackup = path.join(process.cwd(), 'backup', lab);
+    const folderBackup = path.join(process.cwd(), 'log', lab);
     const fileName = `${dayjs().format('YYYYMMDD')}.txt`;
     const filePath = path.join(folderBackup, fileName);
 
@@ -107,78 +147,117 @@ ipcMain.on(
       fs.mkdirSync(folderBackup, { recursive: true });
     }
 
-    const parser = new SlipParser();
-    portManager[id].pipe(parser);
-
-    // const connDevice: any = connectmanageApi.getById(id)?.data;
-
-    parser.on('data', async (buffer: Buffer) => {
-      // Use regex to match Control characters in Unicode and replace them with an empty string
-      // https://en.wikipedia.org/wiki/Control_character#In_Unicode
-      const str = buffer
-        .toString()
-        .replace(/[\u0000-\u001F\u007F-\u009F]/g, '\n') // Use regex to match Control characters in Unicode and replace them with newline
-        .replace(/^\s+|\s+$/g, '') // Remove leading and trailing whitespace
-        .replace(/\r\n/g, '\n') // Replace "\r\n" with "\n"
-        .replace(/\n{2,}/g, '\n'); // Remove duplicate newline characters
-
-      // Write data to backup file
-      fs.appendFile(filePath, `${str}\n`, (error) => {
+    // Write data to log file
+    portManager[id].on('data', (buffer: Buffer) => {
+      fs.appendFile(filePath, buffer.toString(), (error) => {
         if (error) {
           console.log('Error write backup file', error);
         } else {
           console.log('Write backup file successfully:', filePath);
         }
       });
+    });
 
-      const lines = str.split('\n');
-      const result: any = { datetime: Date.now() };
+    /* Access 2 */
+    const parser = new Access2Parser();
+    portManager[id].pipe(parser);
 
-      // Extract computer and barcode
-      const barcode = lines[0] // BIOWAY B-11  001-001
-        .split('-') // split string with separator -
-        .at(-1) // get last string
-        .padStart(4, '0'); // fill zero at start
-      result.barcode = barcode;
-
-      // Extract other indexes
-      for (let i = 1; i < lines.length; i++) {
-        const chisoStr = lines[i]
-          .replace(/^\s+|\s+$/g, '') // Remove leading and trailing whitespace
-          .replace(/\s{2,}/g, ' '); // Remove duplicate whitespace
-        const parts = chisoStr.split(' ');
-        const len = parts.length;
-        if (len > 1) {
-          const chiso = parts.slice(0, -1).join(' ');
-          const ketqua = parts.at(-1) === '-' ? 'Âm tính' : parts.at(-1);
-          result[chiso] = ketqua;
-        } else if (len > 0) {
-          const chiso = parts[0];
-          result[chiso] = null;
-        }
-      }
-
-      // Save into result table
-      const data = kqBW200Api.create(result)?.data;
-      event.reply('serialport-data', data);
-
-      if (!mainWindow.isFocused()) {
-        const notification = new Notification({
-          title: 'Kết quả xét nghiệm',
-          body: `Nhận được kết quả từ ${comp}, bạn muốn xem kết quả này không?`,
+    portManager[id].on('data', (buffer: Buffer) => {
+      // Send ACK when ENQ is received
+      if (parser.buffer[0] === ASCII.ENQ) {
+        portManager[id].write(Buffer.from([ASCII.ACK]));
+        portManager[id].drain((error) => {
+          if (error) console.log('PortManager write error', error);
         });
-        notification.on('click', () => {
-          if (!mainWindow.isFocused()) {
-            if (!mainWindow.isMinimized()) {
-              mainWindow.restore();
-            }
-            mainWindow.focus();
-          }
-          event.reply('notification-data', data);
-        });
-        notification.show();
       }
     });
+
+    parser.on('data', async (buffer: Buffer) => {
+      const str = buffer
+        .toString()
+        .replace(/[\u0000-\u001F\u007F-\u009F]/g, '\n') // Use regex to match Control characters in Unicode and replace them with newline
+        .replace(/^\s+|\s+$/g, '') // Remove leading and trailing whitespace
+        .replace(/\r\n/g, '\n') // Replace "\r\n" with "\n"
+        .replace(/\n{2,}/g, '\n'); // Remove duplicate newline characters
+      console.log('parser->data', str);
+    });
+    /* Access 2 - End */
+
+    // const connDevice: any = connectmanageApi.getById(id)?.data;
+
+    /* BW200 */
+    // const parser = new BW200Parser();
+    // portManager[id].pipe(parser);
+
+    // parser.on('data', async (buffer: Buffer) => {
+    //   // Use regex to match Control characters in Unicode and replace them with an empty string
+    //   // https://en.wikipedia.org/wiki/Control_character#In_Unicode
+    //   const str = buffer
+    //     .toString()
+    //     .replace(/[\u0000-\u001F\u007F-\u009F]/g, '\n') // Use regex to match Control characters in Unicode and replace them with newline
+    //     .replace(/^\s+|\s+$/g, '') // Remove leading and trailing whitespace
+    //     .replace(/\r\n/g, '\n') // Replace "\r\n" with "\n"
+    //     .replace(/\n{2,}/g, '\n'); // Remove duplicate newline characters
+
+    //   const lines = str.split('\n');
+    //   if (!lines || !lines.length) return;
+
+    //   /**
+    //    * Regex match `BIOWAY B-11  001-001`
+    //    */
+    //   const regex = /^BIOWAY[A-Za-z0-9-\s]*\s+\d{3,}-\d{3,}$/;
+    //   if (!regex.test(lines[0])) return;
+
+    //   // Extract computer and barcode
+    //   const barcode = lines[0] // BIOWAY B-11  001-001
+    //     .split('-') // split string with separator -
+    //     .at(-1) // get last string
+    //     .padStart(4, '0'); // fill zero at start
+    //   if (!barcode) return;
+
+    //   const result: any = {
+    //     datetime: new Date().toISOString(),
+    //   };
+    //   result.barcode = barcode;
+
+    //   // Extract other indexes
+    //   for (let i = 1; i < lines.length; i++) {
+    //     /**
+    //      * Extract index and value
+    //      * `URO -`
+    //      * `SG  1.015`
+    //      * `VC  +-`
+    //      */
+    //     const chisoRegex = /(?<chiso>[A-Z]+)\s*(?<ketqua>[.\S]*)\s*/i;
+    //     const found = lines[i].match(chisoRegex);
+    //     if (found) {
+    //       let { chiso, ketqua } = found.groups;
+    //       if (ketqua === '-') ketqua = 'Âm tính';
+    //       if (ketqua === '+-') ketqua = '+Âm tính';
+    //       result[chiso] = ketqua;
+    //     }
+    //   }
+
+    //   // Save into result table
+    //   const data = kqBW200Api.create(result)?.data;
+    //   event.reply('serialport-data', data);
+
+    //   if (!mainWindow.isFocused()) {
+    //     const notification = new Notification({
+    //       title: 'Kết quả xét nghiệm',
+    //       body: `Nhận được kết quả từ ${comp}, bạn muốn xem kết quả này không?`,
+    //     });
+    //     notification.on('click', () => {
+    //       if (!mainWindow.isFocused()) {
+    //         if (!mainWindow.isMinimized()) mainWindow.restore();
+    //         mainWindow.focus();
+    //       }
+    //       event.reply('notification-data', data);
+    //     });
+    //     notification.show();
+    //   }
+    // });
+    /* BW200 - End */
 
     portManager[id].on('open', () => {
       console.log('serial port open');
