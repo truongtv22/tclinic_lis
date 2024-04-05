@@ -179,7 +179,49 @@ ipcMain.on(
         .replace(/^\s+|\s+$/g, '') // Remove leading and trailing whitespace
         .replace(/\r\n/g, '\n') // Replace "\r\n" with "\n"
         .replace(/\n{2,}/g, '\n'); // Remove duplicate newline characters
-      console.log('parser->data', str);
+
+      const lines = str.split('\n');
+      if (!lines || !lines.length) return;
+
+      /**
+       * Regex match `1H|\^&|||ACCESS^503884|||||LIS||P|1|20240330104322`
+       */
+      const regex = /^.*ACCESS.*(?<datetime>[0-9]{14})$/;
+      if (!regex.test(lines[0])) return;
+
+      const datetime = lines[0].match(regex)?.groups?.datetime;
+      if (!datetime) return;
+
+      /**
+       * Regex match `2P|1|HOANG PHUONG`
+       */
+      const regex1 = /(?<person>[a-zA-Z0-9\s]+)$/;
+      const person = lines[2].match(regex1)?.groups?.person;
+      if (!person) return;
+
+      /**
+       * Regex match `3O|1|0012P|^1302^4|^^^HCG5^1|||||||||||Serum||||||||||F`
+       */
+      // match text 3O|1|0012P|^1302^4|^^^HCG5^1|||||||||||Serum||||||||||F
+      const regex2 = /(?<barcode>[0-9]{3,})[a-zA-Z0-9]*/;
+      const barcode = lines[4].match(regex2)?.groups?.barcode;
+      if (!barcode) return;
+
+      /**
+       * Regex match `4R|1|^^^HCG5^1|342.22|mIU/mL||N||F||||20240330104401|503884`
+       */
+      const regex3 =
+        /\^{3}(?<chiso>[a-zA-Z0-9-]+)\^[0-9]+\|(?<ketqua>[>\-+]?[0-9.]+)\|/;
+      const { chiso, ketqua } = lines[6].match(regex3)?.groups || {};
+
+      const result = {
+        datetime,
+        person,
+        barcode,
+        chiso,
+        ketqua,
+      };
+      console.log('result', result);
     });
     /* Access 2 - End */
 
