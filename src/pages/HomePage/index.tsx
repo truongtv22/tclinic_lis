@@ -475,7 +475,11 @@ export function HomePage() {
               </Row>
             </Row>
             <Form.Item name="id" hidden />
-            <Form.Item name="comp" label="Tên thiết bị">
+            <Form.Item
+              name="comp"
+              label="Tên thiết bị"
+              rules={[{ required: true, message: 'Không được để trống' }]}
+            >
               <Input />
             </Form.Item>
             <Row gutter={8}>

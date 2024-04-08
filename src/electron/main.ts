@@ -158,82 +158,21 @@ ipcMain.on(
       });
     });
 
-    /* Access 2 */
-    const parser = new Access2Parser();
-    portManager[id].pipe(parser);
-
-    portManager[id].on('data', (buffer: Buffer) => {
-      // Send ACK when ENQ is received
-      if (parser.buffer[0] === ASCII.ENQ) {
-        portManager[id].write(Buffer.from([ASCII.ACK]));
-        portManager[id].drain((error) => {
-          if (error) console.log('PortManager write error', error);
-        });
-      }
-    });
-
-    parser.on('data', async (buffer: Buffer) => {
-      const str = buffer
-        .toString()
-        .replace(/[\u0000-\u001F\u007F-\u009F]/g, '\n') // Use regex to match Control characters in Unicode and replace them with newline
-        .replace(/^\s+|\s+$/g, '') // Remove leading and trailing whitespace
-        .replace(/\r\n/g, '\n') // Replace "\r\n" with "\n"
-        .replace(/\n{2,}/g, '\n'); // Remove duplicate newline characters
-
-      const lines = str.split('\n');
-      if (!lines || !lines.length) return;
-
-      /**
-       * Regex match `1H|\^&|||ACCESS^503884|||||LIS||P|1|20240330104322`
-       */
-      const regex = /^.*ACCESS.*(?<datetime>[0-9]{14})$/;
-      if (!regex.test(lines[0])) return;
-
-      const datetime = lines[0].match(regex)?.groups?.datetime;
-      if (!datetime) return;
-
-      /**
-       * Regex match `2P|1|HOANG PHUONG`
-       */
-      const regex1 = /(?<person>[a-zA-Z0-9\s]+)$/;
-      const person = lines[2].match(regex1)?.groups?.person;
-      if (!person) return;
-
-      /**
-       * Regex match `3O|1|0012P|^1302^4|^^^HCG5^1|||||||||||Serum||||||||||F`
-       */
-      // match text 3O|1|0012P|^1302^4|^^^HCG5^1|||||||||||Serum||||||||||F
-      const regex2 = /(?<barcode>[0-9]{3,})[a-zA-Z0-9]*/;
-      const barcode = lines[4].match(regex2)?.groups?.barcode;
-      if (!barcode) return;
-
-      /**
-       * Regex match `4R|1|^^^HCG5^1|342.22|mIU/mL||N||F||||20240330104401|503884`
-       */
-      const regex3 =
-        /\^{3}(?<chiso>[a-zA-Z0-9-]+)\^[0-9]+\|(?<ketqua>[>\-+]?[0-9.]+)\|/;
-      const { chiso, ketqua } = lines[6].match(regex3)?.groups || {};
-
-      const result = {
-        datetime,
-        person,
-        barcode,
-        chiso,
-        ketqua,
-      };
-      console.log('result', result);
-    });
-    /* Access 2 - End */
-
-    // const connDevice: any = connectmanageApi.getById(id)?.data;
-
-    /* BW200 */
-    // const parser = new BW200Parser();
+    // #region Access 2
+    // const parser = new Access2Parser();
     // portManager[id].pipe(parser);
 
+    // portManager[id].on('data', (buffer: Buffer) => {
+    //   // Send ACK when ENQ is received
+    //   if (parser.buffer[0] === ASCII.ENQ) {
+    //     portManager[id].write(Buffer.from([ASCII.ACK]));
+    //     portManager[id].drain((error) => {
+    //       if (error) console.log('PortManager write error', error);
+    //     });
+    //   }
+    // });
+
     // parser.on('data', async (buffer: Buffer) => {
-    //   // Use regex to match Control characters in Unicode and replace them with an empty string
-    //   // https://en.wikipedia.org/wiki/Control_character#In_Unicode
     //   const str = buffer
     //     .toString()
     //     .replace(/[\u0000-\u001F\u007F-\u009F]/g, '\n') // Use regex to match Control characters in Unicode and replace them with newline
@@ -245,61 +184,119 @@ ipcMain.on(
     //   if (!lines || !lines.length) return;
 
     //   /**
-    //    * Regex match `BIOWAY B-11  001-001`
+    //    * Regex match `1H|\^&|||ACCESS^503884|||||LIS||P|1|20240330104322`
     //    */
-    //   const regex = /^BIOWAY[A-Za-z0-9-\s]*\s+\d{3,}-\d{3,}$/;
+    //   const regex = /^.*ACCESS.*(?<datetime>[0-9]{14})$/;
     //   if (!regex.test(lines[0])) return;
 
-    //   // Extract computer and barcode
-    //   const barcode = lines[0] // BIOWAY B-11  001-001
-    //     .split('-') // split string with separator -
-    //     .at(-1) // get last string
-    //     .padStart(4, '0'); // fill zero at start
+    //   const datetime = lines[0].match(regex)?.groups?.datetime;
+    //   if (!datetime) return;
+
+    //   /**
+    //    * Regex match `2P|1|HOANG PHUONG`
+    //    */
+    //   const regex1 = /(?<person>[a-zA-Z0-9\s]+)$/;
+    //   const person = lines[2].match(regex1)?.groups?.person;
+    //   if (!person) return;
+
+    //   /**
+    //    * Regex match `3O|1|0012P|^1302^4|^^^HCG5^1|||||||||||Serum||||||||||F`
+    //    */
+    //   // match text 3O|1|0012P|^1302^4|^^^HCG5^1|||||||||||Serum||||||||||F
+    //   const regex2 = /(?<barcode>[0-9]{3,})[a-zA-Z0-9]*/;
+    //   const barcode = lines[4].match(regex2)?.groups?.barcode;
     //   if (!barcode) return;
 
-    //   const result: any = {
-    //     datetime: new Date().toISOString(),
+    //   /**
+    //    * Regex match `4R|1|^^^HCG5^1|342.22|mIU/mL||N||F||||20240330104401|503884`
+    //    */
+    //   const regex3 =
+    //     /\^{3}(?<chiso>[a-zA-Z0-9-]+)\^[0-9]+\|(?<ketqua>[>\-+]?[0-9.]+)\|/;
+    //   const { chiso, ketqua } = lines[6].match(regex3)?.groups || {};
+
+    //   const result = {
+    //     datetime,
+    //     person,
+    //     barcode,
+    //     chiso,
+    //     ketqua,
     //   };
-    //   result.barcode = barcode;
-
-    //   // Extract other indexes
-    //   for (let i = 1; i < lines.length; i++) {
-    //     /**
-    //      * Extract index and value
-    //      * `URO -`
-    //      * `SG  1.015`
-    //      * `VC  +-`
-    //      */
-    //     const chisoRegex = /(?<chiso>[A-Z]+)\s*(?<ketqua>[.\S]*)\s*/i;
-    //     const found = lines[i].match(chisoRegex);
-    //     if (found) {
-    //       let { chiso, ketqua } = found.groups;
-    //       if (ketqua === '-') ketqua = 'Âm tính';
-    //       if (ketqua === '+-') ketqua = '+Âm tính';
-    //       result[chiso] = ketqua;
-    //     }
-    //   }
-
-    //   // Save into result table
-    //   const data = kqBW200Api.create(result)?.data;
-    //   event.reply('serialport-data', data);
-
-    //   if (!mainWindow.isFocused()) {
-    //     const notification = new Notification({
-    //       title: 'Kết quả xét nghiệm',
-    //       body: `Nhận được kết quả từ ${comp}, bạn muốn xem kết quả này không?`,
-    //     });
-    //     notification.on('click', () => {
-    //       if (!mainWindow.isFocused()) {
-    //         if (!mainWindow.isMinimized()) mainWindow.restore();
-    //         mainWindow.focus();
-    //       }
-    //       event.reply('notification-data', data);
-    //     });
-    //     notification.show();
-    //   }
+    //   console.log('result', result);
     // });
-    /* BW200 - End */
+    // #endregion
+
+    // const connDevice: any = connectmanageApi.getById(id)?.data;
+
+    // #region BW200
+    const parser = new BW200Parser();
+    portManager[id].pipe(parser);
+
+    parser.on('data', async (buffer: Buffer) => {
+      // Use regex to match Control characters in Unicode and replace them with an empty string
+      // https://en.wikipedia.org/wiki/Control_character#In_Unicode
+      const str = buffer
+        .toString()
+        .replace(/[\u0000-\u001F\u007F-\u009F]/g, '\n') // Use regex to match Control characters in Unicode and replace them with newline
+        .replace(/^\s+|\s+$/g, '') // Remove leading and trailing whitespace
+        .replace(/\r\n/g, '\n') // Replace "\r\n" with "\n"
+        .replace(/\n{2,}/g, '\n'); // Remove duplicate newline characters
+
+      const lines = str.split('\n');
+      if (!lines || !lines.length) return;
+
+      /**
+       * Regex match `BIOWAY B-11  001-001`
+       */
+      const regex = /^BIOWAY[A-Za-z0-9-\s]*\s+\d{3,}-(?<barcode>\d{3,})$/;
+      if (!regex.test(lines[0])) return;
+
+      // Extract computer and barcode
+      const barcode = lines[0].match(regex)?.groups?.barcode; // BIOWAY B-11  001-001
+      if (!barcode) return;
+
+      const result: any = {
+        datetime: new Date().toISOString(),
+      };
+      result.barcode = barcode;
+
+      // Extract other indexes
+      for (let i = 1; i < lines.length; i++) {
+        /**
+         * Extract index and value
+         * `URO -`
+         * `SG  1.015`
+         * `VC  +-`
+         */
+        const chisoRegex = /(?<chiso>[A-Z]+)\s*(?<ketqua>[.\S]*)\s*/i;
+        const found = lines[i].match(chisoRegex);
+        if (found) {
+          let { chiso, ketqua } = found.groups;
+          if (ketqua === '-') ketqua = 'Âm tính';
+          if (ketqua === '+-') ketqua = '+Âm tính';
+          result[chiso] = ketqua;
+        }
+      }
+
+      // Save into result table
+      const data = kqBW200Api.create(result)?.data;
+      event.reply('serialport-data', data);
+
+      if (!mainWindow.isFocused()) {
+        const notification = new Notification({
+          title: 'Kết quả xét nghiệm',
+          body: `Nhận được kết quả từ ${comp}, bạn muốn xem kết quả này không?`,
+        });
+        notification.on('click', () => {
+          if (!mainWindow.isFocused()) {
+            if (!mainWindow.isMinimized()) mainWindow.restore();
+            mainWindow.focus();
+          }
+          event.reply('notification-data', data);
+        });
+        notification.show();
+      }
+    });
+    // #endregion
 
     portManager[id].on('open', () => {
       console.log('serial port open');
@@ -343,6 +340,12 @@ ipcMain.handle('connectmanage-update', async (event, values) => {
 
 ipcMain.handle('connectmanage-delete', async (event, id) => {
   const result = connectmanageApi.delete(id);
+  return result;
+});
+
+// IPC KQ BW200
+ipcMain.handle('kqbw200-get', async (event) => {
+  const result = kqBW200Api.getAll();
   return result;
 });
 

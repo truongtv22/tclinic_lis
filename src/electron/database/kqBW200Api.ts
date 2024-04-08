@@ -1,6 +1,23 @@
 import connect from './index';
 
 export default {
+  getAll() {
+    try {
+      const db = connect();
+      const stmTotal = db.prepare(
+        'SELECT COUNT(*) total FROM [dbo.KQ_BW200]',
+      );
+      const stmList = db.prepare(
+        'SELECT * FROM [dbo.KQ_BW200] ORDER BY datetime ASC',
+      );
+
+      const total: any = stmTotal.all();
+      const data = stmList.all();
+      return { success: true, data, total: total[0].total };
+    } catch (error) {
+      return { success: false, message: error };
+    }
+  },
   create(values: any = {}) {
     try {
       const db = connect();

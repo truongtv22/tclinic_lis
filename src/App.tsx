@@ -1,4 +1,5 @@
 import { ConfigProvider, App } from 'antd';
+import viVN from 'antd/locale/vi_VN';
 import { HashRouter } from 'react-router-dom';
 import { StyleProvider } from '@ant-design/cssinjs';
 import { PersistGate } from 'redux-persist/es/integration/react';
@@ -24,8 +25,13 @@ export default function AppPage() {
               Modal: {
                 wireframe: true,
               },
+              Form: {
+                itemMarginBottom: 8,
+                verticalLabelPadding: '0 0 2px',
+              },
             },
           }}
+          locale={viVN}
         >
           <App
             message={{ maxCount: 2 }}
