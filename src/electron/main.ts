@@ -186,11 +186,11 @@ ipcMain.on(
     //   /**
     //    * Regex match `1H|\^&|||ACCESS^503884|||||LIS||P|1|20240330104322`
     //    */
-    //   const regex = /^.*ACCESS.*(?<datetime>[0-9]{14})$/;
+    //   const regex = /^.*ACCESS.*(?<date_time>[0-9]{14})$/;
     //   if (!regex.test(lines[0])) return;
 
-    //   const datetime = lines[0].match(regex)?.groups?.datetime;
-    //   if (!datetime) return;
+    //   const date_time = lines[0].match(regex)?.groups?.date_time;
+    //   if (!date_time) return;
 
     //   /**
     //    * Regex match `2P|1|HOANG PHUONG`
@@ -215,7 +215,7 @@ ipcMain.on(
     //   const { chiso, ketqua } = lines[6].match(regex3)?.groups || {};
 
     //   const result = {
-    //     datetime,
+    //     date_time,
     //     person,
     //     barcode,
     //     chiso,
@@ -255,7 +255,7 @@ ipcMain.on(
       if (!barcode) return;
 
       const result: any = {
-        datetime: new Date().toISOString(),
+        date_time: new Date().toISOString(),
       };
       result.barcode = barcode;
 
@@ -344,8 +344,8 @@ ipcMain.handle('connectmanage-delete', async (event, id) => {
 });
 
 // IPC KQ BW200
-ipcMain.handle('kqbw200-get', async (event) => {
-  const result = kqBW200Api.getAll();
+ipcMain.handle('kqBW200-get', async (event, params) => {
+  const result = kqBW200Api.getAll(params);
   return result;
 });
 
@@ -361,7 +361,7 @@ ipcMain.handle('dong-bo-his', async (event: any, data) => {
     mamay: 'BW200',
     barcode: data.barcode_edit || data.barcode,
     kqxetnghiem: [],
-    ngaythuchien: new Date(data.datetime).toISOString(),
+    ngaythuchien: new Date(data.date_time).toISOString(),
     loaidongbo: 'ONE',
   };
   for (const chiso in chisoById) {

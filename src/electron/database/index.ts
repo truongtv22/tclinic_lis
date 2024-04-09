@@ -61,7 +61,7 @@ export function initDatabase() {
   if (!tables.includes('dbo.KQ_BW200')) {
     db.exec(`create table if not exists [dbo.KQ_BW200] (
       id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-      datetime TEXT,
+      date_time TEXT,
       barcode TEXT, /* mã barcode */
       sendhis INTEGER DEFAULT 0, /* flag send HIS */
       barcode_edit TEXT,
@@ -82,7 +82,7 @@ export function initDatabase() {
   if (!tables.includes('dbo.KQ_Access2')) {
     db.exec(`create table if not exists [dbo.KQ_Access2] (
       id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-      datetime TEXT,
+      date_time TEXT,
       barcode TEXT, /* mã barcode */
       sendhis INTEGER DEFAULT 0, /* flag send HIS */
       barcode_edit TEXT,

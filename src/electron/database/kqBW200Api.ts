@@ -1,14 +1,15 @@
 import connect from './index';
 
 export default {
-  getAll() {
+  getAll(
+    params: { start_date?: string; end_date?: string; sendhis?: number } = {},
+  ) {
     try {
       const db = connect();
-      const stmTotal = db.prepare(
-        'SELECT COUNT(*) total FROM [dbo.KQ_BW200]',
-      );
+
+      const stmTotal = db.prepare('SELECT COUNT(*) total FROM [dbo.KQ_BW200]');
       const stmList = db.prepare(
-        'SELECT * FROM [dbo.KQ_BW200] ORDER BY datetime ASC',
+        'SELECT * FROM [dbo.KQ_BW200] ORDER BY date_time DESC',
       );
 
       const total: any = stmTotal.all();
@@ -24,6 +25,7 @@ export default {
 
       const stmAdd = db.prepare(
         `INSERT INTO [dbo.KQ_BW200] (
+          date_time
           barcode,
           URO,
           BIL,
@@ -36,8 +38,8 @@ export default {
           SG,
           PH,
           VC,
-          datetime
         ) VALUES (
+          @date_time,
           @barcode,
           @URO,
           @BIL,
@@ -49,8 +51,7 @@ export default {
           @GLU,
           @SG,
           @PH,
-          @VC,
-          @datetime
+          @VC
         )`,
       );
       const result = stmAdd.run(values);

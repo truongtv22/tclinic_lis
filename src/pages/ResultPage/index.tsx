@@ -1,81 +1,117 @@
-import { useEffect, useState } from 'react';
-import { App, Spin, Card, Radio, Row, Col } from 'antd';
+import dayjs from 'dayjs';
+import { useEffect, useRef, useState } from 'react';
+import { App, Row, Col, Spin, Card, Radio, Checkbox } from 'antd';
 import Split from '@uiw/react-split';
+
 import {
-  EditableProTable,
   ProForm,
   ProFormText,
-  ProFormDatePicker,
   ProFormSelect,
+  ProFormDatePicker,
+  EditableProTable,
 } from '@ant-design/pro-components';
-
-const defaultData = [
-  {
-    id: 624748504,
-    title: '活动名称一',
-    readonly: '活动名称一',
-    decs: '这个活动真好玩',
-    state: 'open',
-    created_at: 1590486176000,
-    update_at: 1590486176000,
-  },
-  {
-    id: 624691229,
-    title: '活动名称二',
-    readonly: '活动名称二',
-    decs: '这个活动真好玩',
-    state: 'closed',
-    created_at: 1590481162000,
-    update_at: 1590481162000,
-  },
-];
+import type { ProColumns } from '@ant-design/pro-components';
+import classNames from 'classnames';
 
 export function ResultPage() {
-  const { modal, notification } = App.useApp();
+  const [form] = ProForm.useForm();
 
   const [loading, setLoading] = useState(false);
 
   const [devices, setDevices] = useState([]);
   const [selected, setSelected] = useState(null);
 
-  const [dataSource, setDataSource] = useState<any>(defaultData);
+  const [dataSource, setDataSource] = useState<any>([]);
   const [editableKeys, setEditableRowKeys] = useState([]);
 
-  const columns = [
+  const columns: ProColumns<any>[] = [
     {
-      title: 'Name',
-      dataIndex: 'title',
-      formItemProps: (form, { rowIndex }) => {
-        return {
-          rules:
-            rowIndex > 1 ? [{ required: true, message: '此项为必填项' }] : [],
-        };
+      title: 'Thời gian',
+      dataIndex: 'date_time',
+      width: 160,
+      fixed: 'left',
+      renderText: (value) => {
+        return dayjs(value).format('YYYY-MM-DD HH:mm:ss');
       },
-      // 第一行不允许编辑
-      editable: (text, record, index) => {
-        return index !== 0;
+    },
+    {
+      title: 'Barcode',
+      dataIndex: 'barcode',
+      width: 80,
+      fixed: 'left',
+    },
+    {
+      title: 'Gửi HIS',
+      dataIndex: 'sendhis',
+      renderText: (value) => {
+        return <Checkbox checked={value === 1} />;
       },
-      width: '15%',
+    },
+    {
+      title: 'URO',
+      dataIndex: 'URO',
+    },
+    {
+      title: 'BIL',
+      dataIndex: 'BIL',
+    },
+    {
+      title: 'KET',
+      dataIndex: 'KET',
+    },
+    {
+      title: 'BLD',
+      dataIndex: 'BLD',
+    },
+    {
+      title: 'PRO',
+      dataIndex: 'PRO',
+    },
+    {
+      title: 'NIT',
+      dataIndex: 'NIT',
+    },
+    {
+      title: 'LEU',
+      dataIndex: 'LEU',
+    },
+    {
+      title: 'GLU',
+      dataIndex: 'GLU',
+    },
+    {
+      title: 'SG',
+      dataIndex: 'SG',
+    },
+    {
+      title: 'PH',
+      dataIndex: 'PH',
+    },
+    {
+      title: 'VC',
+      dataIndex: 'VC',
     },
   ];
 
-  const getData = async () => {
+  useEffect(() => {
+    getConnect();
+    getKqBW200();
+  }, []);
+
+  const getConnect = async () => {
     const result = await window.dbApi.getConnect();
-    if (result.success) {
-      return result.data;
+    if (result.success && result.data) {
+      setDevices(result.data);
+      setSelected(result.data[0]);
     }
-    return null;
   };
 
-  useEffect(() => {
-    (async () => {
-      const data = await getData();
-      if (data && data.length > 0) {
-        setDevices(data);
-        setSelected(data[0]);
-      }
-    })();
-  }, []);
+  const getKqBW200 = async () => {
+    const result = await window.dbApi.getKqBW200();
+    if (result.success && result.data) {
+      setDataSource(result.data);
+    }
+  };
 
   const onSelect = (item: any) => {
     setSelected(item);
@@ -106,72 +142,81 @@ export function ResultPage() {
             )}
           </div>
         </Card>
-        <Card className="flex-1" size="small">
-          <div className="space-y-2">
-            <h4 className="text-lg font-semibold">Kết quả xét nghiệm</h4>
-            <ProForm
-              submitter={{
-                searchConfig: { resetText: 'Làm mới', submitText: 'Tìm kiếm' },
-              }}
-            >
-              <Row gutter={8}>
-                <Col span={12}>
-                  <ProFormDatePicker
-                    name="startDate"
-                    label="Từ ngày"
-                    placeholder="Từ ngày"
-                    fieldProps={{
-                      className: 'w-full',
-                    }}
-                  />
-                </Col>
-                <Col span={12}>
-                  <ProFormDatePicker
-                    name="endDate"
-                    label="Đến ngày"
-                    placeholder="Đến ngày"
-                    fieldProps={{
-                      className: 'w-full',
-                    }}
-                  />
-                </Col>
-              </Row>
-              <Row gutter={8}>
-                <Col span={12}>
-                  <ProFormText
-                    name="barcode"
-                    label="Barcode"
-                    placeholder="Barcode"
-                  />
-                </Col>
-                <Col span={12}>
-                  <ProFormSelect
-                    name="status"
-                    label="Trạng thái"
-                    placeholder="Tất cả"
-                    options={[
-                      {
-                        value: 0,
-                        label: 'Tất cả',
-                      },
-                      {
-                        value: 1,
-                        label: 'Đã gửi sang HIS',
-                      },
-                      {
-                        value: 2,
-                        label: 'Chưa gửi sang HIS',
-                      },
-                    ]}
-                  />
-                </Col>
-              </Row>
-            </ProForm>
+        <Card className="flex-1 overflow-hidden" size="small">
+          <div className="space-y-8">
+            <div className="space-y-2">
+              <h4 className="text-lg font-semibold">Kết quả xét nghiệm</h4>
+              <ProForm
+                form={form}
+                submitter={{
+                  searchConfig: {
+                    resetText: 'Làm mới',
+                    submitText: 'Tìm kiếm',
+                  },
+                  render: (props, dom) => (
+                    <div className="flex gap-2 justify-end">{dom}</div>
+                  ),
+                }}
+              >
+                <Row gutter={8}>
+                  <Col span={12}>
+                    <ProFormDatePicker
+                      name="startDate"
+                      label="Từ ngày"
+                      placeholder="Từ ngày"
+                      fieldProps={{
+                        className: 'w-full',
+                      }}
+                    />
+                  </Col>
+                  <Col span={12}>
+                    <ProFormDatePicker
+                      name="endDate"
+                      label="Đến ngày"
+                      placeholder="Đến ngày"
+                      fieldProps={{
+                        className: 'w-full',
+                      }}
+                    />
+                  </Col>
+                </Row>
+                <Row gutter={8}>
+                  <Col span={12}>
+                    <ProFormText
+                      name="barcode"
+                      label="Barcode"
+                      placeholder="Barcode"
+                    />
+                  </Col>
+                  <Col span={12}>
+                    <ProFormSelect
+                      name="status"
+                      label="Trạng thái"
+                      placeholder="Tất cả"
+                      options={[
+                        {
+                          value: 0,
+                          label: 'Tất cả',
+                        },
+                        {
+                          value: 1,
+                          label: 'Đã gửi sang HIS',
+                        },
+                        {
+                          value: 2,
+                          label: 'Chưa gửi sang HIS',
+                        },
+                      ]}
+                    />
+                  </Col>
+                </Row>
+              </ProForm>
+            </div>
             <EditableProTable
               rowKey="id"
-              cardProps={{ bodyStyle: { padding: 0 } }}
-              columns={columns}
               value={dataSource}
+              scroll={{ x: 'max-content' }}
+              columns={columns}
               onChange={setDataSource}
               // editable={{
               //   type: 'multiple',
@@ -181,6 +226,26 @@ export function ResultPage() {
               //   },
               //   onChange: setEditableRowKeys,
               // }}
+              cardProps={{ bodyStyle: { padding: 0 } }}
+              // components={{
+              //   table: (props) => (
+              //     <table
+              //       {...props}
+              //       onKeyDown={() => console.log('onKeyDown')}
+              //     />
+              //   ),
+              //   body: {
+              //     cell: (props) => (
+              //       <td
+              //         {...props}
+              //         tabIndex={1}
+              //         className={classNames(props.className, '')}
+              //       />
+              //     ),
+              //   },
+              // }}
+              pagination={{ position: ['bottomRight'] }}
+              recordCreatorProps={false}
             />
           </div>
         </Card>

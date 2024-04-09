@@ -49,6 +49,8 @@
   "dependencies": {
     "@ant-design/pro-components": "^2.7.0",
     "@reduxjs/toolkit": "^2.1.0",
+    "@table-nav/core": "^0.0.7",
+    "@table-nav/react": "^0.0.7",
     "@uiw/react-split": "^5.9.3",
     "ahooks": "^3.7.10",
     "antd": "^5.13.3",

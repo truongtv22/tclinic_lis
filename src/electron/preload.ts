@@ -70,6 +70,10 @@ contextBridge.exposeInMainWorld('dbApi', {
   deleteConnect: async (id: any) => {
     return ipcRenderer.invoke('connectmanage-delete', id);
   },
+
+  getKqBW200: async (params?: any) => {
+    return ipcRenderer.invoke('kqBW200-get', params);
+  },
 });
 
 const { handlers } = preloadReduxBridge<Partial<State>, Action>(ipcRenderer);
