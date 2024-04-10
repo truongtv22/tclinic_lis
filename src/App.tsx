@@ -37,7 +37,7 @@ const viVNIntl = createIntl('vi_VN', {
 });
 
 export default function AppPage() {
-  const values = useContext(ProProvider);
+  const proConfig = useContext(ProProvider);
 
   return (
     <Provider store={store}>
@@ -59,7 +59,7 @@ export default function AppPage() {
           }}
           locale={viVN}
         >
-          <ProProvider.Provider value={{ ...values, intl: viVNIntl }}>
+          <ProProvider.Provider value={{ ...proConfig, intl: viVNIntl }}>
             <App
               message={{ maxCount: 2 }}
               notification={{

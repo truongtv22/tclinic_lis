@@ -70,7 +70,7 @@ export const PageLayout = () => {
           </div>
         </Dropdown>
       </Layout.Header>
-      <Layout.Content className="pt-8 px-12">
+      <Layout.Content className="pt-8 px-12 min-h-[calc(100vh-64px-70px)]">
         <Outlet />
       </Layout.Content>
       <Layout.Footer className="text-center">

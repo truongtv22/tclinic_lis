@@ -204,8 +204,9 @@ ipcMain.on(
     //    */
     //   // match text 3O|1|0012P|^1302^4|^^^HCG5^1|||||||||||Serum||||||||||F
     //   const regex2 = /(?<barcode>[0-9]{3,})[a-zA-Z0-9]*/;
-    //   const barcode = lines[4].match(regex2)?.groups?.barcode;
+    //   let barcode = lines[4].match(regex2)?.groups?.barcode;
     //   if (!barcode) return;
+    //   barcode = barcode.padStart(4, '0'); // fill zero at start
 
     //   /**
     //    * Regex match `4R|1|^^^HCG5^1|342.22|mIU/mL||N||F||||20240330104401|503884`
@@ -251,8 +252,9 @@ ipcMain.on(
       if (!regex.test(lines[0])) return;
 
       // Extract computer and barcode
-      const barcode = lines[0].match(regex)?.groups?.barcode; // BIOWAY B-11  001-001
+      let barcode = lines[0].match(regex)?.groups?.barcode; // BIOWAY B-11  001-001
       if (!barcode) return;
+      barcode = barcode.padStart(4, '0'); // fill zero at start
 
       const result: any = {
         date_time: new Date().toISOString(),

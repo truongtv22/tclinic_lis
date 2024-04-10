@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
-import { useEffect, useRef, useState } from 'react';
-import { App, Row, Col, Spin, Card, Radio, Checkbox } from 'antd';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { App, Row, Col, Spin, Card, Radio, Checkbox, DatePicker } from 'antd';
 import Split from '@uiw/react-split';
 
 import {
@@ -93,9 +93,15 @@ export function ResultPage() {
     },
   ];
 
+  const formValues = {
+    startDate: dayjs().subtract(1, 'day').startOf('day'),
+    endDate: dayjs().endOf('day'),
+    status: -1,
+  };
+
   useEffect(() => {
     getConnect();
-    getKqBW200();
+    getKqBW200(formValues);
   }, []);
 
   const getConnect = async () => {
@@ -106,8 +112,14 @@ export function ResultPage() {
     }
   };
 
-  const getKqBW200 = async () => {
-    const result = await window.dbApi.getKqBW200();
+  const getKqBW200 = async (params: any = {}) => {
+    if (params.startDate) {
+      params.startDate = dayjs(params.startDate).format('YYYY-MM-DD');
+    }
+    if (params.endDate) {
+      params.endDate = dayjs(params.endDate).format('YYYY-MM-DD');
+    }
+    const result = await window.dbApi.getKqBW200(params);
     if (result.success && result.data) {
       setDataSource(result.data);
     }
@@ -148,6 +160,10 @@ export function ResultPage() {
               <h4 className="text-lg font-semibold">Kết quả xét nghiệm</h4>
               <ProForm
                 form={form}
+                initialValues={formValues}
+                onFinish={async (values) => {
+                  getKqBW200(values);
+                }}
                 submitter={{
                   searchConfig: {
                     resetText: 'Làm mới',
@@ -156,6 +172,9 @@ export function ResultPage() {
                   render: (props, dom) => (
                     <div className="flex gap-2 justify-end">{dom}</div>
                   ),
+                  onReset: (values) => {
+                    getKqBW200(values);
+                  },
                 }}
               >
                 <Row gutter={8}>
@@ -195,7 +214,7 @@ export function ResultPage() {
                       placeholder="Tất cả"
                       options={[
                         {
-                          value: 0,
+                          value: -1,
                           label: 'Tất cả',
                         },
                         {
@@ -203,7 +222,7 @@ export function ResultPage() {
                           label: 'Đã gửi sang HIS',
                         },
                         {
-                          value: 2,
+                          value: 0,
                           label: 'Chưa gửi sang HIS',
                         },
                       ]}
