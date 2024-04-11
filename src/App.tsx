@@ -1,5 +1,6 @@
 import { useContext } from 'react';
 import { ConfigProvider, App } from 'antd';
+import merge from 'lodash/merge';
 import { ProProvider, createIntl } from '@ant-design/pro-components';
 import viVN from 'antd/locale/vi_VN';
 import viVNLocale from '@ant-design/pro-provider/lib/locale/vi_VN';
@@ -25,16 +26,23 @@ dayjs.updateLocale('vi', {
 });
 
 const { store, persistor } = configureAppStore();
-const viVNIntl = createIntl('vi_VN', {
-  ...viVNLocale,
-  pagination: {
-    total: {
-      range: ' ',
-      total: 'tổng',
-      item: ' ',
+const viVNIntl = createIntl(
+  'vi_VN',
+  merge(viVNLocale, {
+    pagination: {
+      total: {
+        range: ' ',
+        total: 'tổng',
+        item: ' ',
+      },
     },
-  },
-});
+    editableTable: {
+      action: {
+        save: 'Lưu',
+      },
+    },
+  }),
+);
 
 export default function AppPage() {
   const proConfig = useContext(ProProvider);

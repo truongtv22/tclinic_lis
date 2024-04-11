@@ -1,6 +1,16 @@
 import dayjs from 'dayjs';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { App, Row, Col, Spin, Card, Radio, Checkbox, DatePicker } from 'antd';
+import { cloneElement, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  App,
+  Row,
+  Col,
+  Spin,
+  Card,
+  Radio,
+  Table,
+  Checkbox,
+  DatePicker,
+} from 'antd';
 import Split from '@uiw/react-split';
 
 import {
@@ -13,6 +23,16 @@ import {
 import type { ProColumns } from '@ant-design/pro-components';
 import classNames from 'classnames';
 
+const CustomCheckbox = ({ value, onChange }: any) => {
+  console.log('value', value);
+  return (
+    <Checkbox
+      checked={value === 1}
+      onChange={(e) => onChange(e.target.checked ? 1 : 0)}
+    />
+  );
+};
+
 export function ResultPage() {
   const [form] = ProForm.useForm();
 
@@ -23,6 +43,7 @@ export function ResultPage() {
 
   const [dataSource, setDataSource] = useState<any>([]);
   const [editableKeys, setEditableRowKeys] = useState([]);
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
   const columns: ProColumns<any>[] = [
     {
@@ -40,13 +61,17 @@ export function ResultPage() {
       width: 80,
       fixed: 'left',
     },
-    {
-      title: 'Gửi HIS',
-      dataIndex: 'sendhis',
-      renderText: (value) => {
-        return <Checkbox checked={value === 1} />;
-      },
-    },
+    Table.SELECTION_COLUMN,
+    // {
+    //   title: 'Gửi HIS',
+    //   dataIndex: 'sendhis',
+    //   width: 70,
+    //   // fixed: 'left',
+    //   // editable: true,
+    //   // valueType: 'checkbox',
+    //   render: (_, row) => <Checkbox checked={row.sendhis === 1} disabled />,
+    //   renderFormItem: () => <CustomCheckbox />,
+    // },
     {
       title: 'URO',
       dataIndex: 'URO',
@@ -91,6 +116,23 @@ export function ResultPage() {
       title: 'VC',
       dataIndex: 'VC',
     },
+    // {
+    //   title: '#',
+    //   valueType: 'option',
+    //   render: (text, record, _, action) => [
+    //     <a
+    //       key="editable"
+    //       onClick={() => {
+    //         action?.startEditable?.(record.id);
+    //       }}
+    //     >
+    //       Sửa
+    //     </a>,
+    //     <a key="delete" onClick={() => {}}>
+    //       Xoá
+    //     </a>,
+    //   ],
+    // },
   ];
 
   const formValues = {
@@ -236,14 +278,36 @@ export function ResultPage() {
               value={dataSource}
               scroll={{ x: 'max-content' }}
               columns={columns}
-              onChange={setDataSource}
+              tableAlertRender={false}
+              rowSelection={{
+                selectedRowKeys,
+                onChange: setSelectedRowKeys,
+                columnTitle: 'Gửi HIS',
+                columnWidth: 70,
+                getCheckboxProps: (row) => ({
+                  disabled: row.sendhis === 1,
+                }),
+                renderCell: (value, row, index, node) => {
+                  return cloneElement(
+                    node,
+                    row.sendhis === 1 ? { checked: true } : {},
+                  );
+                },
+              }}
+              onChange={(v) => {
+                console.log('v', v);
+              }}
               // editable={{
               //   type: 'multiple',
-              //   editableKeys,
+              //   actionRender: (row, config, dom) => [dom.save, dom.cancel],
               //   onSave: async (rowKey, data, row) => {
-              //     console.log(rowKey, data, row);
+              //     console.log(rowKey, data, row, 'onSave');
               //   },
-              //   onChange: setEditableRowKeys,
+              //   // editableKeys,
+              //   //   onSave: async (rowKey, data, row) => {
+              //   //     console.log(rowKey, data, row);
+              //   //   },
+              //   // onChange: setEditableRowKeys,
               // }}
               cardProps={{ bodyStyle: { padding: 0 } }}
               // components={{
