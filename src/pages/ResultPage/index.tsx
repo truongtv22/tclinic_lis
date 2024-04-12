@@ -8,6 +8,8 @@ import {
   Card,
   Radio,
   Table,
+  Space,
+  Button,
   Checkbox,
   DatePicker,
 } from 'antd';
@@ -21,6 +23,13 @@ import {
   EditableProTable,
 } from '@ant-design/pro-components';
 import type { ProColumns } from '@ant-design/pro-components';
+import {
+  EditOutlined,
+  CloseOutlined,
+  SaveOutlined,
+  DeleteOutlined,
+} from '@ant-design/icons';
+
 import classNames from 'classnames';
 
 const CustomCheckbox = ({ value, onChange }: any) => {
@@ -75,68 +84,84 @@ export function ResultPage() {
     {
       title: 'URO',
       dataIndex: 'URO',
+      width: 80,
     },
     {
       title: 'BIL',
       dataIndex: 'BIL',
+      width: 80,
     },
     {
       title: 'KET',
       dataIndex: 'KET',
+      width: 80,
     },
     {
       title: 'BLD',
       dataIndex: 'BLD',
+      width: 80,
     },
     {
       title: 'PRO',
       dataIndex: 'PRO',
+      width: 80,
     },
     {
       title: 'NIT',
       dataIndex: 'NIT',
+      width: 80,
     },
     {
       title: 'LEU',
       dataIndex: 'LEU',
+      width: 80,
     },
     {
       title: 'GLU',
       dataIndex: 'GLU',
+      width: 80,
     },
     {
       title: 'SG',
       dataIndex: 'SG',
+      width: 80,
     },
     {
       title: 'PH',
       dataIndex: 'PH',
+      width: 80,
     },
     {
       title: 'VC',
       dataIndex: 'VC',
+      width: 80,
     },
-    // {
-    //   title: '#',
-    //   valueType: 'option',
-    //   render: (text, record, _, action) => [
-    //     <a
-    //       key="editable"
-    //       onClick={() => {
-    //         action?.startEditable?.(record.id);
-    //       }}
-    //     >
-    //       Sửa
-    //     </a>,
-    //     <a key="delete" onClick={() => {}}>
-    //       Xoá
-    //     </a>,
-    //   ],
-    // },
+    {
+      valueType: 'option',
+      width: 66,
+      fixed: 'right',
+      render: (text, row, index, action, config) => (
+        <>
+          <Button
+            size="small"
+            type="link"
+            icon={<EditOutlined />}
+            onClick={() => action.startEditable(row.id)}
+          />
+          <Button
+            size="small"
+            type="link"
+            icon={<DeleteOutlined />}
+            danger
+            onClick={() => {}}
+          />
+        </>
+      ),
+    },
   ];
 
   const formValues = {
-    startDate: dayjs().subtract(1, 'day').startOf('day'),
+    startDate: dayjs().subtract(7, 'day').startOf('day'),
     endDate: dayjs().endOf('day'),
     status: -1,
   };
@@ -201,6 +226,7 @@ export function ResultPage() {
             <div className="space-y-2">
               <h4 className="text-lg font-semibold">Kết quả xét nghiệm</h4>
               <ProForm
+                // variant="filled"
                 form={form}
                 initialValues={formValues}
                 onFinish={async (values) => {
@@ -278,7 +304,21 @@ export function ResultPage() {
               value={dataSource}
               scroll={{ x: 'max-content' }}
               columns={columns}
-              tableAlertRender={false}
+              options={{ density: false, reload: true, setting: true }}
+              toolbar={{ className: '*:p-0' }}
+              tableAlertRender={({ selectedRowKeys }) => (
+                <span>Đã chọn {selectedRowKeys.length} kết quả</span>
+              )}
+              tableAlertOptionRender={({ selectedRows, onCleanSelected }) => (
+                <Space size={8}>
+                  <Button size="small" onClick={onCleanSelected}>
+                    Huỷ
+                  </Button>
+                  <Button size="small" type="primary">
+                    Đồng bộ HIS
+                  </Button>
+                </Space>
+              )}
               rowSelection={{
                 selectedRowKeys,
                 onChange: setSelectedRowKeys,
@@ -289,7 +329,7 @@ export function ResultPage() {
                 }),
                 renderCell: (value, row, index, node) => {
                   return cloneElement(
-                    node,
+                    node as any,
                     row.sendhis === 1 ? { checked: true } : {},
                   );
                 },
@@ -297,18 +337,45 @@ export function ResultPage() {
               onChange={(v) => {
                 console.log('v', v);
               }}
-              // editable={{
-              //   type: 'multiple',
-              //   actionRender: (row, config, dom) => [dom.save, dom.cancel],
-              //   onSave: async (rowKey, data, row) => {
-              //     console.log(rowKey, data, row, 'onSave');
-              //   },
-              //   // editableKeys,
-              //   //   onSave: async (rowKey, data, row) => {
-              //   //     console.log(rowKey, data, row);
-              //   //   },
-              //   // onChange: setEditableRowKeys,
+              form={{
+                // variant: 'filled',
+                // className: 'bg-red-500',
+              }}
+              // formItemProps={{
+              //   rules: [{ required: true }],
               // }}
+              editable={{
+                type: 'single',
+                actionRender: (row, config, dom) => [
+                  <div key="action">
+                    <Button
+                      size="small"
+                      type="link"
+                      icon={<SaveOutlined />}
+                      onClick={() =>
+                        config.onSave(row.id, { ...row, barcode: '12' }, row)
+                      }
+                    />
+                    <Button
+                      size="small"
+                      type="link"
+                      icon={<CloseOutlined />}
+                      danger
+                      onClick={() => config.cancelEditable(row.id)}
+                    />
+                  </div>,
+                ],
+                //   onSave: async (rowKey, data, row) => {
+                //     console.log(rowKey, data, row, 'onSave');
+                //   },
+                //   // editableKeys,
+                //   //   onSave: async (rowKey, data, row) => {
+                //   //     console.log(rowKey, data, row);
+                //   //   },
+                //   // onChange: setEditableRowKeys,
+                onlyOneLineEditorAlertMessage:
+                  'Chỉ cho phép chỉnh sửa từng dòng một',
+              }}
               cardProps={{ bodyStyle: { padding: 0 } }}
               // components={{
               //   table: (props) => (

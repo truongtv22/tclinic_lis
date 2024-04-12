@@ -37,6 +37,7 @@ const viVNIntl = createIntl(
       },
     },
     editableTable: {
+      onlyOneLineEditor: 'Chỉ cho phép chỉnh sửa từng dòng một',
       action: {
         save: 'Lưu',
       },
