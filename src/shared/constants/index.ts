@@ -4,7 +4,7 @@ export const LAB = {
   SysmexXP100: 'SysmexXP100',
 };
 
-export const CONN_TYPE = {
+export const CONNECT_TYPE = {
   SerialPort: 'SerialPort',
   Folder: 'Folder',
 };

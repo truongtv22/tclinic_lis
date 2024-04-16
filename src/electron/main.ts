@@ -13,6 +13,7 @@ import { Transform, TransformCallback, TransformOptions } from 'stream';
 import kqBW200Api from './database/kqBW200Api';
 import dmkhopmaApi from './database/dmkhopma';
 import connectmanageApi from './database/connectmanageApi';
+import connectManageDb from './database/connectManage';
 import { StatefullBrowserWindow } from 'stateful-electron-window';
 import axios from 'axios';
 import { mainReduxBridge } from 'reduxtron/main';
@@ -150,6 +151,96 @@ class SysmexXP100Parser extends Transform {
   }
 }
 
+const connectManager: { [key: string]: { port?: SerialPort } } = {};
+
+ipcMain.on('connect-all-port', (event) => {
+  connectAllPort();
+});
+
+ipcMain.on('connect-port', (event, params) => {
+  connectPort(params);
+});
+
+function connectAllPort() {
+  try {
+    console.log('Connect all ports automatically');
+    const allConnect = connectManageDb.getAll();
+    if (allConnect && allConnect.length > 0) {
+      allConnect.forEach((connect) => {
+        connectPort(connect);
+      });
+    }
+  } catch (error) {
+    console.log('Error connecting all ports', error);
+  }
+}
+
+function connectPort(params: any, options: any = {}) {
+  const retryCount = options.retryCount || 0;
+  const maxRetries = options.maxRetries || 5;
+  const retryDelay = options.retryDelay || 2000;
+
+  const connectOptions: any = {
+    autoOpen: false,
+    path: params.comport,
+    baudRate: params.baudrate,
+    dataBits: params.databits,
+    stopBits: params.stopbits,
+    parity: params.parity,
+  };
+  if (process.platform === 'win32') {
+    connectOptions.rtsMode = params.rtsmode;
+  }
+
+  if (!connectManager[params.id]) {
+    connectManager[params.id] = {};
+  }
+  if (!connectManager[params.id].port) {
+    connectManager[params.id].port = new SerialPort(connectOptions);
+  }
+
+  if (!connectManager[params.id].port.isOpen) {
+    connectManager[params.id].port.open((error) => {
+      if (error) {
+        // Check if the maximum number of connection attempts has been exceeded
+        if (retryCount < maxRetries) {
+          // Retry after certain time
+          setTimeout(() => {
+            connectPort(params, { retryCount: retryCount + 1 });
+          }, retryDelay);
+        } else {
+          console.log(
+            `Exceeded the maximum number of connection attempts (${maxRetries}) to connectId=${params.id} comport=${params.comport}`,
+          );
+        }
+      }
+    });
+  }
+
+  connectManager[params.id].port.on('open', () => {
+    console.log(
+      `Opened connection to connectId=${params.id} comport=${params.comport}`,
+    );
+    mainWindow.webContents.send('connect-opened', params);
+  });
+
+  connectManager[params.id].port.on('close', () => {
+    console.log(
+      `Closed connection to connectId=${params.id} comport=${params.comport}`,
+    );
+    mainWindow.webContents.send('connect-closed', params);
+    connectManager[params.id].port = null;
+  });
+
+  connectManager[params.id].port.on('error', (error: any) => {
+    console.log(
+      `Error connecting to connectId=${params.id} comport=${params.comport}`,
+      error,
+    );
+    mainWindow.webContents.send('connect-error', params, error);
+  });
+}
+
 ipcMain.on(
   'serialport-connect',
   async (event, { id, lab, comp, ...params }) => {
@@ -188,72 +279,72 @@ ipcMain.on(
       });
     });
 
-    // #region Sysmex XP 100
-    const parser = new SysmexXP100Parser();
-    portManager[id].pipe(parser);
+    // // #region Sysmex XP 100
+    // const parser = new SysmexXP100Parser();
+    // portManager[id].pipe(parser);
 
-    portManager[id].on('data', (buffer: Buffer) => {
-      buffer.forEach((char) => {
-        // Send ACK when ETX, ENQ or LF is received
-        if (char === ASCII.ETX || char === ASCII.ENQ || char === ASCII.LF) {
-          portManager[id].write(Buffer.from([ASCII.ACK]));
-          portManager[id].drain((error) => {
-            if (error) console.log('PortManager write error', error);
-          });
-        }
-      });
-    });
+    // portManager[id].on('data', (buffer: Buffer) => {
+    //   buffer.forEach((char) => {
+    //     // Send ACK when ETX, ENQ or LF is received
+    //     if (char === ASCII.ETX || char === ASCII.ENQ || char === ASCII.LF) {
+    //       portManager[id].write(Buffer.from([ASCII.ACK]));
+    //       portManager[id].drain((error) => {
+    //         if (error) console.log('PortManager write error', error);
+    //       });
+    //     }
+    //   });
+    // });
 
-    parser.on('data', async (buffer: Buffer) => {
-      const str = buffer
-        .toString()
-        .replace(/[\u0000-\u001F\u007F-\u009F]/g, '\n') // Use regex to match Control characters in Unicode and replace them with newline
-        .replace(/^\s+|\s+$/g, '') // Remove leading and trailing whitespace
-        .replace(/\r\n/g, '\n') // Replace "\r\n" with "\n"
-        .replace(/\n{2,}/g, '\n'); // Remove duplicate newline characters
+    // parser.on('data', async (buffer: Buffer) => {
+    //   const str = buffer
+    //     .toString()
+    //     .replace(/[\u0000-\u001F\u007F-\u009F]/g, '\n') // Use regex to match Control characters in Unicode and replace them with newline
+    //     .replace(/^\s+|\s+$/g, '') // Remove leading and trailing whitespace
+    //     .replace(/\r\n/g, '\n') // Replace "\r\n" with "\n"
+    //     .replace(/\n{2,}/g, '\n'); // Remove duplicate newline characters
 
-      const lines = str.split('\n');
-      if (!lines || !lines.length) return;
+    //   const lines = str.split('\n');
+    //   if (!lines || !lines.length) return;
 
-      /**
-       * Regex match `1H|\^&|||XP-100^00-11^^^^A4941^BS649542||||||||E1394-97`
-       */
-      const regex = /^.*XP-100.*$/;
-      if (!regex.test(lines[0])) return;
+    //   /**
+    //    * Regex match `1H|\^&|||XP-100^00-11^^^^A4941^BS649542||||||||E1394-97`
+    //    */
+    //   const regex = /^.*XP-100.*$/;
+    //   if (!regex.test(lines[0])) return;
 
-      /**
-       * Regex match `3O|1||^^ 0001^A`
-       */
-      const regex1 = /\^{2}\s*(?<barcode>[0-9]{3,})\^/;
-      let barcode = lines[4].match(regex1)?.groups?.barcode;
-      if (!barcode) return;
-      barcode = barcode.padStart(4, '0'); // fill zero at start
+    //   /**
+    //    * Regex match `3O|1||^^ 0001^A`
+    //    */
+    //   const regex1 = /\^{2}\s*(?<barcode>[0-9]{3,})\^/;
+    //   let barcode = lines[4].match(regex1)?.groups?.barcode;
+    //   if (!barcode) return;
+    //   barcode = barcode.padStart(4, '0'); // fill zero at start
 
-      const result: any = {
-        date_time: new Date().toISOString(),
-      };
-      result.barcode = barcode;
+    //   const result: any = {
+    //     date_time: new Date().toISOString(),
+    //   };
+    //   result.barcode = barcode;
 
-      // Extract other indexes
-      for (let i = 5; i < lines.length; i++) {
-        /**
-         * Extract index and value
-         * `4R|1|^^^^WBC^1|  0,2|10*9/L||N||||               ||20240330150404`
-         */
-        const regex2 =
-          /\^{4}(?<chiso>[a-zA-Z-%#]*)\^.\|\s*(?<giatri>[0-9.,*+-]*)/i;
-        const found = lines[i].match(regex2);
-        if (found) {
-          let { chiso, giatri } = found.groups;
-          result[chiso] = giatri;
-        }
-      }
+    //   // Extract other indexes
+    //   for (let i = 5; i < lines.length; i++) {
+    //     /**
+    //      * Extract index and value
+    //      * `4R|1|^^^^WBC^1|  0,2|10*9/L||N||||               ||20240330150404`
+    //      */
+    //     const regex2 =
+    //       /\^{4}(?<chiso>[a-zA-Z-%#]*)\^.\|\s*(?<giatri>[0-9.,*+-]*)/i;
+    //     const found = lines[i].match(regex2);
+    //     if (found) {
+    //       let { chiso, giatri } = found.groups;
+    //       result[chiso] = giatri;
+    //     }
+    //   }
 
-      console.log('result', result);
-    });
-    // #endregion
+    //   console.log('result', result);
+    // });
+    // // #endregion
 
-    // #region Access 2
+    //// #region Access 2
     // const parser = new Access2Parser();
     // portManager[id].pipe(parser);
 
@@ -319,11 +410,11 @@ ipcMain.on(
     //   };
     //   console.log('result', result);
     // });
-    // #endregion
+    // // #endregion
 
     // const connDevice: any = connectmanageApi.getById(id)?.data;
 
-    // #region BW200
+    // // #region BW200
     // const parser = new BW200Parser();
     // portManager[id].pipe(parser);
 
@@ -393,7 +484,7 @@ ipcMain.on(
     //     notification.show();
     //   }
     // });
-    // #endregion
+    // // #endregion
 
     portManager[id].on('open', () => {
       console.log('serial port open');
@@ -603,6 +694,7 @@ app.on('ready', () => {
   loadExtensions();
   initDatabase();
   createWindow();
+  connectAllPort();
   // listSerialPorts();
 
   // https://stackoverflow.com/a/19733677

@@ -36,6 +36,10 @@ export default {
       const db = connect();
       const currentTime = new Date().toISOString();
 
+      const stmQuery = db.prepare(
+        `SELECT * FROM [dbo.connectmanage] WHERE content LIKE @content`
+      )
+      
       const stmAdd = db.prepare(
         `INSERT INTO [dbo.connectmanage] (
           cong,
