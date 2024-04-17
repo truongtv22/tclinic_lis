@@ -5,26 +5,39 @@ import { preloadReduxBridge } from 'reduxtron/preload';
 
 import type { State, Action } from 'shared/reducers';
 
-contextBridge.exposeInMainWorld('electron', {
+const electronAPI = {
   ipcRenderer: {
     send(channel: string, ...args: any[]) {
       ipcRenderer.send(channel, ...args);
     },
     invoke: async (channel: string, ...args: any[]) => {
-      const result = await ipcRenderer.invoke(channel, ...args);
-      return result;
+      return ipcRenderer.invoke(channel, ...args);
     },
     on(channel: string, func: (...args: any[]) => void) {
-      const subscription = (_event: any, ...args: any[]) => func(...args);
-      ipcRenderer.on(channel, subscription);
+      const listener = (_event: any, ...args: any[]) => func(...args);
+      ipcRenderer.on(channel, listener);
       return () => {
-        ipcRenderer.removeListener(channel, subscription);
+        ipcRenderer.removeListener(channel, listener);
       };
     },
     once(channel: string, func: (...args: any[]) => void) {
-      ipcRenderer.once(channel, (_event, ...args) => func(...args));
+      const listener = (_event: any, ...args: any[]) => func(...args);
+      ipcRenderer.once(channel, listener);
+      return () => {
+        ipcRenderer.removeListener(channel, listener);
+      };
+    },
+    removeListener(channel: string, listener: () => void) {
+      ipcRenderer.removeListener(channel, listener);
+    },
+    removeAllListeners(channel: string) {
+      ipcRenderer.removeAllListeners(channel);
     },
   },
+};
+
+contextBridge.exposeInMainWorld('electron', {
+  ...electronAPI,
   store: {
     get(key: string) {
       return ipcRenderer.sendSync('electron-store-get', key);
@@ -69,6 +82,10 @@ contextBridge.exposeInMainWorld('dbApi', {
   },
   deleteConnect: async (id: any) => {
     return ipcRenderer.invoke('connectmanage-delete', id);
+  },
+
+  getKqBW200: async (params?: any) => {
+    return ipcRenderer.invoke('kqBW200-get', params);
   },
 });
 

@@ -8,6 +8,8 @@ declare global {
         invoke: (channel: string, ...args: any[]) => Promise<any>;
         on(channel: string, func: (...args: any[]) => void): () => void;
         once(channel: string, func: (...args: any[]) => void): void;
+        removeListener(channel: string, listener: (...args: any[]) => void): void;
+        removeAllListeners(channel: string): void;
       };
       store: {
         get: (key: string) => any;
@@ -27,6 +29,8 @@ declare global {
       createConnect: (values: any) => Promise<any>;
       updateConnect: (values: any) => Promise<any>;
       deleteConnect: (id: any) => Promise<any>;
+
+      getKqBW200: (params?: any) => Promise<any>;
     };
 
     reduxtron: PreloadReduxBridgeReturn<State, Action>['handlers'];

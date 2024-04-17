@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { produce } from 'immer';
 import dayjs from 'dayjs';
 import { useDispatch, useSelector } from 'react-redux';
@@ -28,10 +28,24 @@ import {
 import Split from '@uiw/react-split';
 import { selectDevices } from 'store/devices/selectors';
 import { deviceActions } from 'store/devices/slice';
+import {
+  LAB,
+  CONNECT_TYPE,
+  COM_PORT,
+  BAUD_RATE,
+  DATA_BITS,
+  STOP_BITS,
+  RTS_MODE,
+  PARITY,
+} from 'shared/constants';
 
 export function HomePage() {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
+
+  const [connectManager, setConnectManager] = useState({});
+
+  const kieuketnoi = Form.useWatch('kieuketnoi', form);
 
   const [loading, setLoading] = useState(false);
   const [connected, setConnected] = useState(false);
@@ -475,14 +489,23 @@ export function HomePage() {
               </Row>
             </Row>
             <Form.Item name="id" hidden />
-            <Form.Item name="comp" label="Tên thiết bị">
+            <Form.Item
+              name="comp"
+              label="Tên thiết bị"
+              rules={[{ required: true, message: 'Không được để trống' }]}
+            >
               <Input />
             </Form.Item>
             <Row gutter={8}>
               <Col sm={24} md={12}>
-                <Form.Item name="lab" label="Loại máy" initialValue="BW200">
+                <Form.Item
+                  name="lab"
+                  label="Loại máy"
+                  initialValue="BW200"
+                  rules={[{ required: true, message: 'Không được để trống' }]}
+                >
                   <Select
-                    options={['BW200'].map((v) => ({
+                    options={Object.values(LAB).map((v) => ({
                       value: v,
                       label: v,
                     }))}
@@ -494,9 +517,10 @@ export function HomePage() {
                   name="kieuketnoi"
                   label="Kết nối"
                   initialValue="SerialPort"
+                  rules={[{ required: true, message: 'Không được để trống' }]}
                 >
                   <Select
-                    options={['SerialPort', 'Foder'].map((v) => ({
+                    options={Object.values(CONNECT_TYPE).map((v) => ({
                       value: v,
                       label: v,
                     }))}
@@ -504,103 +528,118 @@ export function HomePage() {
                 </Form.Item>
               </Col>
             </Row>
-            <Row gutter={8}>
-              <Col sm={24} md={12}>
-                <Form.Item name="comport" label="ComPort" initialValue="COM1">
-                  <AutoComplete
-                    options={[
-                      'COM1',
-                      'COM2',
-                      'COM3',
-                      'COM4',
-                      'COM5',
-                      'COM6',
-                      'COM7',
-                      'COM8',
-                      'COM9',
-                      'COM10',
-                    ].map((v) => ({
-                      value: v,
-                      label: v,
-                    }))}
-                  />
-                </Form.Item>
-              </Col>
-              <Col sm={24} md={12}>
-                <Form.Item name="baudrate" label="BaudRate" initialValue={9600}>
-                  <AutoComplete
-                    options={[
-                      110, 300, 1200, 2400, 4800, 9600, 14400, 19200, 38400,
-                      57600, 115200,
-                    ].map((v) => ({ value: v, label: v }))}
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-            <Row gutter={8}>
-              <Col sm={24} md={12}>
-                <Form.Item name="databits" label="DataBits" initialValue={8}>
-                  <Select
-                    options={[5, 6, 7, 8].map((v) => ({ value: v, label: v }))}
-                  />
-                </Form.Item>
-              </Col>
-              <Col sm={24} md={12}>
-                <Form.Item name="stopbits" label="StopBits" initialValue={1}>
-                  <Select
-                    options={[1, 1.5, 2].map((v) => ({ value: v, label: v }))}
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-            <Row gutter={8}>
-              <Col sm={24} md={12}>
-                <Form.Item
-                  name="rtsmode"
-                  label="RtsMode"
-                  initialValue="handshake"
-                >
-                  <Select
-                    options={['handshake', 'enable', 'toggle'].map((v) => ({
-                      value: v,
-                      label: v,
-                    }))}
-                  />
-                </Form.Item>
-              </Col>
-              <Col sm={24} md={12}>
-                <Form.Item name="parity" label="Parity" initialValue="none">
-                  <Select
-                    options={['none', 'even', 'odd', 'mark', 'space'].map(
-                      (v) => ({
-                        value: v,
-                        label: v,
-                      }),
-                    )}
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-            <Row gutter={8}>
-              <Col sm={24} md={12}>
-                <Form.Item
-                  name="readtimeout"
-                  label="ReadTimeout"
-                  initialValue={-1}
-                >
-                  <InputNumber min={-1} className="w-full" />
-                </Form.Item>
-              </Col>
-              <Col sm={24} md={12}>
-                <Form.Item
-                  name="writetimeout"
-                  label="WriteTimeout"
-                  initialValue={-1}
-                >
-                  <InputNumber min={-1} className="w-full" />
-                </Form.Item>
-              </Col>
-            </Row>
+            {kieuketnoi === CONNECT_TYPE.SerialPort && (
+              <>
+                <Row gutter={8}>
+                  <Col sm={24} md={12}>
+                    <Form.Item
+                      name="comport"
+                      label="ComPort"
+                      rules={[
+                        { required: true, message: 'Không được để trống' },
+                      ]}
+                    >
+                      <AutoComplete
+                        options={COM_PORT.map((v) => ({
+                          value: v,
+                          label: v,
+                        }))}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col sm={24} md={12}>
+                    <Form.Item
+                      name="baudrate"
+                      label="BaudRate"
+                      initialValue={9600}
+                      rules={[
+                        { required: true, message: 'Không được để trống' },
+                      ]}
+                    >
+                      <AutoComplete
+                        options={BAUD_RATE.map((v) => ({ value: v, label: v }))}
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+                <Row gutter={8}>
+                  <Col sm={24} md={12}>
+                    <Form.Item
+                      name="databits"
+                      label="DataBits"
+                      initialValue={8}
+                      rules={[
+                        { required: true, message: 'Không được để trống' },
+                      ]}
+                    >
+                      <Select
+                        options={DATA_BITS.map((v) => ({ value: v, label: v }))}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col sm={24} md={12}>
+                    <Form.Item
+                      name="stopbits"
+                      label="StopBits"
+                      initialValue={1}
+                      rules={[
+                        { required: true, message: 'Không được để trống' },
+                      ]}
+                    >
+                      <Select
+                        options={STOP_BITS.map((v) => ({ value: v, label: v }))}
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+                <Row gutter={8}>
+                  <Col sm={24} md={12}>
+                    <Form.Item
+                      name="rtsmode"
+                      label="RtsMode"
+                      initialValue="handshake"
+                      rules={[
+                        { required: true, message: 'Không được để trống' },
+                      ]}
+                    >
+                      <Select options={RTS_MODE} />
+                    </Form.Item>
+                  </Col>
+                  <Col sm={24} md={12}>
+                    <Form.Item
+                      name="parity"
+                      label="Parity"
+                      initialValue="none"
+                      rules={[
+                        { required: true, message: 'Không được để trống' },
+                      ]}
+                    >
+                      <Select options={PARITY} />
+                    </Form.Item>
+                  </Col>
+                </Row>
+                {/* <Row gutter={8}>
+                  <Col sm={24} md={12}>
+                    <Form.Item
+                      name="readtimeout"
+                      label="ReadTimeout"
+                      initialValue={-1}
+                    >
+                      <InputNumber min={-1} className="w-full" />
+                    </Form.Item>
+                  </Col>
+                  <Col sm={24} md={12}>
+                    <Form.Item
+                      name="writetimeout"
+                      label="WriteTimeout"
+                      initialValue={-1}
+                    >
+                      <InputNumber min={-1} className="w-full" />
+                    </Form.Item>
+                  </Col>
+                </Row> */}
+              </>
+            )}
             <Space>
               <Button
                 type="primary"

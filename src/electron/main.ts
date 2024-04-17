@@ -6,13 +6,14 @@ import installExtensions, {
   REACT_DEVELOPER_TOOLS,
   REDUX_DEVTOOLS,
 } from 'electron-devtools-installer';
-import Store from 'electron-store';
+import Storage from 'electron-store';
 import { SerialPort } from 'serialport';
 import { initDatabase } from './database';
 import { Transform, TransformCallback, TransformOptions } from 'stream';
 import kqBW200Api from './database/kqBW200Api';
 import dmkhopmaApi from './database/dmkhopma';
 import connectmanageApi from './database/connectmanageApi';
+import connectManageDb from './database/connectManage';
 import { StatefullBrowserWindow } from 'stateful-electron-window';
 import axios from 'axios';
 import { mainReduxBridge } from 'reduxtron/main';
@@ -39,7 +40,7 @@ ipcMain.on('open-view-window', (event) => {
 });
 
 // IPC Electron Store
-const storage = new Store();
+const storage = new Storage();
 
 ipcMain.on('electron-store-get', async (event, key) => {
   event.returnValue = storage.get(key);
@@ -55,29 +56,189 @@ ipcMain.on('electron-store-delete', async (event, key) => {
 const portManager: { [key: string]: SerialPort } = {};
 // let port: SerialPort = null;
 
+const ASCII = {
+  STX: 2, // 0x02,
+  ETX: 3, // 0x03,
+  EOT: 4, // 0x04,
+  ENQ: 5, // 0x05,
+  ACK: 6, // 0x06,
+  LF: 10, // 0x0a,
+  SUB: 26, // 0x1a,
+};
+
 // https://github.com/serialport/node-serialport/issues/1178
-class SlipParser extends Transform {
+class BW200Parser extends Transform {
   buffer: Buffer;
 
   constructor(options = {}) {
     super(options);
+    // buffer = [ASCII.STX...ASCII.ETX]
     this.buffer = Buffer.alloc(0);
   }
 
   _transform(chunk: Buffer, encoding: BufferEncoding, cb: TransformCallback) {
     const chunkLength = chunk.length;
     for (let i = 0; i < chunkLength; i++) {
-      if (chunk[i] === 0x03 /* ETX */) {
-        if (this.buffer[0] === 0x02) this.push(this.buffer);
+      if (chunk[i] === ASCII.ETX) {
+        // buffer = [ASCII.STX...]
+        if (this.buffer[0] === ASCII.STX) this.push(this.buffer);
         this.buffer = Buffer.alloc(0);
-      } else if (chunk[i] === 0x02 /* STX */) {
-        this.buffer = Buffer.from([0x02]);
-      } else if (this.buffer[0] === 0x02 /* STX */) {
+      } else if (chunk[i] === ASCII.STX) {
+        // buffer = [ASCII.STX]
+        this.buffer = Buffer.from([ASCII.STX]);
+      } else if (this.buffer[0] === ASCII.STX) {
+        // buffer = [ASCII.STX...chunk[i] ]
         this.buffer = Buffer.concat([this.buffer, Buffer.from([chunk[i]])]);
       }
     }
     cb();
   }
+}
+
+class Access2Parser extends Transform {
+  buffer: Buffer;
+
+  constructor(options = {}) {
+    super(options);
+    // buffer = [ASCII.ENQ...ASCII.EOT]
+    this.buffer = Buffer.alloc(0);
+  }
+
+  _transform(chunk: Buffer, encoding: BufferEncoding, cb: TransformCallback) {
+    const chunkLength = chunk.length;
+    for (let i = 0; i < chunkLength; i++) {
+      if (chunk[i] === ASCII.EOT) {
+        // buffer = [ASCII.ENQ...]
+        if (this.buffer[0] === ASCII.ENQ) this.push(this.buffer);
+        this.buffer = Buffer.alloc(0);
+      } else if (chunk[i] === ASCII.ENQ) {
+        // buffer = [ASCII.ENQ]
+        this.buffer = Buffer.from([ASCII.ENQ]);
+      } else if (this.buffer[0] === ASCII.ENQ) {
+        // buffer = [ASCII.ENQ...chunk[i] ]
+        this.buffer = Buffer.concat([this.buffer, Buffer.from([chunk[i]])]);
+      }
+    }
+    cb();
+  }
+}
+
+class SysmexXP100Parser extends Transform {
+  buffer: Buffer;
+
+  constructor(options = {}) {
+    super(options);
+    // buffer = [ASCII.ENQ...ASCII.EOT]
+    this.buffer = Buffer.alloc(0);
+  }
+
+  _transform(chunk: Buffer, encoding: BufferEncoding, cb: TransformCallback) {
+    const chunkLength = chunk.length;
+    for (let i = 0; i < chunkLength; i++) {
+      if (chunk[i] === ASCII.EOT) {
+        // buffer = [ASCII.ENQ...]
+        if (this.buffer[0] === ASCII.ENQ) this.push(this.buffer);
+        this.buffer = Buffer.alloc(0);
+      } else if (chunk[i] === ASCII.ENQ) {
+        // buffer = [ASCII.ENQ]
+        this.buffer = Buffer.from([ASCII.ENQ]);
+      } else if (this.buffer[0] === ASCII.ENQ) {
+        // buffer = [ASCII.ENQ...chunk[i] ]
+        this.buffer = Buffer.concat([this.buffer, Buffer.from([chunk[i]])]);
+      }
+    }
+    cb();
+  }
+}
+
+const connectManager: { [key: string]: { port?: SerialPort } } = {};
+
+ipcMain.on('connect-all-port', (event) => {
+  connectAllPort();
+});
+
+ipcMain.on('connect-port', (event, params) => {
+  connectPort(params);
+});
+
+function connectAllPort() {
+  try {
+    console.log('Connect all ports automatically');
+    const allConnect = connectManageDb.getAll();
+    if (allConnect && allConnect.length > 0) {
+      allConnect.forEach((connect) => {
+        connectPort(connect);
+      });
+    }
+  } catch (error) {
+    console.log('Error connecting all ports', error);
+  }
+}
+
+function connectPort(params: any, options: any = {}) {
+  const retryCount = options.retryCount || 0;
+  const maxRetries = options.maxRetries || 5;
+  const retryDelay = options.retryDelay || 2000;
+
+  const connectOptions: any = {
+    autoOpen: false,
+    path: params.comport,
+    baudRate: params.baudrate,
+    dataBits: params.databits,
+    stopBits: params.stopbits,
+    parity: params.parity,
+  };
+  if (process.platform === 'win32') {
+    connectOptions.rtsMode = params.rtsmode;
+  }
+
+  if (!connectManager[params.id]) {
+    connectManager[params.id] = {};
+  }
+  if (!connectManager[params.id].port) {
+    connectManager[params.id].port = new SerialPort(connectOptions);
+  }
+
+  if (!connectManager[params.id].port.isOpen) {
+    connectManager[params.id].port.open((error) => {
+      if (error) {
+        // Check if the maximum number of connection attempts has been exceeded
+        if (retryCount < maxRetries) {
+          // Retry after certain time
+          setTimeout(() => {
+            connectPort(params, { retryCount: retryCount + 1 });
+          }, retryDelay);
+        } else {
+          console.log(
+            `Exceeded the maximum number of connection attempts (${maxRetries}) to connectId=${params.id} comport=${params.comport}`,
+          );
+        }
+      }
+    });
+  }
+
+  connectManager[params.id].port.on('open', () => {
+    console.log(
+      `Opened connection to connectId=${params.id} comport=${params.comport}`,
+    );
+    mainWindow.webContents.send('connect-opened', params);
+  });
+
+  connectManager[params.id].port.on('close', () => {
+    console.log(
+      `Closed connection to connectId=${params.id} comport=${params.comport}`,
+    );
+    mainWindow.webContents.send('connect-closed', params);
+    connectManager[params.id].port = null;
+  });
+
+  connectManager[params.id].port.on('error', (error: any) => {
+    console.log(
+      `Error connecting to connectId=${params.id} comport=${params.comport}`,
+      error,
+    );
+    mainWindow.webContents.send('connect-error', params, error);
+  });
 }
 
 ipcMain.on(
@@ -99,7 +260,7 @@ ipcMain.on(
     }
 
     // Create folder if doesnt exist
-    const folderBackup = path.join(process.cwd(), 'backup', lab);
+    const folderBackup = path.join(process.cwd(), 'log', lab);
     const fileName = `${dayjs().format('YYYYMMDD')}.txt`;
     const filePath = path.join(folderBackup, fileName);
 
@@ -107,78 +268,223 @@ ipcMain.on(
       fs.mkdirSync(folderBackup, { recursive: true });
     }
 
-    const parser = new SlipParser();
-    portManager[id].pipe(parser);
-
-    // const connDevice: any = connectmanageApi.getById(id)?.data;
-
-    parser.on('data', async (buffer: Buffer) => {
-      // Use regex to match Control characters in Unicode and replace them with an empty string
-      // https://en.wikipedia.org/wiki/Control_character#In_Unicode
-      const str = buffer
-        .toString()
-        .replace(/[\u0000-\u001F\u007F-\u009F]/g, '\n') // Use regex to match Control characters in Unicode and replace them with newline
-        .replace(/^\s+|\s+$/g, '') // Remove leading and trailing whitespace
-        .replace(/\r\n/g, '\n') // Replace "\r\n" with "\n"
-        .replace(/\n{2,}/g, '\n'); // Remove duplicate newline characters
-
-      // Write data to backup file
-      fs.appendFile(filePath, `${str}\n`, (error) => {
+    // Write data to log file
+    portManager[id].on('data', (buffer: Buffer) => {
+      fs.appendFile(filePath, buffer.toString(), (error) => {
         if (error) {
           console.log('Error write backup file', error);
         } else {
           console.log('Write backup file successfully:', filePath);
         }
       });
-
-      const lines = str.split('\n');
-      const result: any = { datetime: Date.now() };
-
-      // Extract computer and barcode
-      const barcode = lines[0] // BIOWAY B-11  001-001
-        .split('-') // split string with separator -
-        .at(-1) // get last string
-        .padStart(4, '0'); // fill zero at start
-      result.barcode = barcode;
-
-      // Extract other indexes
-      for (let i = 1; i < lines.length; i++) {
-        const chisoStr = lines[i]
-          .replace(/^\s+|\s+$/g, '') // Remove leading and trailing whitespace
-          .replace(/\s{2,}/g, ' '); // Remove duplicate whitespace
-        const parts = chisoStr.split(' ');
-        const len = parts.length;
-        if (len > 1) {
-          const chiso = parts.slice(0, -1).join(' ');
-          const ketqua = parts.at(-1) === '-' ? 'Âm tính' : parts.at(-1);
-          result[chiso] = ketqua;
-        } else if (len > 0) {
-          const chiso = parts[0];
-          result[chiso] = null;
-        }
-      }
-
-      // Save into result table
-      const data = kqBW200Api.create(result)?.data;
-      event.reply('serialport-data', data);
-
-      if (!mainWindow.isFocused()) {
-        const notification = new Notification({
-          title: 'Kết quả xét nghiệm',
-          body: `Nhận được kết quả từ ${comp}, bạn muốn xem kết quả này không?`,
-        });
-        notification.on('click', () => {
-          if (!mainWindow.isFocused()) {
-            if (!mainWindow.isMinimized()) {
-              mainWindow.restore();
-            }
-            mainWindow.focus();
-          }
-          event.reply('notification-data', data);
-        });
-        notification.show();
-      }
     });
+
+    // // #region Sysmex XP 100
+    // const parser = new SysmexXP100Parser();
+    // portManager[id].pipe(parser);
+
+    // portManager[id].on('data', (buffer: Buffer) => {
+    //   buffer.forEach((char) => {
+    //     // Send ACK when ETX, ENQ or LF is received
+    //     if (char === ASCII.ETX || char === ASCII.ENQ || char === ASCII.LF) {
+    //       portManager[id].write(Buffer.from([ASCII.ACK]));
+    //       portManager[id].drain((error) => {
+    //         if (error) console.log('PortManager write error', error);
+    //       });
+    //     }
+    //   });
+    // });
+
+    // parser.on('data', async (buffer: Buffer) => {
+    //   const str = buffer
+    //     .toString()
+    //     .replace(/[\u0000-\u001F\u007F-\u009F]/g, '\n') // Use regex to match Control characters in Unicode and replace them with newline
+    //     .replace(/^\s+|\s+$/g, '') // Remove leading and trailing whitespace
+    //     .replace(/\r\n/g, '\n') // Replace "\r\n" with "\n"
+    //     .replace(/\n{2,}/g, '\n'); // Remove duplicate newline characters
+
+    //   const lines = str.split('\n');
+    //   if (!lines || !lines.length) return;
+
+    //   /**
+    //    * Regex match `1H|\^&|||XP-100^00-11^^^^A4941^BS649542||||||||E1394-97`
+    //    */
+    //   const regex = /^.*XP-100.*$/;
+    //   if (!regex.test(lines[0])) return;
+
+    //   /**
+    //    * Regex match `3O|1||^^ 0001^A`
+    //    */
+    //   const regex1 = /\^{2}\s*(?<barcode>[0-9]{3,})\^/;
+    //   let barcode = lines[4].match(regex1)?.groups?.barcode;
+    //   if (!barcode) return;
+    //   barcode = barcode.padStart(4, '0'); // fill zero at start
+
+    //   const result: any = {
+    //     date_time: new Date().toISOString(),
+    //   };
+    //   result.barcode = barcode;
+
+    //   // Extract other indexes
+    //   for (let i = 5; i < lines.length; i++) {
+    //     /**
+    //      * Extract index and value
+    //      * `4R|1|^^^^WBC^1|  0,2|10*9/L||N||||               ||20240330150404`
+    //      */
+    //     const regex2 =
+    //       /\^{4}(?<chiso>[a-zA-Z-%#]*)\^.\|\s*(?<giatri>[0-9.,*+-]*)/i;
+    //     const found = lines[i].match(regex2);
+    //     if (found) {
+    //       let { chiso, giatri } = found.groups;
+    //       result[chiso] = giatri;
+    //     }
+    //   }
+
+    //   console.log('result', result);
+    // });
+    // // #endregion
+
+    //// #region Access 2
+    // const parser = new Access2Parser();
+    // portManager[id].pipe(parser);
+
+    // portManager[id].on('data', (buffer: Buffer) => {
+    //   // Send ACK when ENQ is received
+    //   if (parser.buffer[0] === ASCII.ENQ) {
+    //     portManager[id].write(Buffer.from([ASCII.ACK]));
+    //     portManager[id].drain((error) => {
+    //       if (error) console.log('PortManager write error', error);
+    //     });
+    //   }
+    // });
+
+    // parser.on('data', async (buffer: Buffer) => {
+    //   const str = buffer
+    //     .toString()
+    //     .replace(/[\u0000-\u001F\u007F-\u009F]/g, '\n') // Use regex to match Control characters in Unicode and replace them with newline
+    //     .replace(/^\s+|\s+$/g, '') // Remove leading and trailing whitespace
+    //     .replace(/\r\n/g, '\n') // Replace "\r\n" with "\n"
+    //     .replace(/\n{2,}/g, '\n'); // Remove duplicate newline characters
+
+    //   const lines = str.split('\n');
+    //   if (!lines || !lines.length) return;
+
+    //   /**
+    //    * Regex match `1H|\^&|||ACCESS^503884|||||LIS||P|1|20240330104322`
+    //    */
+    //   const regex = /^.*ACCESS.*(?<date_time>[0-9]{14})$/;
+    //   if (!regex.test(lines[0])) return;
+
+    //   const date_time = lines[0].match(regex)?.groups?.date_time;
+    //   if (!date_time) return;
+
+    //   /**
+    //    * Regex match `2P|1|HOANG PHUONG`
+    //    */
+    //   const regex1 = /(?<person>[a-zA-Z0-9\s]+)$/;
+    //   const person = lines[2].match(regex1)?.groups?.person;
+    //   if (!person) return;
+
+    //   /**
+    //    * Regex match `3O|1|0012P|^1302^4|^^^HCG5^1|||||||||||Serum||||||||||F`
+    //    */
+    //   // match text 3O|1|0012P|^1302^4|^^^HCG5^1|||||||||||Serum||||||||||F
+    //   const regex2 = /(?<barcode>[0-9]{3,})[a-zA-Z0-9]*/;
+    //   let barcode = lines[4].match(regex2)?.groups?.barcode;
+    //   if (!barcode) return;
+    //   barcode = barcode.padStart(4, '0'); // fill zero at start
+
+    //   /**
+    //    * Regex match `4R|1|^^^HCG5^1|342.22|mIU/mL||N||F||||20240330104401|503884`
+    //    */
+    //   const regex3 =
+    //     /\^{3}(?<chiso>[a-zA-Z0-9-]+)\^[0-9]+\|(?<giatri>[>\-+]?[0-9.]+)\|/;
+    //   const { chiso, giatri } = lines[6].match(regex3)?.groups || {};
+
+    //   const result = {
+    //     date_time,
+    //     person,
+    //     barcode,
+    //     chiso,
+    //     giatri,
+    //   };
+    //   console.log('result', result);
+    // });
+    // // #endregion
+
+    // const connDevice: any = connectmanageApi.getById(id)?.data;
+
+    // // #region BW200
+    // const parser = new BW200Parser();
+    // portManager[id].pipe(parser);
+
+    // parser.on('data', async (buffer: Buffer) => {
+    //   // Use regex to match Control characters in Unicode and replace them with an empty string
+    //   // https://en.wikipedia.org/wiki/Control_character#In_Unicode
+    //   const str = buffer
+    //     .toString()
+    //     .replace(/[\u0000-\u001F\u007F-\u009F]/g, '\n') // Use regex to match Control characters in Unicode and replace them with newline
+    //     .replace(/^\s+|\s+$/g, '') // Remove leading and trailing whitespace
+    //     .replace(/\r\n/g, '\n') // Replace "\r\n" with "\n"
+    //     .replace(/\n{2,}/g, '\n'); // Remove duplicate newline characters
+
+    //   const lines = str.split('\n');
+    //   if (!lines || !lines.length) return;
+
+    //   /**
+    //    * Regex match `BIOWAY B-11  001-001`
+    //    */
+    //   const regex = /^BIOWAY[A-Za-z0-9-\s]*\s+\d{3,}-(?<barcode>\d{3,})$/;
+    //   if (!regex.test(lines[0])) return;
+
+    //   // Extract computer and barcode
+    //   let barcode = lines[0].match(regex)?.groups?.barcode; // BIOWAY B-11  001-001
+    //   if (!barcode) return;
+    //   barcode = barcode.padStart(4, '0'); // fill zero at start
+
+    //   const result: any = {
+    //     date_time: new Date().toISOString(),
+    //   };
+    //   result.barcode = barcode;
+
+    //   // Extract other indexes
+    //   for (let i = 1; i < lines.length; i++) {
+    //     /**
+    //      * Extract index and value
+    //      * `URO -`
+    //      * `SG  1.015`
+    //      * `VC  +-`
+    //      */
+    //     const chisoRegex = /(?<chiso>[A-Z]+)\s*(?<giatri>[.\S]*)\s*/i;
+    //     const found = lines[i].match(chisoRegex);
+    //     if (found) {
+    //       let { chiso, giatri } = found.groups;
+    //       if (giatri === '-') giatri = 'Âm tính';
+    //       if (giatri === '+-') giatri = '+Âm tính';
+    //       result[chiso] = giatri;
+    //     }
+    //   }
+
+    //   // Save into result table
+    //   const data = kqBW200Api.create(result)?.data;
+    //   event.reply('serialport-data', data);
+
+    //   if (!mainWindow.isFocused()) {
+    //     const notification = new Notification({
+    //       title: 'Kết quả xét nghiệm',
+    //       body: `Nhận được kết quả từ ${comp}, bạn muốn xem kết quả này không?`,
+    //     });
+    //     notification.on('click', () => {
+    //       if (!mainWindow.isFocused()) {
+    //         if (!mainWindow.isMinimized()) mainWindow.restore();
+    //         mainWindow.focus();
+    //       }
+    //       event.reply('notification-data', data);
+    //     });
+    //     notification.show();
+    //   }
+    // });
+    // // #endregion
 
     portManager[id].on('open', () => {
       console.log('serial port open');
@@ -225,6 +531,12 @@ ipcMain.handle('connectmanage-delete', async (event, id) => {
   return result;
 });
 
+// IPC KQ BW200
+ipcMain.handle('kqBW200-get', async (event, params) => {
+  const result = kqBW200Api.getAll(params);
+  return result;
+});
+
 ipcMain.handle('dong-bo-his', async (event: any, data) => {
   const dmchiso = dmkhopmaApi.getByLab('BW200')?.data;
   const chisoById: any = {};
@@ -237,7 +549,7 @@ ipcMain.handle('dong-bo-his', async (event: any, data) => {
     mamay: 'BW200',
     barcode: data.barcode_edit || data.barcode,
     kqxetnghiem: [],
-    ngaythuchien: new Date(data.datetime).toISOString(),
+    ngaythuchien: new Date(data.date_time).toISOString(),
     loaidongbo: 'ONE',
   };
   for (const chiso in chisoById) {
@@ -382,6 +694,7 @@ app.on('ready', () => {
   loadExtensions();
   initDatabase();
   createWindow();
+  connectAllPort();
   // listSerialPorts();
 
   // https://stackoverflow.com/a/19733677
