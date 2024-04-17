@@ -23,6 +23,7 @@
       "store": ["./src/store"],
       "types": ["./src/types"],
       "utils": ["./src/utils"],
+      "hooks": ["./src/hooks"],
 
       "shared/*": ["./src/shared/*"],
       "components/*": ["./src/components/*"],
@@ -33,7 +34,8 @@
       "services/*": ["./src/services/*"],
       "store/*": ["./src/store/*"],
       "types/*": ["./src/types/*"],
-      "utils/*": ["./src/utils/*"]
+      "utils/*": ["./src/utils/*"],
+      "hooks/*": ["./src/hooks/*"]
     }
   },
   "include": ["src"]

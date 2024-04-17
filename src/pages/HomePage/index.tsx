@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { produce } from 'immer';
 import dayjs from 'dayjs';
-import { useDispatch, useSelector } from 'react-redux';
+// import { useDispatch, useSelector } from 'react-redux';
 import {
   App,
   Row,
@@ -38,10 +38,17 @@ import {
   RTS_MODE,
   PARITY,
 } from 'shared/constants';
+import useIpcRenderer from 'utils/useIpcRenderer';
+import { useStore } from 'hooks/useStore';
+import { useDispatch } from 'hooks/useDispatch';
+import { connectionActions } from 'shared/store/connection/slice';
 
 export function HomePage() {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
+
+  const connectionList = useStore((store) => store.connection?.connectionList);
+  console.log('connectionList', connectionList);
 
   const [connectManager, setConnectManager] = useState({});
 
@@ -69,6 +76,10 @@ export function HomePage() {
   };
 
   useEffect(() => {
+    dispatch(connectionActions.setTest());
+  }, []);
+
+  useEffect(() => {
     (async () => {
       const data = await getData();
       if (data && data.length > 0) {
@@ -91,6 +102,20 @@ export function HomePage() {
       setTestResult({});
     }
   }, [isModalOpen]);
+
+  useEffect(() => {
+    (async () => {
+      // Get all connected ports
+      const data = await window.electron.ipcRenderer.invoke('connected-ports');
+      console.log('data', data);
+    })();
+  }, []);
+
+  // useIpcRenderer('port-opened', () => {});
+
+  // useIpcRenderer('port-closed', () => {});
+
+  // useIpcRenderer('port-error', () => {});
 
   useEffect(() => {
     const openSub = window.electron.serialport.on('open', () => {

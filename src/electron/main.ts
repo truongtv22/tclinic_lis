@@ -17,8 +17,7 @@ import connectManageDb from './database/connectManage';
 import { StatefullBrowserWindow } from 'stateful-electron-window';
 import axios from 'axios';
 import { mainReduxBridge } from 'reduxtron/main';
-import { ipcMain as sharedIpcMain } from 'shared/ipcs';
-import { store } from './store';
+import { store } from '../shared/store';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -151,7 +150,8 @@ class SysmexXP100Parser extends Transform {
   }
 }
 
-const connectManager: { [key: string]: { port?: SerialPort } } = {};
+const connectManager: { [key: string]: { connect?: any; port?: SerialPort } } =
+  {};
 
 ipcMain.on('connect-all-port', (event) => {
   connectAllPort();
@@ -161,13 +161,23 @@ ipcMain.on('connect-port', (event, params) => {
   connectPort(params);
 });
 
+ipcMain.handle('connected-ports', async (event) => {
+  const results: any[] = [];
+  Object.values(connectManager).forEach((item) => {
+    if (item && item.port && item.port.isOpen) {
+      results.push(item.connect);
+    }
+  });
+  return results;
+});
+
 function connectAllPort() {
   try {
     console.log('Connect all ports automatically');
     const allConnect = connectManageDb.getAll();
     if (allConnect && allConnect.length > 0) {
       allConnect.forEach((connect) => {
-        connectPort(connect);
+        connectPort(connect, { retry: true });
       });
     }
   } catch (error) {
@@ -175,69 +185,73 @@ function connectAllPort() {
   }
 }
 
-function connectPort(params: any, options: any = {}) {
+function connectPort(connect: any, options: any = {}) {
   const retryCount = options.retryCount || 0;
   const maxRetries = options.maxRetries || 5;
   const retryDelay = options.retryDelay || 2000;
 
   const connectOptions: any = {
     autoOpen: false,
-    path: params.comport,
-    baudRate: params.baudrate,
-    dataBits: params.databits,
-    stopBits: params.stopbits,
-    parity: params.parity,
+    path: connect.comport,
+    baudRate: connect.baudrate,
+    dataBits: connect.databits,
+    stopBits: connect.stopbits,
+    parity: connect.parity,
   };
   if (process.platform === 'win32') {
-    connectOptions.rtsMode = params.rtsmode;
+    connectOptions.rtsMode = connect.rtsmode;
   }
 
-  if (!connectManager[params.id]) {
-    connectManager[params.id] = {};
+  if (!connectManager[connect.id]) {
+    connectManager[connect.id] = {};
   }
-  if (!connectManager[params.id].port) {
-    connectManager[params.id].port = new SerialPort(connectOptions);
+  if (!connectManager[connect.id].port) {
+    connectManager[connect.id].connect = connect;
+    connectManager[connect.id].port = new SerialPort(connectOptions);
   }
 
-  if (!connectManager[params.id].port.isOpen) {
-    connectManager[params.id].port.open((error) => {
-      if (error) {
+  if (!connectManager[connect.id].port.isOpen) {
+    connectManager[connect.id].port.open((error) => {
+      if (error && options.retry) {
         // Check if the maximum number of connection attempts has been exceeded
         if (retryCount < maxRetries) {
           // Retry after certain time
           setTimeout(() => {
-            connectPort(params, { retryCount: retryCount + 1 });
+            connectPort(connect, {
+              retry: options.retry,
+              retryCount: retryCount + 1,
+            });
           }, retryDelay);
         } else {
           console.log(
-            `Exceeded the maximum number of connection attempts (${maxRetries}) to connectId=${params.id} comport=${params.comport}`,
+            `Exceeded the maximum number of connection attempts (${maxRetries}) to connectId=${connect.id} comport=${connect.comport}`,
           );
         }
       }
     });
   }
 
-  connectManager[params.id].port.on('open', () => {
+  connectManager[connect.id].port.on('open', () => {
     console.log(
-      `Opened connection to connectId=${params.id} comport=${params.comport}`,
+      `Opened connection to connectId=${connect.id} comport=${connect.comport}`,
     );
-    mainWindow.webContents.send('connect-opened', params);
+    mainWindow.webContents.send('port-opened', connect);
   });
 
-  connectManager[params.id].port.on('close', () => {
+  connectManager[connect.id].port.on('close', () => {
     console.log(
-      `Closed connection to connectId=${params.id} comport=${params.comport}`,
+      `Closed connection to connectId=${connect.id} comport=${connect.comport}`,
     );
-    mainWindow.webContents.send('connect-closed', params);
-    connectManager[params.id].port = null;
+    mainWindow.webContents.send('port-closed', connect);
+    connectManager[connect.id].port = null;
   });
 
-  connectManager[params.id].port.on('error', (error: any) => {
+  connectManager[connect.id].port.on('error', (error: any) => {
     console.log(
-      `Error connecting to connectId=${params.id} comport=${params.comport}`,
+      `Error connecting to connectId=${connect.id} comport=${connect.comport}`,
       error,
     );
-    mainWindow.webContents.send('connect-error', params, error);
+    mainWindow.webContents.send('port-error', connect, error);
   });
 }
 
