@@ -4,13 +4,13 @@ import {
   Observable,
   UnknownAction,
 } from '@reduxjs/toolkit';
-import { reducer } from './reducers';
+import { rootReducer } from './reducers';
 
 type ActionOrAnyAction = UnknownAction;
 
 export type Action = Exclude<ActionOrAnyAction, { type: '' }>;
 
-export type State = ReturnType<typeof reducer>;
+export type State = ReturnType<typeof rootReducer>;
 export type Dispatch = BaseDispatch<Action>;
 export type Subscribe = (listener: () => void) => () => void;
 
