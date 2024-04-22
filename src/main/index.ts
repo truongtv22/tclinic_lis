@@ -1,10 +1,10 @@
-import path from 'path';
-import { BrowserWindow, Menu, app, ipcMain } from 'electron';
-import { StatefullBrowserWindow } from 'stateful-electron-window';
+import { BrowserWindow, app } from 'electron';
 import installExtensions, {
   REACT_DEVELOPER_TOOLS,
   REDUX_DEVTOOLS,
 } from 'electron-devtools-installer';
+import { createMainWindow } from './window';
+import { initIpcs } from './ipcs';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -15,50 +15,9 @@ let mainWindow: BrowserWindow | null = null;
 let viewWindow: BrowserWindow | null = null;
 
 const createWindow = () => {
-  // Create the browser window.
-  mainWindow = new StatefullBrowserWindow({
-    width: 1270,
-    height: 860,
-    minWidth: 800,
-    minHeight: 600,
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-    },
-  });
-
-  ipcMain.on('subscribe', async (state: any) => {
-    if (mainWindow?.isDestroyed()) return;
-    mainWindow?.webContents?.send('subscribe', state);
-  });
-
-  // Remove the linux, window menu bar
-  // mainWindow.removeMenu();
-
-  // Disable macOS menu bar
-  // Menu.setApplicationMenu(Menu.buildFromTemplate([]));
-
-  // and load the index.html of the app.
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
-  } else {
-    mainWindow.loadFile(
-      path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`),
-    );
-  }
-
+  mainWindow = createMainWindow();
   mainWindow.on('closed', () => {
     mainWindow = null;
-  });
-
-  // Open the DevTools.
-  mainWindow?.webContents.on('did-finish-load', () => {
-    // We close the DevTools so that it can be reopened and redux reconnected.
-    // This is a workaround for a bug in redux devtools.
-    // mainWindow?.webContents.closeDevTools();
-    // mainWindow?.webContents.once('devtools-opened', () => {
-    //   mainWindow?.focus();
-    // });
-    mainWindow?.webContents.openDevTools();
   });
 };
 
@@ -80,6 +39,8 @@ const loadExtensions = async () => {
 app.on('ready', () => {
   loadExtensions();
   createWindow();
+
+  initIpcs(mainWindow, viewWindow);
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
