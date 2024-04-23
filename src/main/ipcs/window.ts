@@ -1,24 +1,14 @@
-import { BrowserWindow } from 'electron';
 import { ipcMain, IpcChannels } from 'shared/ipcs';
-import { createViewWindow } from '../window';
+import { WINDOW_ID } from 'shared/constants/window';
+import { windowManager } from '../window/manager';
 
-export function initWindowIpc(
-  mainWindow: BrowserWindow | null,
-  viewWindow: BrowserWindow | null,
-) {
+export function registerWindowIpc() {
   ipcMain.on(IpcChannels.MAIN_WINDOW_RELOAD, (event) => {
-    mainWindow?.reload();
+    const window = windowManager.getWindow(WINDOW_ID.MAIN);
+    if (window) window.reload();
   });
 
   ipcMain.on(IpcChannels.OPEN_VIEW_WINDOW, (event) => {
-    if (viewWindow) {
-      viewWindow.focus();
-      return;
-    }
-
-    viewWindow = createViewWindow();
-    viewWindow.on('close', () => {
-      viewWindow = null;
-    });
+    windowManager.createWindow(WINDOW_ID.VIEW);
   });
 }

@@ -5,5 +5,5 @@ export interface Connection {
 
 export interface ConnectionState {
   connectionList: Connection[];
-  connectedIds: number[];
+  connectionStatus: { [key: string]: any };
 }

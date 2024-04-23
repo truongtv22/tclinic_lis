@@ -1,17 +1,9 @@
 import { ipcMain as IpcMain, ipcRenderer as IpcRenderer } from 'electron';
 import { TypedIpcMain, TypedIpcRenderer } from 'electron-typed-ipc';
+import { IpcChannels } from './types';
+import type { IpcEvents, IpcCommands } from './types';
 
-import { WindowIpcChannels, WindowIpcEvents } from './window';
-import { StorageIpcChannels } from './storage';
-
-export type IpcEvents = WindowIpcEvents;
-
-export type IpcCommands = {};
-
-export const IpcChannels = {
-  ...WindowIpcChannels,
-  ...StorageIpcChannels,
-};
+export { IpcEvents, IpcCommands, IpcChannels };
 
 export const ipcMain = IpcMain as TypedIpcMain<IpcEvents, IpcCommands>;
 export const ipcRenderer = IpcRenderer as TypedIpcRenderer<

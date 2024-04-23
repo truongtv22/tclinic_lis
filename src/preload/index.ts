@@ -4,39 +4,32 @@ import { contextBridge } from 'electron';
 import { preloadReduxBridge } from 'reduxtron/preload';
 
 import { ipcRenderer } from 'shared/ipcs';
-import type { IpcEvents, IpcCommands } from 'shared/ipcs';
-import type { State, Action } from 'shared/reducers';
+import type { IpcEvents } from 'shared/ipcs';
+import type { State, Action } from 'shared/store/types';
+
+type Channel = keyof IpcEvents;
+type EventParams = IpcEvents[Channel];
 
 export const electronAPI = {
-  ipcRenderer,
-  // ipcRenderer: {
-  //   send(channel: keyof IpcEvents, ...args: Parameters<IpcEvents[keyof IpcEvents]>) {
-  //     ipcRenderer.send(channel, ...args);
-  //   },
-  //   invoke: async (channel: string, ...args: any[]) => {
-  //     return ipcRenderer.invoke(channel, ...args);
-  //   },
-  //   on(channel: string, func: (...args: any[]) => void) {
-  //     const listener = (_event: any, ...args: any[]) => func(...args);
-  //     ipcRenderer.on(channel, listener);
-  //     return () => {
-  //       ipcRenderer.removeListener(channel, listener);
-  //     };
-  //   },
-  //   once(channel: string, func: (...args: any[]) => void) {
-  //     const listener = (_event: any, ...args: any[]) => func(...args);
-  //     ipcRenderer.once(channel, listener);
-  //     return () => {
-  //       ipcRenderer.removeListener(channel, listener);
-  //     };
-  //   },
-  //   removeListener(channel: string, listener: () => void) {
-  //     ipcRenderer.removeListener(channel, listener);
-  //   },
-  //   removeAllListeners(channel: string) {
-  //     ipcRenderer.removeAllListeners(channel);
-  //   },
-  // },
+  ipcRenderer: {
+    ...ipcRenderer,
+    on(channel: Channel, func: (...args: Parameters<EventParams>) => void) {
+      const listener = (_: any, ...args: Parameters<EventParams>) =>
+        func(...args);
+      ipcRenderer.on(channel, listener);
+      return () => {
+        ipcRenderer.removeListener(channel, listener);
+      };
+    },
+    once(channel: Channel, func: (...args: Parameters<EventParams>) => void) {
+      const listener = (_: any, ...args: Parameters<EventParams>) =>
+        func(...args);
+      ipcRenderer.once(channel, listener);
+      return () => {
+        ipcRenderer.removeListener(channel, listener);
+      };
+    },
+  },
 };
 
 export type ElectronAPI = typeof electronAPI;

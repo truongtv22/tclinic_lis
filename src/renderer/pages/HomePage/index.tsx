@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { produce } from 'immer';
 import dayjs from 'dayjs';
-// import { useDispatch, useSelector } from 'react-redux';
 import {
   App,
   Row,
@@ -40,6 +39,7 @@ import { useStore } from 'renderer/hooks/useStore';
 import { useDispatch } from 'renderer/hooks/useDispatch';
 import { useIpcRenderer } from 'renderer/hooks/useIpcRenderer';
 import { connectionActions } from 'shared/store/connection/slice';
+import { getConnections } from 'shared/store/connection/actions';
 
 export function HomePage() {
   const [form] = Form.useForm();
@@ -65,16 +65,16 @@ export function HomePage() {
   const { modal, notification } = App.useApp();
 
   const getData = async () => {
-    const result = await window.dbApi.getConnect();
-    if (result.success) {
-      return result.data;
-    }
+    // const result = await window.dbApi.getConnect();
+    // if (result.success) {
+    //   return result.data;
+    // }
     return null;
   };
 
-  useEffect(() => {
-    dispatch(connectionActions.setTest());
-  }, []);
+  // useEffect(() => {
+  //   dispatch(getConnections());
+  // }, []);
 
   useEffect(() => {
     (async () => {
@@ -103,8 +103,8 @@ export function HomePage() {
   useEffect(() => {
     (async () => {
       // Get all connected ports
-      const data = await window.electron.ipcRenderer.invoke('connected-ports');
-      console.log('data', data);
+      // const data = await window.electron.ipcRenderer.invoke('connected-ports');
+      // console.log('data', data);
     })();
   }, []);
 
@@ -115,80 +115,75 @@ export function HomePage() {
   // useIpcRenderer('port-error', () => {});
 
   useEffect(() => {
-    const openSub = window.electron.serialport.on('open', () => {
-      setConnected(true);
-    });
-
-    const errorSub = window.electron.serialport.on('error', (error: any) => {
-      notification.error({
-        message: 'SerialPort',
-        description: error.message,
-      });
-    });
-
-    const dataSub = window.electron.serialport.on('data', (data) => {
-      const notifyKey = `open-${Date.now()}`;
-
-      notification.open({
-        key: notifyKey,
-        message: 'Thông báo đồng bộ',
-        description:
-          'Bạn nhận được kết quả từ Máy xét nghiệm nước tiểu, bạn muốn xem kết quả trước khi đồng bộ tới HIS không?',
-        btn: (
-          <Space>
-            <Button
-              type="link"
-              size="small"
-              onClick={() => notification.destroy(notifyKey)}
-            >
-              Đóng
-            </Button>
-            <Button
-              size="small"
-              type="primary"
-              onClick={() => {
-                notification.destroy(notifyKey);
-                setIsModalOpen(true);
-                setTestResult(data);
-              }}
-            >
-              Kết quả xét nghiệm
-            </Button>
-          </Space>
-        ),
-      });
-    });
-
-    const closeSub = window.electron.serialport.on('close', () => {
-      setConnected(false);
-    });
-
-    return () => {
-      openSub();
-      errorSub();
-      dataSub();
-      closeSub();
-    };
+    // const openSub = window.electron.serialport.on('open', () => {
+    //   setConnected(true);
+    // });
+    // const errorSub = window.electron.serialport.on('error', (error: any) => {
+    //   notification.error({
+    //     message: 'SerialPort',
+    //     description: error.message,
+    //   });
+    // });
+    // const dataSub = window.electron.serialport.on('data', (data) => {
+    //   const notifyKey = `open-${Date.now()}`;
+    //   notification.open({
+    //     key: notifyKey,
+    //     message: 'Thông báo đồng bộ',
+    //     description:
+    //       'Bạn nhận được kết quả từ Máy xét nghiệm nước tiểu, bạn muốn xem kết quả trước khi đồng bộ tới HIS không?',
+    //     btn: (
+    //       <Space>
+    //         <Button
+    //           type="link"
+    //           size="small"
+    //           onClick={() => notification.destroy(notifyKey)}
+    //         >
+    //           Đóng
+    //         </Button>
+    //         <Button
+    //           size="small"
+    //           type="primary"
+    //           onClick={() => {
+    //             notification.destroy(notifyKey);
+    //             setIsModalOpen(true);
+    //             setTestResult(data);
+    //           }}
+    //         >
+    //           Kết quả xét nghiệm
+    //         </Button>
+    //       </Space>
+    //     ),
+    //   });
+    // });
+    // const closeSub = window.electron.serialport.on('close', () => {
+    //   setConnected(false);
+    // });
+    // return () => {
+    //   openSub();
+    //   errorSub();
+    //   dataSub();
+    //   closeSub();
+    // };
   }, []);
 
   useEffect(() => {
-    const notifySub = window.electron.ipcRenderer.on(
-      'notification-data',
-      async (data) => {
-        const confirmed = await modal.confirm({
-          title: 'Kết quả xét nghiệm',
-          content:
-            'Bạn nhận được kết quả từ Máy xét nghiệm nước tiểu, bạn muốn xem kết quả xét nghiệm này không?',
-          okText: 'Đồng ý',
-          cancelText: 'Đóng',
-        });
-        if (confirmed) {
-          setIsModalOpen(true);
-          setTestResult(data);
-        }
-      },
-    );
-    return () => notifySub();
+    // const notifySub = window.electron.ipcRenderer.on(
+    //   'notification-data',
+    //   async (data) => {
+    //     const confirmed = await modal.confirm({
+    //       title: 'Kết quả xét nghiệm',
+    //       content:
+    //         'Bạn nhận được kết quả từ Máy xét nghiệm nước tiểu, bạn muốn xem kết quả xét nghiệm này không?',
+    //       okText: 'Đồng ý',
+    //       cancelText: 'Đóng',
+    //     });
+    //     if (confirmed) {
+    //       setIsModalOpen(true);
+    //       setTestResult(data);
+    //     }
+    //   },
+    // );
+    // return () => notifySub();
   }, []);
 
   const onAdd = () => {
@@ -201,78 +196,78 @@ export function HomePage() {
 
   const onSave = async (values: any) => {
     console.log('onSubmit', values);
-    setLoading(true);
-    if (values.id) {
-      const result = await window.dbApi.updateConnect(values);
-      console.log('result', result);
-      if (result.success) {
-        const newDevices = produce(devices, (draft) => {
-          const index = draft.findIndex((item) => item.id === values.id);
-          if (index > -1) {
-            draft.splice(index, 1, result.data);
-          }
-        });
-        setDevices(newDevices);
-        notification.success({
-          message: 'Thành công',
-          description: 'Cập nhật kết nối thành công',
-        });
-      }
-    } else {
-      const result = await window.dbApi.createConnect(values);
-      console.log('result', result);
-      if (result.success) {
-        const newDevices = produce(devices, (draft) => {
-          draft.push(result.data);
-        });
-        setDevices(newDevices);
-        setSelected(result.data);
-        notification.success({
-          message: 'Thành công',
-          description: 'Thêm mới kết nối thành công',
-        });
-      }
-    }
-    setLoading(false);
+    // setLoading(true);
+    // if (values.id) {
+    //   const result = await window.dbApi.updateConnect(values);
+    //   console.log('result', result);
+    //   if (result.success) {
+    //     const newDevices = produce(devices, (draft) => {
+    //       const index = draft.findIndex((item) => item.id === values.id);
+    //       if (index > -1) {
+    //         draft.splice(index, 1, result.data);
+    //       }
+    //     });
+    //     setDevices(newDevices);
+    //     notification.success({
+    //       message: 'Thành công',
+    //       description: 'Cập nhật kết nối thành công',
+    //     });
+    //   }
+    // } else {
+    //   const result = await window.dbApi.createConnect(values);
+    //   console.log('result', result);
+    //   if (result.success) {
+    //     const newDevices = produce(devices, (draft) => {
+    //       draft.push(result.data);
+    //     });
+    //     setDevices(newDevices);
+    //     setSelected(result.data);
+    //     notification.success({
+    //       message: 'Thành công',
+    //       description: 'Thêm mới kết nối thành công',
+    //     });
+    //   }
+    // }
+    // setLoading(false);
   };
 
   const onDelete = async (id: any) => {
-    setLoading(true);
-    const result = await window.dbApi.deleteConnect(id);
-    console.log('result', result);
-    if (result.success) {
-      const newDevices = produce(devices, (draft) => {
-        const index = draft.findIndex((item) => item.id === id);
-        if (index > -1) {
-          draft.splice(index, 1);
-        }
-      });
-      setDevices(newDevices);
-      if (newDevices.length > 0) {
-        setSelected(newDevices[0]);
-      } else {
-        setSelected(null);
-      }
-      notification.success({
-        message: 'Thành công',
-        description: 'Xoá kết nối thành công',
-      });
-    }
-    setLoading(false);
+    // setLoading(true);
+    // const result = await window.dbApi.deleteConnect(id);
+    // console.log('result', result);
+    // if (result.success) {
+    //   const newDevices = produce(devices, (draft) => {
+    //     const index = draft.findIndex((item) => item.id === id);
+    //     if (index > -1) {
+    //       draft.splice(index, 1);
+    //     }
+    //   });
+    //   setDevices(newDevices);
+    //   if (newDevices.length > 0) {
+    //     setSelected(newDevices[0]);
+    //   } else {
+    //     setSelected(null);
+    //   }
+    //   notification.success({
+    //     message: 'Thành công',
+    //     description: 'Xoá kết nối thành công',
+    //   });
+    // }
+    // setLoading(false);
   };
 
   const onOpen = () => {
     const params = form.getFieldsValue();
-    window.electron.serialport.connect(params);
+    // window.electron.serialport.connect(params);
   };
 
   const onClose = () => {
     const params = form.getFieldsValue();
-    window.electron.serialport.disconnect({ id: params.id });
+    // window.electron.serialport.disconnect({ id: params.id });
   };
 
   const onViewLog = () => {
-    window.electron.ipcRenderer.send('open-view-window');
+    // window.electron.ipcRenderer.send('open-view-window');
   };
 
   return (
@@ -299,32 +294,32 @@ export function HomePage() {
             icon={<CloudUploadOutlined />}
             loading={globalLoading}
             onClick={async () => {
-              try {
-                setGlobalLoading(true);
-                const result = await window.electron.ipcRenderer.invoke(
-                  'dong-bo-his',
-                  testResult,
-                );
-                setIsModalOpen(false);
-                setGlobalLoading(false);
-                if (result.success) {
-                  notification.success({
-                    message: 'Đồng bộ HIS',
-                    description: result.message,
-                  });
-                } else {
-                  notification.error({
-                    message: 'Đồng bộ HIS',
-                    description: result.message,
-                  });
-                }
-              } catch (error) {
-                setGlobalLoading(false);
-                notification.error({
-                  message: 'Đồng bộ HIS',
-                  description: error.message,
-                });
-              }
+              // try {
+              //   setGlobalLoading(true);
+              //   const result = await window.electron.ipcRenderer.invoke(
+              //     'dong-bo-his',
+              //     testResult,
+              //   );
+              //   setIsModalOpen(false);
+              //   setGlobalLoading(false);
+              //   if (result.success) {
+              //     notification.success({
+              //       message: 'Đồng bộ HIS',
+              //       description: result.message,
+              //     });
+              //   } else {
+              //     notification.error({
+              //       message: 'Đồng bộ HIS',
+              //       description: result.message,
+              //     });
+              //   }
+              // } catch (error) {
+              //   setGlobalLoading(false);
+              //   notification.error({
+              //     message: 'Đồng bộ HIS',
+              //     description: error.message,
+              //   });
+              // }
             }}
           >
             Đồng bộ HIS

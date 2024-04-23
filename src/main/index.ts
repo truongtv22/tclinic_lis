@@ -1,24 +1,25 @@
-import { BrowserWindow, app } from 'electron';
+import { app, ipcMain } from 'electron';
 import installExtensions, {
   REACT_DEVELOPER_TOOLS,
   REDUX_DEVTOOLS,
 } from 'electron-devtools-installer';
-import { createMainWindow } from './window';
-import { initIpcs } from './ipcs';
+import { mainReduxBridge } from 'reduxtron/main';
+import { WINDOW_ID } from 'shared/constants/window';
+import { getConnections } from 'shared/store/connection/actions';
+import { store } from './store';
+import { initDatabase } from './database';
+import { registerIpcs } from './ipcs';
+import { windowManager } from './window/manager';
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
-let mainWindow: BrowserWindow | null = null;
-let viewWindow: BrowserWindow | null = null;
+const { unsubscribe } = mainReduxBridge(ipcMain, store);
 
 const createWindow = () => {
-  mainWindow = createMainWindow();
-  mainWindow.on('closed', () => {
-    mainWindow = null;
-  });
+  windowManager.createWindow(WINDOW_ID.MAIN);
 };
 
 const loadExtensions = async () => {
@@ -38,9 +39,10 @@ const loadExtensions = async () => {
 // Some APIs can only be used after this event occurs.
 app.on('ready', () => {
   loadExtensions();
+  initDatabase();
+  store.dispatch(getConnections());
   createWindow();
-
-  initIpcs(mainWindow, viewWindow);
+  registerIpcs();
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -55,8 +57,11 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
+  const mainWindow = windowManager.getWindow(WINDOW_ID.MAIN);
   if (mainWindow === null) createWindow();
   // if (BrowserWindow.getAllWindows().length === 0) {
   //   createWindow();
   // }
 });
+
+app.on('quit', unsubscribe);

@@ -2,7 +2,6 @@
   "include": [
     "src/main/**/*",
     "src/preload/**/*",
-    "src/preload/*.d.ts",
     "src/shared/**/*",
     "src/renderer/**/*"
   ],
