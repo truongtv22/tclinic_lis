@@ -12,6 +12,7 @@ export default defineConfig({
     },
   },
   build: {
+    outDir: '.vite/build/main',
     rollupOptions: {
       external: ['better-sqlite3', 'serialport'],
     },
