@@ -11,6 +11,11 @@ import { initDatabase } from './database';
 import { registerIpcs } from './ipcs';
 import { windowManager } from './window/manager';
 
+import Reactotron from 'reactotron-react-js';
+
+Reactotron.configure({}) // we can use plugins here -- more on this later
+  .connect(); // let's connect!
+
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();

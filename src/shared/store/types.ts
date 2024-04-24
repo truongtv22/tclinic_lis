@@ -4,6 +4,7 @@ import {
   Observable,
   UnknownAction,
 } from '@reduxjs/toolkit';
+import { Action as ReduxAction } from 'redux-actions';
 import { rootReducer } from './reducers';
 
 type ActionOrAnyAction = UnknownAction;
