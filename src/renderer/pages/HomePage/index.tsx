@@ -40,6 +40,7 @@ import { useDispatch } from 'renderer/hooks/useDispatch';
 import { useIpcRenderer } from 'renderer/hooks/useIpcRenderer';
 import { connectionActions } from 'shared/store/connection/slice';
 import { getConnections } from 'shared/store/connection/actions';
+import { IpcChannels } from 'shared/ipcs/types';
 
 export function HomePage() {
   const [form] = Form.useForm();
@@ -267,7 +268,7 @@ export function HomePage() {
   };
 
   const onViewLog = () => {
-    // window.electron.ipcRenderer.send('open-view-window');
+    window.electron.ipcRenderer.send(IpcChannels.OPEN_VIEW_WINDOW);
   };
 
   return (

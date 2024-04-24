@@ -20,8 +20,8 @@ export function initDatabase() {
   );
   const tables = stmAllTable.all()?.map((item: any) => item.name);
 
-  if (!tables.includes('dbo.connectmanage')) {
-    db.exec(`CREATE TABLE IF NOT EXISTS [dbo.connectmanage] (
+  if (!tables.includes('dbo.connectManage')) {
+    db.exec(`CREATE TABLE IF NOT EXISTS [dbo.connectManage] (
       id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
       cong TEXT, /* tên kết nối */
       comp TEXT, /* tên máy tính */

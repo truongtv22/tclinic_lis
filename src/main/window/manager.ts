@@ -3,10 +3,6 @@ import { Window } from './index';
 class WindowManager {
   windows: Record<string, Window> = {};
 
-  setState(windows: Record<string, any>) {
-    this.windows = windows;
-  }
-
   getWindow(id: string) {
     return this.windows[id] || null;
   }

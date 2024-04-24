@@ -2,24 +2,23 @@ import { all, put, select, takeLatest } from 'redux-saga/effects';
 import { getConnections } from 'shared/store/connection/actions';
 import { connectionSelectors } from 'shared/store/connection/slice';
 import connectManage from '../../database/connectManage';
+import { connectionManager } from '../../connection/manager';
 
 function* getConnectionsSaga() {
   try {
-    const data = connectManage.getAll();
-    yield put(getConnections.success(data));
+    const data: any[] = connectManage.getAll();
+    if (data && data.length > 0) {
+      connectionManager.setConnections(data);
+      yield put(getConnections.success(data));
+    }
   } catch (error) {
     console.log('error', error);
   }
 }
 
-function* openConnectionsSaga(): any {
+function* openConnectionsSaga() {
   try {
-    const data = yield select(connectionSelectors.selectConnections);
-    if (data && data.length > 0) {
-      data.forEach((item: any) => {
-
-      });
-    }
+    connectionManager.openAllConnections();
   } catch (error) {
     console.log('error', error);
   }

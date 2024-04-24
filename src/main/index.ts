@@ -1,4 +1,5 @@
 import { app, ipcMain } from 'electron';
+import log from 'electron-log/main';
 import installExtensions, {
   REACT_DEVELOPER_TOOLS,
   REDUX_DEVTOOLS,
@@ -11,10 +12,8 @@ import { initDatabase } from './database';
 import { registerIpcs } from './ipcs';
 import { windowManager } from './window/manager';
 
-import Reactotron from 'reactotron-react-js';
-
-Reactotron.configure({}) // we can use plugins here -- more on this later
-  .connect(); // let's connect!
+log.initialize();
+Object.assign(console, log.functions);
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -33,7 +32,7 @@ const loadExtensions = async () => {
       [REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS],
       { loadExtensionOptions: { allowFileAccess: true } },
     );
-    console.log(`Added Extension:  ${result}`);
+    console.log(`Added Extension 1:  ${result}`);
   } catch (error) {
     console.log('An error occurred: ', error);
   }

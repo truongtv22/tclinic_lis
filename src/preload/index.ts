@@ -2,6 +2,7 @@
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 import { contextBridge } from 'electron';
 import { preloadReduxBridge } from 'reduxtron/preload';
+import '@goosewobbler/electron-redux/preload';
 
 import { ipcRenderer } from 'shared/ipcs';
 import type { IpcEvents } from 'shared/ipcs';

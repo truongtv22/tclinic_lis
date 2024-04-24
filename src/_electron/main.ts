@@ -293,7 +293,7 @@ ipcMain.on(
       });
     });
 
-    // // #region Sysmex XP 100
+    // #region Sysmex XP 100
     // const parser = new SysmexXP100Parser();
     // portManager[id].pipe(parser);
 
@@ -356,9 +356,9 @@ ipcMain.on(
 
     //   console.log('result', result);
     // });
-    // // #endregion
+    // #endregion
 
-    //// #region Access 2
+    // #region Access 2
     // const parser = new Access2Parser();
     // portManager[id].pipe(parser);
 
@@ -424,11 +424,11 @@ ipcMain.on(
     //   };
     //   console.log('result', result);
     // });
-    // // #endregion
+    // #endregion
 
     // const connDevice: any = connectmanageApi.getById(id)?.data;
 
-    // // #region BW200
+    // #region BW200
     // const parser = new BW200Parser();
     // portManager[id].pipe(parser);
 
@@ -498,7 +498,7 @@ ipcMain.on(
     //     notification.show();
     //   }
     // });
-    // // #endregion
+    // #endregion
 
     portManager[id].on('open', () => {
       console.log('serial port open');

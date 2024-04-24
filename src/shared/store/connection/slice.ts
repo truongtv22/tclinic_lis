@@ -16,7 +16,7 @@ export const connectionSlice = createSlice({
     builder.addCase(getConnections.SUCCESS, (state, action: any) => {
       state.connectionList = action.payload;
       state.connectionStatus = reduce(action.payload, (result, item) => {
-        result[item.id] = 0;
+        result[item.id] = false;
         return result;
       });
     });

@@ -1,6 +1,7 @@
 import { configureStore, Middleware, StoreEnhancer } from '@reduxjs/toolkit';
 import { createInjectorsEnhancer } from 'redux-injectors';
 import createSagaMiddleware from 'redux-saga';
+import { syncRenderer } from '@goosewobbler/electron-redux/renderer';
 import {
   persistStore,
   FLUSH,
@@ -26,6 +27,7 @@ export function configureAppStore() {
       createReducer,
       runSaga: sagaMiddleware.run,
     }),
+    syncRenderer,
   ] as StoreEnhancer[];
 
   const store = configureStore({
