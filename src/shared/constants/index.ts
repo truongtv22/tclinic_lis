@@ -1,3 +1,5 @@
+export const STORAGE_KEY = 'TCLINIC_LIS_STORAGE';
+
 export const LAB = {
   BW200: 'BW200',
   Access2: 'Access2',

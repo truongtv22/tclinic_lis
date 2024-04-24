@@ -4,8 +4,8 @@ import { Menu, Avatar, Layout, Dropdown, Typography } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 import { useLocation } from 'react-router-dom';
 
-import { selectIsAuth } from 'renderer/store/app/selectors';
-import { appActions } from 'renderer/store/app/slice';
+import { appActions } from 'shared/store/app/slice';
+import { selectIsAuth } from 'shared/store/app/selectors';
 
 const menus = [
   { key: '/', label: 'Hệ thống' },

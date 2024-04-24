@@ -3,10 +3,13 @@
 import { contextBridge } from 'electron';
 import { preloadReduxBridge } from 'reduxtron/preload';
 import '@goosewobbler/electron-redux/preload';
+// import { preload } from '@wnayes/electron-redux/preload';
 
 import { ipcRenderer } from 'shared/ipcs';
 import type { IpcEvents } from 'shared/ipcs';
 import type { State, Action } from 'shared/store/types';
+
+// preload()
 
 type Channel = keyof IpcEvents;
 type EventParams = IpcEvents[Channel];

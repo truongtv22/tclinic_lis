@@ -11,14 +11,22 @@ export const initialState: ConnectionState = {
 export const connectionSlice = createSlice({
   name: 'connection',
   initialState,
-  reducers: {},
+  reducers: {
+    test: (state, action) => {
+      state.connectionStatus[action.payload.id] = action.payload.status;
+    },
+  },
   extraReducers: (builder) => {
     builder.addCase(getConnections.SUCCESS, (state, action: any) => {
       state.connectionList = action.payload;
-      state.connectionStatus = reduce(action.payload, (result, item) => {
-        result[item.id] = false;
-        return result;
-      });
+      state.connectionStatus = reduce(
+        action.payload,
+        (result: any, item) => {
+          result[item.id] = false;
+          return result;
+        },
+        {},
+      );
     });
   },
   selectors: {

@@ -1,7 +1,7 @@
 import { useSelector } from "react-redux";
 import { Navigate, Outlet } from "react-router-dom";
 
-import { selectIsAuth } from "renderer/store/app/selectors";
+import { selectIsAuth } from "shared/store/app/selectors";
 
 export const AppLayout = () => {
   const isAuth = useSelector(selectIsAuth);

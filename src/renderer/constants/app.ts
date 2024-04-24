@@ -1,1 +1,0 @@
-export const STORAGE_KEY = 'TCLINIC_LIS_STORAGE';

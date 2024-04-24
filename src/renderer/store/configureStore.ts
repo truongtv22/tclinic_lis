@@ -2,6 +2,7 @@ import { configureStore, Middleware, StoreEnhancer } from '@reduxjs/toolkit';
 import { createInjectorsEnhancer } from 'redux-injectors';
 import createSagaMiddleware from 'redux-saga';
 import { syncRenderer } from '@goosewobbler/electron-redux/renderer';
+// import { composeWithStateSync, stateSyncEnhancer } from '@wnayes/electron-redux/renderer';
 import {
   persistStore,
   FLUSH,
@@ -16,10 +17,8 @@ import { rootSaga } from './sagas';
 import { createReducer } from './reducers';
 
 export function configureAppStore() {
-  const sagaMonitorOptions = {};
-  const sagaMiddleware = createSagaMiddleware(sagaMonitorOptions);
-
   // Create the store with saga middleware
+  const sagaMiddleware = createSagaMiddleware();
   const middlewares = [sagaMiddleware] as Middleware[];
 
   const enhancers = [
@@ -28,6 +27,7 @@ export function configureAppStore() {
       runSaga: sagaMiddleware.run,
     }),
     syncRenderer,
+    // stateSyncEnhancer(),
   ] as StoreEnhancer[];
 
   const store = configureStore({

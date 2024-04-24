@@ -8,9 +8,10 @@ import autoMergeLevel2 from 'redux-persist/lib/stateReconciler/autoMergeLevel2';
 
 import { InjectedReducersType } from 'renderer/utils/types/injector-typings';
 import { createElectronStorage } from 'renderer/utils/electron-storage';
-import { STORAGE_KEY } from 'renderer/constants/app';
+import { STORAGE_KEY } from 'shared/constants';
 
-import { appSlice } from './app/slice';
+import { appSlice } from 'shared/store/app/slice';
+// import { appSlice } from './app/slice';
 
 /**
  * Merges the main reducer with the router state and dynamically injected reducers
