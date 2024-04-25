@@ -41,6 +41,7 @@ import { useIpcRenderer } from 'renderer/hooks/useIpcRenderer';
 import { connectionActions } from 'shared/store/connection/slice';
 import { getConnections } from 'shared/store/connection/actions';
 import { IpcChannels } from 'shared/ipcs/types';
+import { useSelector } from 'react-redux';
 
 export function HomePage() {
   const [form] = Form.useForm();
@@ -48,6 +49,9 @@ export function HomePage() {
 
   const connectionList = useStore((store) => store.connection?.connectionList);
   console.log('connectionList', connectionList);
+
+  const connection = useSelector((state) => state.connection);
+  console.log('connection', connection);
 
   const [connectManager, setConnectManager] = useState({});
 

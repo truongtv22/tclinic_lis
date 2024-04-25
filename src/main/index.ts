@@ -46,7 +46,7 @@ app.on('ready', () => {
   initDatabase();
   store.dispatch(getConnections());
   createWindow();
-  registerIpcs();
+  registerIpcs(store);
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
