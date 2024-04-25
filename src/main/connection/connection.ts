@@ -1,3 +1,4 @@
+import { app } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import dayjs from 'dayjs';
@@ -127,7 +128,7 @@ export class Connection {
   }
 
   saveLog(buffer: Buffer) {
-    const folderLog = path.join(process.cwd(), 'log', this.data.lab);
+    const folderLog = path.join(app.getPath('userData'), 'logs', this.data.lab);
     const fileName = `${dayjs().format('YYYYMMDD')}.txt`;
     const filePath = path.join(folderLog, fileName);
 

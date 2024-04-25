@@ -4,6 +4,7 @@ import { Menu, Avatar, Layout, Dropdown, Typography } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 import { useLocation } from 'react-router-dom';
 
+import { IpcChannel } from 'shared/ipcs/types';
 import { appActions } from 'renderer/store/app/slice';
 import { selectIsAuth } from 'renderer/store/app/selectors';
 
@@ -11,7 +12,7 @@ const menus = [
   { key: '/', label: 'Hệ thống' },
   { key: '/manage', label: 'Quản lý kết nối' },
   { key: '/result', label: 'Kết quả xét nghiệm' },
-  { key: '/setting', label: 'Cài đặt chỉ số' },  
+  { key: '/setting', label: 'Cài đặt chỉ số' },
 ];
 
 export const PageLayout = () => {
@@ -52,6 +53,13 @@ export const PageLayout = () => {
               },
               {
                 type: 'divider',
+              },
+              {
+                key: 'log',
+                label: 'Xem thư mục',
+                onClick: () => {
+                  window.electron.ipcRenderer.send(IpcChannel.OPEN_APP_FOLDER);
+                },
               },
               {
                 key: 'logout',

@@ -1,6 +1,5 @@
 import { Transform } from 'stream';
 import { Connection } from '../index';
-import { connectionManager } from '../manager';
 
 export const ASCII_CODE = {
   STX: 2, // 0x02,
@@ -17,7 +16,7 @@ export class LabParser {
   connection: Connection
 
   constructor(connection: Connection) {
-    this.connection = connection; // connectionManager.getConnection(id);
+    this.connection = connection;
     this.connection.port.pipe(this.transform);
     
     this.connection.port.on('data', (buffer: Buffer) => {

@@ -1,5 +1,6 @@
 import { app, ipcMain } from 'electron';
-import log from 'electron-log/main';
+import Log from 'electron-log/main';
+import path from 'path';
 import installExtensions, {
   REACT_DEVELOPER_TOOLS,
   REDUX_DEVTOOLS,
@@ -12,8 +13,12 @@ import { initDatabase } from './database';
 import { registerIpcs } from './ipcs';
 import { windowManager } from './window';
 
-log.initialize();
-Object.assign(console, log.functions);
+Log.initialize();
+Log.transports.file.resolvePathFn = () =>
+  path.join(app.getPath('userData'), 'logs/main.log');
+Object.assign(console, Log.functions);
+
+console.log(Log.transports.file.getFile().path, 'log file');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {

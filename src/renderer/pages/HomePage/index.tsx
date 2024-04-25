@@ -76,9 +76,10 @@ export function HomePage() {
     return null;
   };
 
-  // useEffect(() => {
-  //   dispatch(getConnections());
-  // }, []);
+  useEffect(() => {
+    console.log('HomePage', { a: 1 });
+    //   dispatch(getConnections());
+  }, []);
 
   useEffect(() => {
     (async () => {
