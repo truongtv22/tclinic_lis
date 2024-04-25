@@ -1042,11 +1042,6 @@
   resolved "https://registry.yarnpkg.com/@gar/promisify/-/promisify-1.1.3.tgz#555193ab2e3bb3b6adc3d551c9c030d9e860daf6"
   integrity sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==
 
-"@goosewobbler/electron-redux@^1.0.4":
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/@goosewobbler/electron-redux/-/electron-redux-1.0.4.tgz#2236fba782230bd2cb056630272ad365cbf93c00"
-  integrity sha512-mJ4N6YbIaONuMWfuhsrVzitoRIr5jWishphFUZ5GsUXxrVhzhjl8lTvakMcBcxhi/bjbYsR1AuYj0Dqr8it8qw==
-
 "@humanwhocodes/config-array@^0.11.13":
   version "0.11.14"
   resolved "https://registry.yarnpkg.com/@humanwhocodes/config-array/-/config-array-0.11.14.tgz#d78e481a039f7566ecc9660b4ea7fe6b1fec442b"
@@ -1131,11 +1126,6 @@
   integrity sha512-1DpKU0Z5ThltBwjNySMC14g0CkbyhCaz9FkhxqNsZI6uAPJXFS8cMXlBKo26FJ8ZuW6S9GCMcR9IO5k2X5/9Fg==
   dependencies:
     cross-spawn "^7.0.1"
-
-"@mckayla/electron-redux@^3.0.3":
-  version "3.0.3"
-  resolved "https://registry.yarnpkg.com/@mckayla/electron-redux/-/electron-redux-3.0.3.tgz#870078280995a5a2539ce56d518da45686a11388"
-  integrity sha512-rcjtepGpgnhhqN88FoX61CtfCJ5qCf7BbNv+1kLVVPzWD0nuBG2ssJgyXbfGbOtnAIhbuuIogX1o/GqXiwPxlQ==
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
@@ -1757,14 +1747,6 @@
     "@babel/plugin-transform-react-jsx-source" "^7.23.3"
     "@types/babel__core" "^7.20.5"
     react-refresh "^0.14.0"
-
-"@wnayes/electron-redux@^2.0.0-alpha.10":
-  version "2.0.0-alpha.10"
-  resolved "https://registry.yarnpkg.com/@wnayes/electron-redux/-/electron-redux-2.0.0-alpha.10.tgz#ed162cbea23a64c542fe5a150ab734b89aa1359e"
-  integrity sha512-ycYbhPH5Ap2z5wnarYK6C+WbowEK+B6olzbGYW5uM4m1wsIFAs6Fp5zLhiZ2vh4NvnP92TWlbrvsC2WWWoFf6A==
-  dependencies:
-    lodash.isplainobject "^4.0.6"
-    lodash.isstring "^4.0.1"
 
 "@xmldom/xmldom@^0.8.8":
   version "0.8.10"
@@ -4556,16 +4538,6 @@ lodash.get@^4.0.0:
   resolved "https://registry.yarnpkg.com/lodash.get/-/lodash.get-4.4.2.tgz#2d177f652fa31e939b4438d5341499dfa3825e99"
   integrity sha512-z+Uw/vLuy6gQe8cfaFWD7p0wVv8fJl3mbzXh33RS+0oW2wvUqiRXiQ69gLWSLpgB5/6sU+r6BlQR0MBILadqTQ==
 
-lodash.isplainobject@^4.0.6:
-  version "4.0.6"
-  resolved "https://registry.yarnpkg.com/lodash.isplainobject/-/lodash.isplainobject-4.0.6.tgz#7c526a52d89b45c45cc690b88163be0497f550cb"
-  integrity sha512-oSXzaWypCMHkPC3NvBEaPHf0KsA5mvPrOPgQWDsbg8n7orZ290M0BmC/jgRZ4vcJ6DTAhjrsSYgdsW/F+MFOBA==
-
-lodash.isstring@^4.0.1:
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/lodash.isstring/-/lodash.isstring-4.0.1.tgz#d527dfb5456eca7cc9bb95d5daeaf88ba54a5451"
-  integrity sha512-0wJxfxH1wgO3GrbuP+dTTk7op+6L41QCXbGINEmD+ny/G/eCqGzxyCsh7159S+mgDDcoarnBw6PC1PS5+wUGgw==
-
 lodash.merge@^4.6.2:
   version "4.6.2"
   resolved "https://registry.yarnpkg.com/lodash.merge/-/lodash.merge-4.6.2.tgz#558aa53b43b661e1925a0afdfa36a9a1085fe57a"
@@ -6430,11 +6402,6 @@ safe-stable-stringify@^2.4.3:
   resolved "https://registry.yarnpkg.com/safer-buffer/-/safer-buffer-2.1.2.tgz#44fa161b0187b9549dd84bb91802f9bd8385cd6a"
   integrity sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==
 
-saga-toolkit@^2.1.2:
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/saga-toolkit/-/saga-toolkit-2.1.2.tgz#ffde8bdae2eba43a34c7bea826ce93d7045c83ba"
-  integrity sha512-yZe6/mBAKcOqN2pCz3I4BpAWG4dFIpwcuyy/vd3DMBXNaBKwe+N3KGGbyixW9RNPenB4LKfKrCmaxSOhUvMJPw==
-
 scheduler@^0.23.0:
   version "0.23.0"
   resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.23.0.tgz#ba8041afc3d30eb206a487b6b384002e4e61fdfe"
@@ -7564,11 +7531,6 @@ ws@^7.4.6:
   version "7.5.9"
   resolved "https://registry.yarnpkg.com/ws/-/ws-7.5.9.tgz#54fa7db29f4c7cec68b1ddd3a89de099942bb591"
   integrity sha512-F+P9Jil7UiSKSkppIiD94dN07AwvFixvLIj1Og1Rl9GGMuNipJnV9JzjD6XuqmAeiswGvUmNLjr5cFuXwNS77Q==
-
-ws@^8.16.0:
-  version "8.16.0"
-  resolved "https://registry.yarnpkg.com/ws/-/ws-8.16.0.tgz#d1cd774f36fbc07165066a60e40323eab6446fd4"
-  integrity sha512-HS0c//TP7Ina87TfiPUz1rQzMhHrl/SG2guqRcTOIUYD2q8uhUdNHZYJUaQ8aTGPzCh+c6oawMKW35nFl1dxyQ==
 
 xmlbuilder@^15.1.1:
   version "15.1.1"

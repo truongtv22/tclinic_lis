@@ -4,9 +4,10 @@ import {
   Observable,
   UnknownAction,
 } from '@reduxjs/toolkit';
+import { Action as ActionType } from 'redux-actions';
 import { rootReducer } from './reducers';
 
-type ActionOrAnyAction = UnknownAction;
+type ActionOrAnyAction = ActionType<any> | UnknownAction | ;
 
 export type Action = Exclude<ActionOrAnyAction, { type: '' }>;
 
@@ -24,6 +25,6 @@ export type Store = {
 
 type MiddlewareStore = Pick<Store, 'getState' | 'dispatch'>;
 
-export type Middleware<A extends UnknownAction = Action> = (
+export type Middleware<A extends Action = Action> = (
   store: MiddlewareStore,
 ) => (next: Dispatch) => (action: A) => Promise<Action>;

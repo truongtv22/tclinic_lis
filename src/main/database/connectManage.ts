@@ -16,6 +16,16 @@ export default {
     return data;
   },
 
+  getById(id: number) {
+    const db = connect();
+
+    const stmQueryById = db.prepare(
+      `SELECT * FROM [dbo.connectManage] WHERE id = @id`,
+    );
+    const data = stmQueryById.get({ id });
+    return data;
+  },
+
   create(values: any = {}) {
     const db = connect();
     const currentTime = new Date().toISOString();
@@ -125,7 +135,7 @@ export default {
     return data;
   },
 
-  update(values: any) {
+  update(id: number, values: any = {}) {
     const db = connect();
     const currentTime = new Date().toISOString();
 
@@ -168,7 +178,7 @@ export default {
         WHERE id = @id`,
     );
     stmUpdate.run({
-      id: values.id,
+      id,
       cong: values.cong,
       comp: values.comp,
       lab: values.lab,
@@ -200,11 +210,11 @@ export default {
     const stmQueryById = db.prepare(
       `SELECT * FROM [dbo.connectManage] WHERE id = @id`,
     );
-    const data = stmQueryById.get({ id: values.id });
+    const data = stmQueryById.get({ id });
     return data;
   },
 
-  delete(id: any) {
+  delete(id: number) {
     const db = connect();
 
     const stmQueryById = db.prepare(

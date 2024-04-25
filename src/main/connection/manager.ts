@@ -1,12 +1,33 @@
-import { Connection, ConnectionData } from './index';
+import connectManageDb from '../database/connectManage';
+import { Connection, ConnectionData } from './connection';
 
 class ConnectionManager {
   connections: Record<string, Connection> = {};
+
+  init() {
+    try {
+      const data: any[] = connectManageDb.getAll();
+      if (data && data.length > 0) {
+        this.setConnections(data);
+        this.openAllConnections();
+      }
+    } catch (error) {
+      console.log('Error init connection manager', error);
+    }
+  }
 
   setConnections(connections: ConnectionData[]) {
     for (const item of connections) {
       this.addConnection(item.id, item);
     }
+  }
+
+  getStatusConnections() {
+    const data: { [key: string]: boolean } = {};
+    for (const id in this.connections) {
+      data[id] = this.connections[id].isOpen;
+    }
+    return data;
   }
 
   openAllConnections() {
@@ -35,7 +56,6 @@ class ConnectionManager {
   updateConnection(id: string, data: ConnectionData) {
     const connection = this.connections[id];
     if (connection) {
-
       connection.update(data);
     }
   }

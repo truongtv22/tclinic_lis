@@ -35,23 +35,22 @@ import {
   RTS_MODE,
   PARITY,
 } from 'shared/constants';
-import { useStore } from 'renderer/hooks/useStore';
-import { useDispatch } from 'renderer/hooks/useDispatch';
-import { useIpcRenderer } from 'renderer/hooks/useIpcRenderer';
-import { connectionActions } from 'shared/store/connection/slice';
-import { getConnections } from 'shared/store/connection/actions';
-import { IpcChannels } from 'shared/ipcs/types';
-import { useSelector } from 'react-redux';
+// import { useSharedStore } from 'renderer/hooks/useSharedStore';
+// import { useSharedDispatch } from 'renderer/hooks/useSharedDispatch';
+// import { useIpcListener } from 'renderer/hooks/useIpcListener';
+// import {
+//   connectionActions,
+//   selectConnections,
+// } from 'shared/_store/connection/slice';
+// import { getConnections } from 'shared/_store/connection/actions';
+import { IpcChannel } from 'shared/ipcs/types';
 
 export function HomePage() {
   const [form] = Form.useForm();
-  const dispatch = useDispatch();
 
-  const connectionList = useStore((store) => store.connection?.connectionList);
-  console.log('connectionList', connectionList);
-
-  const connection = useSelector((state) => state.connection);
-  console.log('connection', connection);
+  // const dispatch = useSharedDispatch();
+  // const connections = useSharedStore(selectConnections);
+  // console.log('connectionList', connections);
 
   const [connectManager, setConnectManager] = useState({});
 
@@ -113,11 +112,11 @@ export function HomePage() {
     })();
   }, []);
 
-  // useIpcRenderer('port-opened', () => {});
+  // useIpcListener('port-opened', () => {});
 
-  // useIpcRenderer('port-closed', () => {});
+  // useIpcListener('port-closed', () => {});
 
-  // useIpcRenderer('port-error', () => {});
+  // useIpcListener('port-error', () => {});
 
   useEffect(() => {
     // const openSub = window.electron.serialport.on('open', () => {
@@ -272,7 +271,7 @@ export function HomePage() {
   };
 
   const onViewLog = () => {
-    window.electron.ipcRenderer.send(IpcChannels.OPEN_VIEW_WINDOW);
+    window.electron.ipcRenderer.send(IpcChannel.OPEN_VIEW_WINDOW);
   };
 
   return (
@@ -513,7 +512,7 @@ export function HomePage() {
               label="Tên thiết bị"
               rules={[{ required: true, message: 'Không được để trống' }]}
             >
-              <Input />
+              <Input placeholder="Tên thiết bị" />
             </Form.Item>
             <Row gutter={8}>
               <Col sm={24} md={12}>
@@ -528,6 +527,7 @@ export function HomePage() {
                       value: v,
                       label: v,
                     }))}
+                    placeholder="Loại máy"
                   />
                 </Form.Item>
               </Col>
@@ -543,6 +543,7 @@ export function HomePage() {
                       value: v,
                       label: v,
                     }))}
+                    placeholder="Kết nối"
                   />
                 </Form.Item>
               </Col>
@@ -563,6 +564,7 @@ export function HomePage() {
                           value: v,
                           label: v,
                         }))}
+                        placeholder="ComPort"
                       />
                     </Form.Item>
                   </Col>
@@ -577,6 +579,7 @@ export function HomePage() {
                     >
                       <AutoComplete
                         options={BAUD_RATE.map((v) => ({ value: v, label: v }))}
+                        placeholder="BaudRate"
                       />
                     </Form.Item>
                   </Col>
@@ -593,6 +596,7 @@ export function HomePage() {
                     >
                       <Select
                         options={DATA_BITS.map((v) => ({ value: v, label: v }))}
+                        placeholder="DataBits"
                       />
                     </Form.Item>
                   </Col>
@@ -607,6 +611,7 @@ export function HomePage() {
                     >
                       <Select
                         options={STOP_BITS.map((v) => ({ value: v, label: v }))}
+                        placeholder="StopBits"
                       />
                     </Form.Item>
                   </Col>
@@ -621,7 +626,7 @@ export function HomePage() {
                         { required: true, message: 'Không được để trống' },
                       ]}
                     >
-                      <Select options={RTS_MODE} />
+                      <Select options={RTS_MODE} placeholder="RtsMode" />
                     </Form.Item>
                   </Col>
                   <Col sm={24} md={12}>
@@ -633,7 +638,7 @@ export function HomePage() {
                         { required: true, message: 'Không được để trống' },
                       ]}
                     >
-                      <Select options={PARITY} />
+                      <Select options={PARITY} placeholder="Parity" />
                     </Form.Item>
                   </Col>
                 </Row>
@@ -644,7 +649,7 @@ export function HomePage() {
                       label="ReadTimeout"
                       initialValue={-1}
                     >
-                      <InputNumber min={-1} className="w-full" />
+                      <InputNumber min={-1} placeholder="ReadTimeout" className="w-full" />
                     </Form.Item>
                   </Col>
                   <Col sm={24} md={12}>
@@ -653,7 +658,7 @@ export function HomePage() {
                       label="WriteTimeout"
                       initialValue={-1}
                     >
-                      <InputNumber min={-1} className="w-full" />
+                      <InputNumber min={-1} placeholder="WriteTimeout" className="w-full" />
                     </Form.Item>
                   </Col>
                 </Row> */}

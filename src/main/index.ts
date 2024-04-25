@@ -4,13 +4,13 @@ import installExtensions, {
   REACT_DEVELOPER_TOOLS,
   REDUX_DEVTOOLS,
 } from 'electron-devtools-installer';
-import { mainReduxBridge } from 'reduxtron/main';
-import { WINDOW_ID } from 'shared/constants/window';
-import { getConnections } from 'shared/store/connection/actions';
-import { store } from './store';
+// import { mainReduxBridge } from 'reduxtron/main';
+import { WINDOW_ID } from 'shared/constants';
+// import { getConnections } from 'shared/_store/connection/actions';
+// import { store } from './_store';
 import { initDatabase } from './database';
 import { registerIpcs } from './ipcs';
-import { windowManager } from './window/manager';
+import { windowManager } from './window';
 
 log.initialize();
 Object.assign(console, log.functions);
@@ -20,7 +20,7 @@ if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
-const { unsubscribe } = mainReduxBridge(ipcMain, store);
+// const { unsubscribe } = mainReduxBridge(ipcMain, store);
 
 const createWindow = () => {
   windowManager.createWindow(WINDOW_ID.MAIN);
@@ -32,7 +32,7 @@ const loadExtensions = async () => {
       [REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS],
       { loadExtensionOptions: { allowFileAccess: true } },
     );
-    console.log(`Added Extension 1:  ${result}`);
+    console.log(`Added Extension:  ${result}`);
   } catch (error) {
     console.log('An error occurred: ', error);
   }
@@ -44,9 +44,9 @@ const loadExtensions = async () => {
 app.on('ready', () => {
   loadExtensions();
   initDatabase();
-  store.dispatch(getConnections());
+  // store.dispatch(getConnections());
   createWindow();
-  registerIpcs(store);
+  registerIpcs();
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -68,4 +68,4 @@ app.on('activate', () => {
   // }
 });
 
-app.on('quit', unsubscribe);
+// app.on('quit', unsubscribe);

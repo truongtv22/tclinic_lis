@@ -13,7 +13,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      main: path.resolve(__dirname, './src/main'),
+      // main: path.resolve(__dirname, './src/main'),
       renderer: path.resolve(__dirname, './src/renderer'),
       shared: path.resolve(__dirname, './src/shared'),
       // components: path.resolve(__dirname, './src/components'),

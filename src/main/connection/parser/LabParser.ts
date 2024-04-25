@@ -16,8 +16,10 @@ export class LabParser {
   transform: Transform;
   connection: Connection
 
-  constructor(id: string) {
-    this.connection = connectionManager.getConnection(id);
+  constructor(connection: Connection) {
+    this.connection = connection; // connectionManager.getConnection(id);
+    this.connection.port.pipe(this.transform);
+    
     this.connection.port.on('data', (buffer: Buffer) => {
       this.prepare(buffer);
     });

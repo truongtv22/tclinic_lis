@@ -50,13 +50,10 @@
   },
   "dependencies": {
     "@ant-design/pro-components": "^2.7.0",
-    "@goosewobbler/electron-redux": "^1.0.4",
-    "@mckayla/electron-redux": "^3.0.3",
     "@reduxjs/toolkit": "^2.1.0",
     "@table-nav/core": "^0.0.7",
     "@table-nav/react": "^0.0.7",
     "@uiw/react-split": "^5.9.3",
-    "@wnayes/electron-redux": "^2.0.0-alpha.10",
     "ahooks": "^3.7.10",
     "antd": "^5.16.1",
     "axios": "^1.6.8",
@@ -79,10 +76,8 @@
     "redux-saga": "^1.3.0",
     "redux-saga-routines": "^3.2.3",
     "reduxtron": "^0.0.16",
-    "saga-toolkit": "^2.1.2",
     "serialport": "^12.0.0",
     "stateful-electron-window": "^1.0.0",
-    "ws": "^8.16.0",
     "zustand": "^4.5.2"
   },
   "resolutions": {

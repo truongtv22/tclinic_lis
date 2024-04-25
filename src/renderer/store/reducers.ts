@@ -3,16 +3,13 @@
  */
 import { persistReducer } from 'redux-persist';
 import { combineReducers } from '@reduxjs/toolkit';
-// import createElectronStorage from 'redux-persist-electron-storage';
 import autoMergeLevel2 from 'redux-persist/lib/stateReconciler/autoMergeLevel2';
 
 import { InjectedReducersType } from 'renderer/utils/types/injector-typings';
 import { createElectronStorage } from 'renderer/utils/electron-storage';
 import { STORAGE_KEY } from 'shared/constants';
 
-import { appSlice } from 'shared/store/app/slice';
-import { connectionSlice } from 'shared/store/connection/slice';
-// import { appSlice } from './app/slice';
+import { appSlice } from './app/slice';
 
 /**
  * Merges the main reducer with the router state and dynamically injected reducers
@@ -29,7 +26,6 @@ export function createReducer(injectedReducers: InjectedReducersType = {}) {
 
   const rootReducer = combineReducers({
     [appSlice.name]: appSlice.reducer,
-    [connectionSlice.name]: connectionSlice.reducer,
     ...injectedReducers,
   });
   return persistReducer(persistConfig, rootReducer);

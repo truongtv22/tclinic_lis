@@ -1,7 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { reduce } from 'lodash';
 import { ConnectionState } from './types';
-import { getConnections } from './actions';
 
 export const initialState: ConnectionState = {
   connectionList: [],
@@ -11,11 +9,7 @@ export const initialState: ConnectionState = {
 export const connectionSlice = createSlice({
   name: 'connection',
   initialState,
-  reducers: {
-    test: (state, action) => {
-      state.connectionStatus[action.payload.id] = action.payload.status;
-    },
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder.addCase(getConnections.SUCCESS, (state, action: any) => {
       state.connectionList = action.payload;
@@ -35,5 +29,4 @@ export const connectionSlice = createSlice({
 });
 
 export const connectionActions = connectionSlice.actions;
-export const connectionReducer = connectionSlice.reducer;
-export const connectionSelectors = connectionSlice.selectors;
+export const { selectConnections } = connectionSlice.selectors;

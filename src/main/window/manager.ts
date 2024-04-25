@@ -1,4 +1,4 @@
-import { Window } from './index';
+import { Window } from './window';
 
 class WindowManager {
   windows: Record<string, Window> = {};
