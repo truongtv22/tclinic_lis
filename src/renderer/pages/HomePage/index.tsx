@@ -49,7 +49,7 @@ import { modal, message, notification } from 'renderer/hooks/useGlobal';
 import { useConnectionIpc } from 'renderer/hooks/useConnectionIpc';
 
 export function HomePage() {
-  useConnectionIpc();
+  const { openConnection, closeConnection } = useConnectionIpc();
 
   const [form] = Form.useForm();
   const dispatch = useDispatch();
@@ -220,11 +220,13 @@ export function HomePage() {
 
   const onOpen = () => {
     const params = form.getFieldsValue();
+    openConnection(params.id);
     // window.electron.serialport.connect(params);
   };
 
   const onClose = () => {
     const params = form.getFieldsValue();
+    closeConnection(params.id)
     // window.electron.serialport.disconnect({ id: params.id });
   };
 
