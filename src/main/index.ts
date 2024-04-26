@@ -18,8 +18,6 @@ Log.transports.file.resolvePathFn = () =>
   path.join(app.getPath('userData'), 'logs/main.log');
 Object.assign(console, Log.functions);
 
-console.log(Log.transports.file.getFile().path, 'log file');
-
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
   app.quit();

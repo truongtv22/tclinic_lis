@@ -1,9 +1,9 @@
 {
   "include": [
     "src/main/**/*",
-    "src/preload/**/*",
     "src/shared/**/*",
-    "src/renderer/**/*"
+    "src/renderer/**/*",
+    "src/preload/index.d.ts",
   ],
   "compilerOptions": {
     "target": "ESNext",
