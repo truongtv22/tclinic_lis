@@ -1,6 +1,3 @@
-import { AppState } from 'renderer/store/app/types';
-import { DeviceState } from 'renderer/store/devices/types';
-
 /* 
   Because the redux-injectors injects your reducers asynchronously somewhere in your code
   You have to declare them here manually
@@ -8,6 +5,4 @@ import { DeviceState } from 'renderer/store/devices/types';
   So, not available always
 */
 export interface RootState {
-  app: AppState;
-  device: DeviceState;
 }

@@ -1,7 +1,7 @@
 import { useDispatch } from 'react-redux';
 import { Form, Input, Button, Space } from 'antd';
 
-import { appActions } from 'renderer/store/app/slice';
+import { appActions } from 'renderer/store/app';
 
 type FormData = {
   taikhoan?: string;

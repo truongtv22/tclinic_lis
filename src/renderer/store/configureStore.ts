@@ -2,6 +2,10 @@ import { configureStore, Middleware, StoreEnhancer } from '@reduxjs/toolkit';
 import { createInjectorsEnhancer } from 'redux-injectors';
 import createSagaMiddleware from 'redux-saga';
 import {
+  routinePromiseWatcherSaga,
+  ROUTINE_PROMISE_ACTION,
+} from 'redux-saga-routines';
+import {
   persistStore,
   FLUSH,
   REHYDRATE,
@@ -31,7 +35,15 @@ export function configureAppStore() {
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({
         serializableCheck: {
-          ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+          ignoredActions: [
+            FLUSH,
+            REHYDRATE,
+            PAUSE,
+            PERSIST,
+            PURGE,
+            REGISTER,
+            ROUTINE_PROMISE_ACTION,
+          ],
         },
       }).concat(middlewares),
     devTools: process.env.NODE_ENV !== 'production',
@@ -40,6 +52,7 @@ export function configureAppStore() {
   const persistor = persistStore(store);
 
   sagaMiddleware.run(rootSaga);
+  sagaMiddleware.run(routinePromiseWatcherSaga);
 
   return { store, persistor };
 }

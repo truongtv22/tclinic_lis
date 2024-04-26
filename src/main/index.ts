@@ -1,14 +1,11 @@
-import { app, ipcMain } from 'electron';
+import { app } from 'electron';
 import Log from 'electron-log/main';
 import path from 'path';
 import installExtensions, {
   REACT_DEVELOPER_TOOLS,
   REDUX_DEVTOOLS,
 } from 'electron-devtools-installer';
-// import { mainReduxBridge } from 'reduxtron/main';
 import { WINDOW_ID } from 'shared/constants';
-// import { getConnections } from 'shared/_store/connection/actions';
-// import { store } from './_store';
 import { initDatabase } from './database';
 import { registerIpcs } from './ipcs';
 import { windowManager } from './window';
@@ -22,8 +19,6 @@ Object.assign(console, Log.functions);
 if (require('electron-squirrel-startup')) {
   app.quit();
 }
-
-// const { unsubscribe } = mainReduxBridge(ipcMain, store);
 
 const createWindow = () => {
   windowManager.createWindow(WINDOW_ID.MAIN);
@@ -47,7 +42,6 @@ const loadExtensions = async () => {
 app.on('ready', () => {
   loadExtensions();
   initDatabase();
-  // store.dispatch(getConnections());
   createWindow();
   registerIpcs();
 });
@@ -70,5 +64,3 @@ app.on('activate', () => {
   //   createWindow();
   // }
 });
-
-// app.on('quit', unsubscribe);

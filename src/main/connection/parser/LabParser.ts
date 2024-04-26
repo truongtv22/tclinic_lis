@@ -17,11 +17,11 @@ export class LabParser {
 
   constructor(connection: Connection) {
     this.connection = connection;
-    this.connection.port.pipe(this.transform);
+    // this.connection.port.pipe(this.transform);
     
-    this.connection.port.on('data', (buffer: Buffer) => {
-      this.prepare(buffer);
-    });
+    // this.connection.port.on('data', (buffer: Buffer) => {
+    //   this.prepare(buffer);
+    // });
 
     this.transform.on('data', (buffer: Buffer) => {
       const data = this.parse(buffer);

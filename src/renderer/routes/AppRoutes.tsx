@@ -9,8 +9,11 @@ import {
   LogPage,
 } from 'renderer/pages';
 import { AppLayout, PageLayout } from 'renderer/layouts';
+import useGlobal from 'renderer/hooks/useGlobal';
 
 export const AppRoutes = () => {
+  useGlobal();
+
   return (
     <Routes>
       <Route element={<PageLayout />}>

@@ -5,6 +5,7 @@ import {
   ConnectionIpcEvents,
   ConnectionIpcCommands,
 } from './connection';
+import { KqBW200IpcChannel, KqBW200IpcCommands } from './kqBW200';
 
 export type IpcEvents = WindowIpcEvents &
   StorageIpcEvents &
@@ -12,10 +13,11 @@ export type IpcEvents = WindowIpcEvents &
 export type EventChannel = keyof IpcEvents;
 export type EventParam = IpcEvents[EventChannel];
 
-export type IpcCommands = ConnectionIpcCommands;
+export type IpcCommands = ConnectionIpcCommands & KqBW200IpcCommands;
 
 export const IpcChannel = {
   ...WindowIpcChannel,
   ...StorageIpcChannel,
   ...ConnectionIpcChannel,
+  ...KqBW200IpcChannel,
 };

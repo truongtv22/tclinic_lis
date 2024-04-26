@@ -7,7 +7,7 @@ export enum ConnectionIpcChannel {
   GET_CONNECTION = 'get-connection',
   CREATE_CONNECTION = 'create-connection',
   UPDATE_CONNECTION = 'update-connection',
-  REMOVE_CONNECTION = 'remove-connection',
+  DELETE_CONNECTION = 'delete-connection',
 
   CONNECTION_OPENED = 'connection-opened',
   CONNECTION_CLOSED = 'connection-closed',
@@ -15,12 +15,12 @@ export enum ConnectionIpcChannel {
 }
 
 export type ConnectionIpcEvents = {
-  [ConnectionIpcChannel.OPEN_CONNECTION]: (id: string) => void;
-  [ConnectionIpcChannel.CLOSE_CONNECTION]: (id: string) => void;
+  [ConnectionIpcChannel.OPEN_CONNECTION]: (id: number) => void;
+  [ConnectionIpcChannel.CLOSE_CONNECTION]: (id: number) => void;
 
-  [ConnectionIpcChannel.CONNECTION_OPENED]: (id: string) => void;
-  [ConnectionIpcChannel.CONNECTION_CLOSED]: (id: string) => void;
-  [ConnectionIpcChannel.CONNECTION_ERROR]: (id: string, error: any) => void;
+  [ConnectionIpcChannel.CONNECTION_OPENED]: (id: number) => void;
+  [ConnectionIpcChannel.CONNECTION_CLOSED]: (id: number) => void;
+  [ConnectionIpcChannel.CONNECTION_ERROR]: (id: number, error: any) => void;
 };
 
 export type ConnectionIpcCommands = {
@@ -52,7 +52,7 @@ export type ConnectionIpcCommands = {
     data?: any;
     message?: string;
   };
-  [ConnectionIpcChannel.REMOVE_CONNECTION]: (id: number) => {
+  [ConnectionIpcChannel.DELETE_CONNECTION]: (id: number) => {
     success: boolean;
     message?: string;
   };

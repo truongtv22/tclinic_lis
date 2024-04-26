@@ -38,6 +38,7 @@ export default {
 
     return { data, total: total.total };
   },
+
   create(values: any = {}) {
     const db = connect();
 
@@ -81,13 +82,12 @@ export default {
     const data = stmQueryById.get({ id });
     return data;
   },
+
   update(id: number, values: any) {
     const db = connect();
 
     const stmUpdate = db.prepare(
-      `UPDATE [dbo.KQ_BW200] SET
-          sendhis = @sendhis,
-        WHERE id = @id`,
+      `UPDATE [dbo.KQ_BW200] SET sendhis = @sendhis WHERE id = @id`,
     );
     stmUpdate.run({ id, sendhis: values.sendhis });
 

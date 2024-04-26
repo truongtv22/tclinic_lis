@@ -14,36 +14,36 @@ import {
 } from './parser';
 
 export interface ConnectionData {
-  id: string;
+  id: number;
   lab: string;
   [key: string]: any;
 }
 
 export class Connection {
-  id: string;
+  id: number;
   data: ConnectionData;
 
   port: SerialPort;
   parser: LabParser;
 
-  constructor(id: string, data: ConnectionData) {
+  constructor(id: number, data: ConnectionData) {
     this.id = id;
     this.data = data;
     this.port = new SerialPort(this.openOptions);
 
-    this.port.on('open', () => {
-      switch (this.data.lab) {
-        case LAB.BW200:
-          this.parser = new BW200Parser(this);
-          break;
-        case LAB.Access2:
-          this.parser = new Access2Parser(this);
-          break;
-        case LAB.SysmexXP100:
-          this.parser = new SysmexXP100Parser(this);
-          break;
-      }
-    });
+    // this.port.on('open', () => {
+    //   switch (this.data.lab) {
+    //     case LAB.BW200:
+    //       this.parser = new BW200Parser(this);
+    //       break;
+    //     case LAB.Access2:
+    //       this.parser = new Access2Parser(this);
+    //       break;
+    //     case LAB.SysmexXP100:
+    //       this.parser = new SysmexXP100Parser(this);
+    //       break;
+    //   }
+    // });
 
     this.port.on('open', () => {
       const window = windowManager.getWindow(WINDOW_ID.MAIN);

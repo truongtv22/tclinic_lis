@@ -38,6 +38,7 @@ export class Window {
         webPreferences: {
           preload: path.join(__dirname, '../preload/index.js'),
           sandbox: false,
+          // nodeIntegration: true,
         },
       });
 

@@ -30,7 +30,7 @@ export function registerConnectionIpc() {
   ipcMain.handle(IpcChannel.UPDATE_CONNECTION, (_, id, data) => {
     return connectionService.update(id, data);
   });
-  ipcMain.handle(IpcChannel.REMOVE_CONNECTION, (_, id) => {
+  ipcMain.handle(IpcChannel.DELETE_CONNECTION, (_, id) => {
     return connectionService.delete(id);
   });
 }

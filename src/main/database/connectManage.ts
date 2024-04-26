@@ -35,7 +35,7 @@ export default {
     );
     const listByQuery = stmQuery.all({ comport: values.comport });
     if (listByQuery.length > 0) {
-      throw new Error('Comport đã được sử dụng');
+      throw new Error('ComPort đã được sử dụng');
     }
 
     const stmAdd = db.prepare(
@@ -142,9 +142,9 @@ export default {
     const stmQuery = db.prepare(
       `SELECT * FROM [dbo.connectManage] WHERE id != @id AND comport LIKE @comport`,
     );
-    const listByQuery = stmQuery.all({ comport: values.comport });
+    const listByQuery = stmQuery.all({ id, comport: values.comport });
     if (listByQuery.length > 0) {
-      throw new Error('Comport đã được sử dụng');
+      throw new Error('ComPort đã được sử dụng');
     }
 
     const stmUpdate = db.prepare(

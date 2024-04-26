@@ -1,5 +1,5 @@
 import { connectionManager } from 'main/connection';
-import connectManageDb from '../database/connectManage';
+import connectManageDb from 'main/database/connectManage';
 
 export default {
   getAll() {
@@ -16,7 +16,7 @@ export default {
       const data = connectManageDb.getById(id);
       return { success: true, data };
     } catch (error) {
-      return { success: false, message: error };
+      return { success: false, message: error.message };
     }
   },
 
@@ -25,7 +25,7 @@ export default {
       const data = connectionManager.getStatusConnections();
       return { success: true, data };
     } catch (error) {
-      return { success: false, message: error };
+      return { success: false, message: error.message };
     }
   },
 
@@ -34,7 +34,8 @@ export default {
       const data = connectManageDb.create(values);
       return { success: true, data };
     } catch (error) {
-      return { success: false, message: error };
+      console.log('Create connection error', error);
+      return { success: false, message: error.message };
     }
   },
 
@@ -43,7 +44,8 @@ export default {
       const data = connectManageDb.update(id, values);
       return { success: true, data };
     } catch (error) {
-      return { success: false, message: error };
+      console.log('Update connection error', error);
+      return { success: false, message: error.message };
     }
   },
 
@@ -52,7 +54,8 @@ export default {
       connectManageDb.delete(id);
       return { success: true };
     } catch (error) {
-      return { success: false, message: error };
+      console.log('Delete connection error', error);
+      return { success: false, message: error.message };
     }
   },
 };

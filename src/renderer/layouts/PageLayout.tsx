@@ -5,8 +5,7 @@ import { UserOutlined } from '@ant-design/icons';
 import { useLocation } from 'react-router-dom';
 
 import { IpcChannel } from 'shared/ipcs/types';
-import { appActions } from 'renderer/store/app/slice';
-import { selectIsAuth } from 'renderer/store/app/selectors';
+import { appActions, selectIsAuth } from 'renderer/store/app';
 
 const menus = [
   { key: '/', label: 'Hệ thống' },

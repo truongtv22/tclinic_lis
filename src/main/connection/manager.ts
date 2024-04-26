@@ -2,7 +2,7 @@ import connectManageDb from '../database/connectManage';
 import { Connection, ConnectionData } from './connection';
 
 class ConnectionManager {
-  connections: Record<string, Connection> = {};
+  connections: Record<number, Connection> = {};
 
   init() {
     try {
@@ -23,7 +23,7 @@ class ConnectionManager {
   }
 
   getStatusConnections() {
-    const data: { [key: string]: boolean } = {};
+    const data: { [key: number]: boolean } = {};
     for (const id in this.connections) {
       data[id] = this.connections[id].isOpen;
     }
@@ -42,25 +42,25 @@ class ConnectionManager {
     }
   }
 
-  getConnection(id: string) {
+  getConnection(id: number) {
     return this.connections[id] || null;
   }
 
-  addConnection(id: string, data: ConnectionData) {
+  addConnection(id: number, data: ConnectionData) {
     const connection = this.connections[id];
     if (connection) return;
     const newConnection = new Connection(id, data);
     this.connections[id] = newConnection;
   }
 
-  updateConnection(id: string, data: ConnectionData) {
+  updateConnection(id: number, data: ConnectionData) {
     const connection = this.connections[id];
     if (connection) {
       connection.update(data);
     }
   }
 
-  removeConnection(id: string) {
+  removeConnection(id: number) {
     const connection = this.connections[id];
     if (connection) {
       connection.close();
@@ -68,12 +68,12 @@ class ConnectionManager {
     }
   }
 
-  openConnection(id: string, options = {}) {
+  openConnection(id: number, options = {}) {
     const connection = this.connections[id];
     if (connection) connection.open(options);
   }
 
-  closeConnection(id: string) {
+  closeConnection(id: number) {
     const connection = this.connections[id];
     if (connection) connection.close();
   }

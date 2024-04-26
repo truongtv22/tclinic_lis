@@ -1,7 +1,8 @@
 import { all } from 'redux-saga/effects';
 
-import { appSaga } from './app/saga';
+import { appSaga } from './app';
+import { connectionSaga } from './connection';
 
 export function* rootSaga() {
-  yield all([appSaga()]);
+  yield all([appSaga(), connectionSaga()]);
 }

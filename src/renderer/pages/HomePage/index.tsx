@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { produce } from 'immer';
 import dayjs from 'dayjs';
 import {
@@ -35,61 +36,53 @@ import {
   RTS_MODE,
   PARITY,
 } from 'shared/constants';
-// import { useSharedStore } from 'renderer/hooks/useSharedStore';
-// import { useSharedDispatch } from 'renderer/hooks/useSharedDispatch';
-// import { useIpcListener } from 'renderer/hooks/useIpcListener';
-// import {
-//   connectionActions,
-//   selectConnections,
-// } from 'shared/_store/connection/slice';
-// import { getConnections } from 'shared/_store/connection/actions';
 import { IpcChannel } from 'shared/ipcs/types';
+import {
+  getConnections,
+  createConnection,
+  updateConnection,
+  deleteConnection,
+  selectConnections,
+  selectConnectionStatus,
+} from 'renderer/store/connection';
+import { modal, message, notification } from 'renderer/hooks/useGlobal';
+import { useConnectionIpc } from 'renderer/hooks/useConnectionIpc';
 
 export function HomePage() {
+  useConnectionIpc();
+
   const [form] = Form.useForm();
+  const dispatch = useDispatch();
 
-  // const dispatch = useSharedDispatch();
-  // const connections = useSharedStore(selectConnections);
-  // console.log('connectionList', connections);
-
-  const [connectManager, setConnectManager] = useState({});
+  const connections = useSelector(selectConnections);
+  const connectionStatus = useSelector(selectConnectionStatus);
 
   const kieuketnoi = Form.useWatch('kieuketnoi', form);
 
+  const [selected, setSelected] = useState(null);
+
   const [loading, setLoading] = useState(false);
-  const [connected, setConnected] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [testResult, setTestResult] = useState<any>({});
-  const [globalLoading, setGlobalLoading] = useState(false);
-
-  const [devices, setDevices] = useState([]);
-  const [selected, setSelected] = useState(null);
-
-  const { modal, notification } = App.useApp();
-
-  const getData = async () => {
-    // const result = await window.dbApi.getConnect();
-    // if (result.success) {
-    //   return result.data;
-    // }
-    return null;
-  };
+  const [modalLoading, setModalLoading] = useState(false);
 
   useEffect(() => {
-    console.log('HomePage', { a: 1 });
-    //   dispatch(getConnections());
+    dispatch(getConnections());
   }, []);
 
   useEffect(() => {
-    (async () => {
-      const data = await getData();
-      if (data && data.length > 0) {
-        setDevices(data);
-        setSelected(data[0]);
+    if (selected) {
+      const found = connections.find((item) => item.id === selected.id);
+      if (found) {
+        setSelected(found);
+      } else {
+        setSelected(connections[0]);
       }
-    })();
-  }, []);
+    } else {
+      setSelected(connections[0]);
+    }
+  }, [connections]);
 
   useEffect(() => {
     if (selected) {
@@ -200,65 +193,29 @@ export function HomePage() {
   };
 
   const onSave = async (values: any) => {
-    console.log('onSubmit', values);
-    // setLoading(true);
-    // if (values.id) {
-    //   const result = await window.dbApi.updateConnect(values);
-    //   console.log('result', result);
-    //   if (result.success) {
-    //     const newDevices = produce(devices, (draft) => {
-    //       const index = draft.findIndex((item) => item.id === values.id);
-    //       if (index > -1) {
-    //         draft.splice(index, 1, result.data);
-    //       }
-    //     });
-    //     setDevices(newDevices);
-    //     notification.success({
-    //       message: 'Thành công',
-    //       description: 'Cập nhật kết nối thành công',
-    //     });
-    //   }
-    // } else {
-    //   const result = await window.dbApi.createConnect(values);
-    //   console.log('result', result);
-    //   if (result.success) {
-    //     const newDevices = produce(devices, (draft) => {
-    //       draft.push(result.data);
-    //     });
-    //     setDevices(newDevices);
-    //     setSelected(result.data);
-    //     notification.success({
-    //       message: 'Thành công',
-    //       description: 'Thêm mới kết nối thành công',
-    //     });
-    //   }
-    // }
-    // setLoading(false);
+    try {
+      setLoading(true);
+      if (values.id) {
+        const [, data] = await dispatch(updateConnection([values.id, values]));
+        setSelected(data);
+      } else {
+        const data = await dispatch(createConnection([values]));
+        setSelected(data);
+      }
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+    }
   };
 
   const onDelete = async (id: any) => {
-    // setLoading(true);
-    // const result = await window.dbApi.deleteConnect(id);
-    // console.log('result', result);
-    // if (result.success) {
-    //   const newDevices = produce(devices, (draft) => {
-    //     const index = draft.findIndex((item) => item.id === id);
-    //     if (index > -1) {
-    //       draft.splice(index, 1);
-    //     }
-    //   });
-    //   setDevices(newDevices);
-    //   if (newDevices.length > 0) {
-    //     setSelected(newDevices[0]);
-    //   } else {
-    //     setSelected(null);
-    //   }
-    //   notification.success({
-    //     message: 'Thành công',
-    //     description: 'Xoá kết nối thành công',
-    //   });
-    // }
-    // setLoading(false);
+    try {
+      setLoading(true);
+      await dispatch(deleteConnection([id]));
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+    }
   };
 
   const onOpen = () => {
@@ -287,7 +244,7 @@ export function HomePage() {
           <Button
             key="cancel"
             size="small"
-            disabled={globalLoading}
+            disabled={modalLoading}
             onClick={() => setIsModalOpen(false)}
           >
             Đóng
@@ -297,16 +254,16 @@ export function HomePage() {
             size="small"
             type="primary"
             icon={<CloudUploadOutlined />}
-            loading={globalLoading}
+            loading={modalLoading}
             onClick={async () => {
               // try {
-              //   setGlobalLoading(true);
+              //   setModalLoading(true);
               //   const result = await window.electron.ipcRenderer.invoke(
               //     'dong-bo-his',
               //     testResult,
               //   );
               //   setIsModalOpen(false);
-              //   setGlobalLoading(false);
+              //   setModalLoading(false);
               //   if (result.success) {
               //     notification.success({
               //       message: 'Đồng bộ HIS',
@@ -319,7 +276,7 @@ export function HomePage() {
               //     });
               //   }
               // } catch (error) {
-              //   setGlobalLoading(false);
+              //   setModalLoading(false);
               //   notification.error({
               //     message: 'Đồng bộ HIS',
               //     description: error.message,
@@ -430,9 +387,9 @@ export function HomePage() {
         <Card className="min-w-60 max-w-[50%]" size="small">
           <div className="space-y-2">
             <p className="text-lg font-semibold">Danh sách kết nối</p>
-            {devices.length > 0 ? (
+            {connections.length > 0 ? (
               <div className="space-y-2">
-                {devices.map((item) => (
+                {connections.map((item) => (
                   <div key={item.id} className="flex space-x-2">
                     <Radio
                       value={1}
@@ -669,7 +626,9 @@ export function HomePage() {
               <Button
                 type="primary"
                 size="small"
-                disabled={connected}
+                disabled={
+                  !selected || (selected && !!connectionStatus[selected.id])
+                }
                 onClick={onOpen}
               >
                 Mở cổng
@@ -677,12 +636,14 @@ export function HomePage() {
               <Button
                 type="primary"
                 size="small"
-                disabled={!connected}
+                disabled={
+                  !selected || (selected && !connectionStatus[selected.id])
+                }
                 onClick={onClose}
               >
                 Đóng cổng
               </Button>
-              <Button size="small" onClick={onViewLog}>
+              <Button size="small" disabled={!selected} onClick={onViewLog}>
                 Xem nhật ký
               </Button>
             </Space>
