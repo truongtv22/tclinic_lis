@@ -23,6 +23,7 @@ import {
   PlusOutlined,
   SaveOutlined,
   DeleteOutlined,
+  FolderAddOutlined,
   CloudUploadOutlined,
 } from '@ant-design/icons';
 import Split from '@uiw/react-split';
@@ -45,17 +46,53 @@ import {
   selectConnections,
   selectConnectionStatus,
 } from 'renderer/store/connection';
-import { modal, message, notification } from 'renderer/hooks/useGlobal';
-import { useConnectionIpc } from 'renderer/hooks/useConnectionIpc';
+import {
+  modal,
+  message,
+  notification,
+  useWindowIpc,
+  useConnectionIpc,
+} from 'renderer/hooks';
+
+const SelectFolder = ({
+  value,
+  onChange,
+}: {
+  value?: string;
+  onChange?: (value: string) => void;
+}) => {
+  const { selectFolder } = useWindowIpc();
+
+  const onSelect = async () => {
+    const folder = await selectFolder();
+    if (folder) {
+      onChange(folder);
+    }
+  };
+
+  return (
+    <div className="space-y-1">
+      <Button
+        icon={<FolderAddOutlined />}
+        type="dashed"
+        onClick={onSelect}
+        className="w-full"
+      >
+        Chọn thư mục
+      </Button>
+      <p>{value}</p>
+    </div>
+  );
+};
 
 export function HomePage() {
-  const { openConnection, closeConnection } = useConnectionIpc();
-
   const [form] = Form.useForm();
   const dispatch = useDispatch();
 
   const connections = useSelector(selectConnections);
   const connectionStatus = useSelector(selectConnectionStatus);
+
+  const { openConnection, closeConnection } = useConnectionIpc();
 
   const kieuketnoi = Form.useWatch('kieuketnoi', form);
 
@@ -194,6 +231,7 @@ export function HomePage() {
 
   const onSave = async (values: any) => {
     try {
+      console.log('Submit form', values);
       setLoading(true);
       if (values.id) {
         const [, data] = await dispatch(updateConnection([values.id, values]));
@@ -226,12 +264,12 @@ export function HomePage() {
 
   const onClose = () => {
     const params = form.getFieldsValue();
-    closeConnection(params.id)
+    closeConnection(params.id);
     // window.electron.serialport.disconnect({ id: params.id });
   };
 
   const onViewLog = () => {
-    window.electron.ipcRenderer.send(IpcChannel.OPEN_VIEW_WINDOW);
+    // window.electron.ipcRenderer.send(IpcChannel.OPEN_VIEW_WINDOW);
   };
 
   return (
@@ -622,6 +660,17 @@ export function HomePage() {
                     </Form.Item>
                   </Col>
                 </Row> */}
+              </>
+            )}
+            {kieuketnoi === CONNECT_TYPE.Folder && (
+              <>
+                <Row gutter={8}>
+                  <Col sm={24} md={12}>
+                    <Form.Item name="folder">
+                      <SelectFolder />
+                    </Form.Item>
+                  </Col>
+                </Row>
               </>
             )}
             <Space>

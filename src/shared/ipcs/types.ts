@@ -1,4 +1,4 @@
-import { WindowIpcChannel, WindowIpcEvents } from './window';
+import { WindowIpcChannel, WindowIpcEvents, WindowIpcCommands } from './window';
 import { StorageIpcChannel, StorageIpcEvents } from './storage';
 import {
   ConnectionIpcChannel,
@@ -13,7 +13,9 @@ export type IpcEvents = WindowIpcEvents &
 export type EventChannel = keyof IpcEvents;
 export type EventParam = IpcEvents[EventChannel];
 
-export type IpcCommands = ConnectionIpcCommands & KqBW200IpcCommands;
+export type IpcCommands = WindowIpcCommands &
+  ConnectionIpcCommands &
+  KqBW200IpcCommands;
 
 export const IpcChannel = {
   ...WindowIpcChannel,

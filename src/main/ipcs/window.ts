@@ -1,4 +1,4 @@
-import { app, shell } from 'electron';
+import { app, shell, dialog } from 'electron';
 import { ipcMain, IpcChannel } from 'shared/ipcs';
 import { WINDOW_ID } from 'shared/constants';
 import { windowManager } from '../window';
@@ -15,5 +15,13 @@ export function registerWindowIpc() {
 
   ipcMain.on(IpcChannel.OPEN_APP_FOLDER, (event) => {
     shell.showItemInFolder(app.getPath('userData'));
+  });
+
+  ipcMain.handle(IpcChannel.SELECT_FOLDER, async (event) => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      properties: ['openDirectory'],
+    });
+    const folderPath = filePaths[0];
+    return { folderPath, canceled };
   });
 }

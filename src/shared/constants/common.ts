@@ -4,6 +4,7 @@ export const LAB = {
   BW200: 'BW200',
   Access2: 'Access2',
   SysmexXP100: 'SysmexXP100',
+  BioSystemA15: 'BioSystemA15',
 };
 
 export const CONNECT_TYPE = {

@@ -5,7 +5,7 @@ export default {
   getAll() {
     const db = connect();
 
-    const whereConds = ['kieuketnoi = @kieuketnoi'];
+    const whereConds: any = [/* 'kieuketnoi = @kieuketnoi' */];
     const whereClause =
       whereConds.length > 0 ? `WHERE ${whereConds.join(' AND ')}` : '';
 

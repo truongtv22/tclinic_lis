@@ -9,9 +9,9 @@ import { appActions, selectIsAuth } from 'renderer/store/app';
 
 const menus = [
   { key: '/', label: 'Hệ thống' },
-  { key: '/manage', label: 'Quản lý kết nối' },
+  // { key: '/manage', label: 'Quản lý kết nối' },
   { key: '/result', label: 'Kết quả xét nghiệm' },
-  { key: '/setting', label: 'Cài đặt chỉ số' },
+  // { key: '/setting', label: 'Cài đặt chỉ số' },
 ];
 
 export const PageLayout = () => {
