@@ -4,7 +4,7 @@ import path from 'path';
 import dayjs from 'dayjs';
 import { SerialPort } from 'serialport';
 import { IpcChannel } from 'shared/ipcs';
-import { LAB, WINDOW_ID } from 'shared/constants';
+import { WINDOW_ID, LAB, CONNECT_TYPE, CONNECT_STATUS } from 'shared/constants';
 import { windowManager } from '../window';
 import {
   LabParser,
@@ -16,6 +16,7 @@ import {
 export interface ConnectionData {
   id: number;
   lab: string;
+  kieuketnoi: string;
   [key: string]: any;
 }
 
@@ -26,52 +27,14 @@ export class Connection {
   port: SerialPort;
   parser: LabParser;
 
+  status = CONNECT_STATUS.NONE;
+  statusError: any = null;
+
   constructor(id: number, data: ConnectionData) {
     this.id = id;
     this.data = data;
-    this.port = new SerialPort(this.openOptions);
 
-    // this.port.on('open', () => {
-    //   switch (this.data.lab) {
-    //     case LAB.BW200:
-    //       this.parser = new BW200Parser(this);
-    //       break;
-    //     case LAB.Access2:
-    //       this.parser = new Access2Parser(this);
-    //       break;
-    //     case LAB.SysmexXP100:
-    //       this.parser = new SysmexXP100Parser(this);
-    //       break;
-    //   }
-    // });
-
-    this.port.on('open', () => {
-      const window = windowManager.getWindow(WINDOW_ID.MAIN);
-      if (window) {
-        window.webContents?.send(IpcChannel.CONNECTION_OPENED, this.id);
-      }
-      console.log(`Connection ${this.id} opened`);
-    });
-
-    this.port.on('close', () => {
-      const window = windowManager.getWindow(WINDOW_ID.MAIN);
-      if (window) {
-        window.webContents?.send(IpcChannel.CONNECTION_CLOSED, this.id);
-      }
-      console.log(`Connection ${this.id} closed`, this.id);
-    });
-
-    this.port.on('error', (error) => {
-      const window = windowManager.getWindow(WINDOW_ID.MAIN);
-      if (window) {
-        window.webContents?.send(IpcChannel.CONNECTION_ERROR, this.id, error);
-      }
-      console.log(`Error on connection ${this.id}`, error);
-    });
-
-    this.port.on('data', (buffer: Buffer) => {
-      this.saveLog(buffer);
-    });
+    this.init();
   }
 
   get isOpen() {
@@ -93,41 +56,117 @@ export class Connection {
     return options;
   }
 
+  init() {
+    if (this.data.kieuketnoi === CONNECT_TYPE.SerialPort) {
+      this.port = new SerialPort(this.openOptions);
+
+      this.port.on('open', () => {
+        switch (this.data.lab) {
+          case LAB.BW200:
+            this.parser = new BW200Parser(this);
+            break;
+          case LAB.Access2:
+            this.parser = new Access2Parser(this);
+            break;
+          case LAB.SysmexXP100:
+            this.parser = new SysmexXP100Parser(this);
+            break;
+        }
+      });
+
+      this.port.on('open', () => {
+        const window = windowManager.getWindow(WINDOW_ID.MAIN);
+        if (window) {
+          window.webContents?.send(IpcChannel.CONNECTION_OPENED, this.id);
+        }
+        console.log(`Connection ${this.id} opened`);
+      });
+
+      this.port.on('close', () => {
+        const window = windowManager.getWindow(WINDOW_ID.MAIN);
+        if (window) {
+          window.webContents?.send(IpcChannel.CONNECTION_CLOSED, this.id);
+        }
+        this.destroy();
+        console.log(`Connection ${this.id} closed`);
+      });
+
+      this.port.on('error', (error: Error, retry?: boolean) => {
+        const window = windowManager.getWindow(WINDOW_ID.MAIN);
+        if (window) {
+          window.webContents?.send(
+            IpcChannel.CONNECTION_ERROR,
+            this.id,
+            error,
+            retry,
+          );
+        }
+        console.log(`Error on connection ${this.id}`, error, retry);
+      });
+
+      this.port.on('data', (buffer: Buffer) => {
+        this.saveLog(buffer);
+      });
+    }
+  }
+
   update(data: ConnectionData) {
+    console.log(`Update connection ${this.id}`);
     this.data = data;
-    this.port = new SerialPort(this.openOptions);
+    if (this.data.kieuketnoi === CONNECT_TYPE.SerialPort) {
+      this.port = new SerialPort(this.openOptions);
+    }
   }
 
   open(options: any = {}) {
-    const retryCount = options.retryCount || 0;
-    const maxRetries = options.maxRetries || 5;
-    const retryDelay = options.retryDelay || 2000;
+    console.log(`Open connection ${this.id}`);
+    if (this.data.kieuketnoi === CONNECT_TYPE.SerialPort) {
+      const retryCount = options.retryCount || 0;
+      const maxRetries = options.maxRetries || 2;
+      const retryDelay = options.retryDelay || 2000;
 
-    this.port.open((error) => {
-      if (error && options.retry) {
-        // Check if the maximum number of connection attempts has been exceeded
-        if (retryCount < maxRetries) {
-          // Retry after certain time
-          setTimeout(() => {
-            console.log(
-              `Retry attempt ${retryCount + 1} for connection ${this.id}`,
-            );
-            this.open({ retry: options.retry, retryCount: retryCount + 1 });
-          }, retryDelay);
-        } else {
-          console.error(`Max retry attempts reached for connection ${this.id}`);
+      this.port.open((error) => {
+        if (error) {
+          this.port.emit('error', error, options.retry);
+          if (options.retry) {
+            // Check if the maximum number of connection attempts has been exceeded
+            if (retryCount < maxRetries) {
+              // Retry after certain time
+              setTimeout(() => {
+                console.log(
+                  `Retry attempt ${retryCount + 1} for connection ${this.id}`,
+                );
+                this.open({ retry: options.retry, retryCount: retryCount + 1 });
+              }, retryDelay);
+            } else {
+              console.error(
+                `Max retry attempts reached for connection ${this.id}`,
+              );
+            }
+          }
         }
-      }
-    });
+      });
+    }
   }
 
   close() {
-    if (this.port && this.port.isOpen) {
-      this.port.close();
+    console.log(`Close connection ${this.id}`);
+    if (this.data.kieuketnoi === CONNECT_TYPE.SerialPort) {
+      if (this.port && this.port.isOpen) {
+        this.port.close();
+      }
+    }
+  }
+
+  destroy() {
+    console.log(`Destroy connection ${this.id}`);
+    if (this.data.kieuketnoi === CONNECT_TYPE.SerialPort) {
+      this.parser.destroy();
     }
   }
 
   saveLog(buffer: Buffer) {
+    console.log(`Save log for connection ${this.id}`);
     const folderLog = path.join(app.getPath('userData'), 'logs', this.data.lab);
     const fileName = `${dayjs().format('YYYYMMDD')}.txt`;
     const filePath = path.join(folderLog, fileName);

@@ -31,6 +31,10 @@ class Access2Transform extends Transform {
 export class Access2Parser extends LabParser {
   transform = new Access2Transform();
 
+  init() {
+    this.transform = new Access2Transform();
+  }
+
   prepare(buffer: Buffer) {
     buffer.forEach((char) => {
       // Send ACK when ENQ is received
@@ -98,6 +102,6 @@ export class Access2Parser extends LabParser {
   }
 
   save(data: any) {
-    console.log('Access2Parser', data);
+    console.log('Save data for Access2', data);
   }
 }

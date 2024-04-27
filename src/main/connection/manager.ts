@@ -18,7 +18,7 @@ class ConnectionManager {
 
   setConnections(connections: ConnectionData[]) {
     for (const item of connections) {
-      this.addConnection(item.id, item);
+      this.createConnection(item.id, item);
     }
   }
 
@@ -32,13 +32,13 @@ class ConnectionManager {
 
   openAllConnections() {
     for (const id in this.connections) {
-      this.openConnection(id, { retry: true });
+      this.openConnection(+id, { retry: true });
     }
   }
 
   closeAllConnections() {
     for (const id in this.connections) {
-      this.closeConnection(id);
+      this.closeConnection(+id);
     }
   }
 
@@ -46,7 +46,7 @@ class ConnectionManager {
     return this.connections[id] || null;
   }
 
-  addConnection(id: number, data: ConnectionData) {
+  createConnection(id: number, data: ConnectionData) {
     const connection = this.connections[id];
     if (connection) return;
     const newConnection = new Connection(id, data);
@@ -60,10 +60,10 @@ class ConnectionManager {
     }
   }
 
-  removeConnection(id: number) {
+  deleteConnection(id: number) {
     const connection = this.connections[id];
     if (connection) {
-      connection.close();
+      if (connection.isOpen) connection.close();
       delete this.connections[id];
     }
   }
@@ -75,7 +75,9 @@ class ConnectionManager {
 
   closeConnection(id: number) {
     const connection = this.connections[id];
-    if (connection) connection.close();
+    if (connection && connection.isOpen) {
+      connection.close();
+    }
   }
 }
 

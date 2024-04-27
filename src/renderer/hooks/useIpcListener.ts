@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
-import { EventChannel, EventParam } from 'shared/ipcs/types';
+import { IpcEvents } from 'shared/ipcs/types';
 
-export const useIpcListener = (
-  channel: EventChannel,
-  listener: (...args: Parameters<EventParam>) => void,
+export const useIpcListener = <K extends keyof IpcEvents>(
+  channel: K,
+  listener: (...args: Parameters<IpcEvents[K]>) => void,
 ) => {
   useEffect(() => {
     const unsubscribe = window.electron.ipcRenderer.on(channel, listener);

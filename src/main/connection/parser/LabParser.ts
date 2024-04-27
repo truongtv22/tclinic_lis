@@ -13,18 +13,29 @@ export const ASCII_CODE = {
 
 export class LabParser {
   transform: Transform;
-  connection: Connection
+  connection: Connection;
+  eventListener: [] = [];
 
   constructor(connection: Connection) {
     this.connection = connection;
-    // this.connection.port.pipe(this.transform);
-    
-    // this.connection.port.on('data', (buffer: Buffer) => {
-    //   this.prepare(buffer);
-    // });
+    this.init();
+    this.setup();
+  }
+
+  init() {}
+
+  setup() {
+    this.connection.port.pipe(this.transform);
+
+    this.connection.port.on('data', (buffer: Buffer) => {
+      console.log('Prepare data from port to parser', this.connection.id);
+      this.prepare(buffer);
+    });
 
     this.transform.on('data', (buffer: Buffer) => {
+      console.log('Parse data from parser', this.connection.id);
       const data = this.parse(buffer);
+      console.log('Save data from parser', this.connection.id);
       if (data) this.save(data);
     });
   }
@@ -34,4 +45,10 @@ export class LabParser {
   parse(buffer: Buffer): any {}
 
   save(data: any) {}
+
+  destroy() {
+    console.log('Destroy parser', this.connection.id);
+    // this.transform.removeAllListeners('data');
+    // this.transform.end();
+  }
 }

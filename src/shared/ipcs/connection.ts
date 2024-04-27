@@ -20,7 +20,11 @@ export type ConnectionIpcEvents = {
 
   [ConnectionIpcChannel.CONNECTION_OPENED]: (id: number) => void;
   [ConnectionIpcChannel.CONNECTION_CLOSED]: (id: number) => void;
-  [ConnectionIpcChannel.CONNECTION_ERROR]: (id: number, error: any) => void;
+  [ConnectionIpcChannel.CONNECTION_ERROR]: (
+    id: number,
+    error: any,
+    retry?: boolean,
+  ) => void;
 };
 
 export type ConnectionIpcCommands = {

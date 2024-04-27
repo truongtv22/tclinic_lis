@@ -31,6 +31,10 @@ class SysmexXP100Transform extends Transform {
 export class SysmexXP100Parser extends LabParser {
   transform = new SysmexXP100Transform();
 
+  init() {
+    this.transform = new SysmexXP100Transform();
+  }
+
   prepare(buffer: Buffer) {
     buffer.forEach((char) => {
       // Send ACK when ETX, ENQ or LF is received
@@ -92,6 +96,6 @@ export class SysmexXP100Parser extends LabParser {
   }
 
   save(data: any) {
-    console.log('SysmexXP100Parser', data);
+    console.log('Save data for SysmexXP100', data);
   }
 }

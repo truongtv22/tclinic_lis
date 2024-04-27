@@ -31,7 +31,8 @@ export default {
 
   create(values: any) {
     try {
-      const data = connectManageDb.create(values);
+      const data: any = connectManageDb.create(values);
+      connectionManager.createConnection(data.id, data);
       return { success: true, data };
     } catch (error) {
       console.log('Create connection error', error);
@@ -41,7 +42,16 @@ export default {
 
   update(id: number, values: any) {
     try {
-      const data = connectManageDb.update(id, values);
+      const connection = connectionManager.getConnection(id);
+      if (connection && connection.isOpen) {
+        return {
+          success: false,
+          message:
+            'Thiết bị đang kết nối, vui lòng đóng kết nối trước khi thực hiện hành động',
+        };
+      }
+      const data: any = connectManageDb.update(id, values);
+      connectionManager.updateConnection(id, data);
       return { success: true, data };
     } catch (error) {
       console.log('Update connection error', error);
@@ -51,7 +61,16 @@ export default {
 
   delete(id: number) {
     try {
+      const connection = connectionManager.getConnection(id);
+      if (connection && connection.isOpen) {
+        return {
+          success: false,
+          message:
+            'Thiết bị đang kết nối, vui lòng đóng kết nối trước khi thực hiện hành động',
+        };
+      }
       connectManageDb.delete(id);
+      connectionManager.deleteConnection(id);
       return { success: true };
     } catch (error) {
       console.log('Delete connection error', error);

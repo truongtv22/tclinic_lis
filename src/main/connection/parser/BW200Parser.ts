@@ -31,6 +31,10 @@ class BW200Transform extends Transform {
 export class BW200Parser extends LabParser {
   transform = new BW200Transform();
 
+  init() {
+    this.transform = new BW200Transform();
+  }
+
   prepare(buffer: Buffer) {}
 
   parse(buffer: Buffer) {
@@ -84,6 +88,6 @@ export class BW200Parser extends LabParser {
   }
 
   save(data: any) {
-    console.log('BW200Parser', data);
+    console.log('Save data for BW200', data);
   }
 }

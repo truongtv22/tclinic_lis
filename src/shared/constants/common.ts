@@ -1,5 +1,14 @@
 export const STORAGE_KEY = 'TCLINIC_LIS_STORAGE';
 
+export const CONNECT_STATUS = {
+  NONE: 'none',
+  OPENING: 'opening',
+  OPENED: 'opened',
+  CLOSING: 'closing',
+  CLOSED: 'close',
+  ERROR: 'error',
+};
+
 export const LAB = {
   BW200: 'BW200',
   Access2: 'Access2',

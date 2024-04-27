@@ -5,22 +5,25 @@ import { contextBridge } from 'electron';
 import { ipcRenderer } from 'shared/ipcs';
 import type { IpcEvents } from 'shared/ipcs';
 
-type Channel = keyof IpcEvents;
-type EventParams = IpcEvents[Channel];
-
 export const electronAPI = {
   ipcRenderer: {
     ...ipcRenderer,
-    on(channel: Channel, func: (...args: Parameters<EventParams>) => void) {
-      const listener = (_: any, ...args: Parameters<EventParams>) =>
+    on<K extends keyof IpcEvents>(
+      channel: K,
+      func: (...args: Parameters<IpcEvents[K]>) => void,
+    ) {
+      const listener = (_: any, ...args: Parameters<IpcEvents[K]>) =>
         func(...args);
       ipcRenderer.on(channel, listener);
       return () => {
         ipcRenderer.removeListener(channel, listener);
       };
     },
-    once(channel: Channel, func: (...args: Parameters<EventParams>) => void) {
-      const listener = (_: any, ...args: Parameters<EventParams>) =>
+    once<K extends keyof IpcEvents>(
+      channel: K,
+      func: (...args: Parameters<IpcEvents[K]>) => void,
+    ) {
+      const listener = (_: any, ...args: Parameters<IpcEvents[K]>) =>
         func(...args);
       ipcRenderer.once(channel, listener);
       return () => {
