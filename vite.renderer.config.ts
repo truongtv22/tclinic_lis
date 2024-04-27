@@ -28,4 +28,7 @@ export default defineConfig({
       // hooks: path.resolve(__dirname, './src/hooks'),
     },
   },
+  build: {
+    outDir: '.vite/build/renderer',
+  },
 });

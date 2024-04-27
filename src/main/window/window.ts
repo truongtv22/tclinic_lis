@@ -1,6 +1,7 @@
 import path from 'path';
 import { BrowserWindow, ipcMain } from 'electron';
 import { StatefullBrowserWindow } from 'stateful-electron-window';
+import { is } from '@electron-toolkit/utils';
 import { WINDOW_ID } from 'shared/constants';
 import { WebContents } from 'shared/ipcs';
 
@@ -46,17 +47,12 @@ export class Window {
       if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
         this.instance.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
       } else {
-        this.instance.loadFile(
-          path.join(
-            __dirname,
-            `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`,
-          ),
-        );
+        this.instance.loadFile(path.join(__dirname, `../renderer/index.html`));
       }
 
       // Open the DevTools.
       this.instance.webContents.on('did-finish-load', () => {
-        this.instance?.webContents.openDevTools();
+        if (is.dev) this.instance?.webContents.openDevTools();
       });
     }
     if (this.id === WINDOW_ID.VIEW) {
@@ -75,10 +71,7 @@ export class Window {
         this.instance.loadURL(`${MAIN_WINDOW_VITE_DEV_SERVER_URL}/#/view`);
       } else {
         this.instance.loadFile(
-          path.join(
-            __dirname,
-            `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html/#/view`,
-          ),
+          path.join(__dirname, `../renderer/index.html/#/view`),
         );
       }
     }
