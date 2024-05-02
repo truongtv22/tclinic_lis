@@ -2,12 +2,15 @@ import { IpcChannel } from 'shared/ipcs/types';
 import { useIpcListener } from './useIpcListener';
 
 export const useWindowIpc = () => {
+  const openViewLog = () => {
+    window.electron.ipcRenderer.send(IpcChannel.OPEN_VIEW_WINDOW);
+  };
   const selectFolder = async () => {
     const result = await window.electron.ipcRenderer.invoke(
       IpcChannel.SELECT_FOLDER,
     );
     return result.folderPath;
   };
-  
-  return { selectFolder };
+
+  return { openViewLog, selectFolder };
 };

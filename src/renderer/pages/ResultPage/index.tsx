@@ -1,5 +1,6 @@
-import dayjs from 'dayjs';
 import { cloneElement, useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import dayjs from 'dayjs';
 import {
   Row,
   Col,
@@ -12,7 +13,6 @@ import {
   Checkbox,
 } from 'antd';
 import Split from '@uiw/react-split';
-
 import {
   ProForm,
   ProFormText,
@@ -27,8 +27,8 @@ import {
   SaveOutlined,
   DeleteOutlined,
 } from '@ant-design/icons';
-
 import classNames from 'classnames';
+import { selectConnections } from 'renderer/store/connection';
 
 const CustomCheckbox = ({ value, onChange }: any) => {
   return (
@@ -42,9 +42,10 @@ const CustomCheckbox = ({ value, onChange }: any) => {
 export function ResultPage() {
   const [form] = ProForm.useForm();
 
+  const connections = useSelector(selectConnections);
+
   const [loading, setLoading] = useState(false);
 
-  const [devices, setDevices] = useState([]);
   const [selected, setSelected] = useState(null);
 
   const [dataSource, setDataSource] = useState<any>([]);
@@ -163,18 +164,23 @@ export function ResultPage() {
     status: -1,
   };
 
-  useEffect(() => {
-    getConnect();
-    getKqBW200(formValues);
-  }, []);
+  // useEffect(() => {
+  //   getConnect();
+  //   getKqBW200(formValues);
+  // }, []);
 
-  const getConnect = async () => {
-    const result = await window.dbApi.getConnect();
-    if (result.success && result.data) {
-      setDevices(result.data);
-      setSelected(result.data[0]);
+  useEffect(() => {
+    if (selected) {
+      const found = connections.find((item) => item.id === selected.id);
+      if (found) {
+        setSelected(found);
+      } else {
+        setSelected(connections[0]);
+      }
+    } else {
+      setSelected(connections[0]);
     }
-  };
+  }, [connections]);
 
   const getKqBW200 = async (params: any = {}) => {
     if (params.startDate) {
@@ -198,10 +204,10 @@ export function ResultPage() {
       <Split lineBar className="space-x-2">
         <Card className="min-w-60 max-w-[50%]" size="small">
           <div className="space-y-2">
-            <h4 className="text-lg font-semibold">Danh sách thiết bị</h4>
-            {devices.length > 0 ? (
+            <h4 className="text-lg font-semibold">Danh sách kết nối</h4>
+            {connections.length > 0 ? (
               <div className="space-y-2">
-                {devices.map((item) => (
+                {connections.map((item) => (
                   <div key={item.id} className="flex space-x-2">
                     <Radio
                       value={1}

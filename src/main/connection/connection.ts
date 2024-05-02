@@ -60,19 +60,17 @@ export class Connection {
     if (this.data.kieuketnoi === CONNECT_TYPE.SerialPort) {
       this.port = new SerialPort(this.openOptions);
 
-      this.port.on('open', () => {
-        switch (this.data.lab) {
-          case LAB.BW200:
-            this.parser = new BW200Parser(this);
-            break;
-          case LAB.Access2:
-            this.parser = new Access2Parser(this);
-            break;
-          case LAB.SysmexXP100:
-            this.parser = new SysmexXP100Parser(this);
-            break;
-        }
-      });
+      switch (this.data.lab) {
+        case LAB.BW200:
+          this.parser = new BW200Parser(this);
+          break;
+        case LAB.Access2:
+          this.parser = new Access2Parser(this);
+          break;
+        case LAB.SysmexXP100:
+          this.parser = new SysmexXP100Parser(this);
+          break;
+      }
 
       this.port.on('open', () => {
         const window = windowManager.getWindow(WINDOW_ID.MAIN);
@@ -113,9 +111,7 @@ export class Connection {
   update(data: ConnectionData) {
     console.log(`Update connection ${this.id}`);
     this.data = data;
-    if (this.data.kieuketnoi === CONNECT_TYPE.SerialPort) {
-      this.port = new SerialPort(this.openOptions);
-    }
+    this.init();
   }
 
   open(options: any = {}) {

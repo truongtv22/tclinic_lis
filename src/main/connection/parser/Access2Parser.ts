@@ -1,5 +1,6 @@
 import { Transform, TransformCallback } from 'stream';
-import { LabParser, ASCII_CODE } from './LabParser';
+import { LabParser } from './LabParser';
+import { ASCII_CODE } from './constants';
 
 class Access2Transform extends Transform {
   // buffer [ENQ...EOT]
@@ -29,16 +30,14 @@ class Access2Transform extends Transform {
 }
 
 export class Access2Parser extends LabParser {
-  transform = new Access2Transform();
-
   init() {
     this.transform = new Access2Transform();
   }
 
   prepare(buffer: Buffer) {
     buffer.forEach((char) => {
-      // Send ACK when ENQ is received
-      if (char === ASCII_CODE.ENQ) {
+      // Send ACK when ETX, ENQ or LF is received
+      if ([ASCII_CODE.ETX, ASCII_CODE.ENQ, ASCII_CODE.LF].includes(char)) {
         this.connection.port.write(Buffer.from([ASCII_CODE.ACK]));
         this.connection.port.drain((error) => {
           if (error) console.log('Write port error', error);
@@ -56,7 +55,7 @@ export class Access2Parser extends LabParser {
       .replace(/\n{2,}/g, '\n'); // Remove duplicate newline characters
 
     const lines = str.split('\n');
-    if (!lines || !lines.length) return;
+    if (!lines || !lines.length || lines.length < 6) return;
 
     /**
      * Regex match `1H|\^&|||ACCESS^503884|||||LIS||P|1|20240330104322`
@@ -77,7 +76,6 @@ export class Access2Parser extends LabParser {
     /**
      * Regex match `3O|1|0012P|^1302^4|^^^HCG5^1|||||||||||Serum||||||||||F`
      */
-    // match text 3O|1|0012P|^1302^4|^^^HCG5^1|||||||||||Serum||||||||||F
     const regex2 = /(?<barcode>[0-9]{3,})[a-zA-Z0-9]*/;
     let barcode = lines[4].match(regex2)?.groups?.barcode;
     if (!barcode) return;

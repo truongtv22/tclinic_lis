@@ -37,7 +37,6 @@ import {
   RTS_MODE,
   PARITY,
 } from 'shared/constants';
-import { IpcChannel } from 'shared/ipcs/types';
 import {
   getConnections,
   createConnection,
@@ -89,6 +88,8 @@ export function HomePage() {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
 
+  const { openViewLog } = useWindowIpc();
+
   const connections = useSelector(selectConnections);
   const connectionStatus = useSelector(selectConnectionStatus);
 
@@ -134,20 +135,6 @@ export function HomePage() {
       setTestResult({});
     }
   }, [isModalOpen]);
-
-  useEffect(() => {
-    (async () => {
-      // Get all connected ports
-      // const data = await window.electron.ipcRenderer.invoke('connected-ports');
-      // console.log('data', data);
-    })();
-  }, []);
-
-  // useIpcListener('port-opened', () => {});
-
-  // useIpcListener('port-closed', () => {});
-
-  // useIpcListener('port-error', () => {});
 
   useEffect(() => {
     // const openSub = window.electron.serialport.on('open', () => {
@@ -259,17 +246,11 @@ export function HomePage() {
   const onOpen = () => {
     const params = form.getFieldsValue();
     openConnection(params.id);
-    // window.electron.serialport.connect(params);
   };
 
   const onClose = () => {
     const params = form.getFieldsValue();
     closeConnection(params.id);
-    // window.electron.serialport.disconnect({ id: params.id });
-  };
-
-  const onViewLog = () => {
-    // window.electron.ipcRenderer.send(IpcChannel.OPEN_VIEW_WINDOW);
   };
 
   return (
@@ -694,7 +675,7 @@ export function HomePage() {
               >
                 Đóng cổng
               </Button>
-              <Button size="small" disabled={!selected} onClick={onViewLog}>
+              <Button size="small" disabled={!selected} onClick={openViewLog}>
                 Xem nhật ký
               </Button>
             </Space>

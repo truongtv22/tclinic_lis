@@ -1,5 +1,7 @@
 import { Transform, TransformCallback } from 'stream';
-import { LabParser, ASCII_CODE } from './LabParser';
+import kqBW200Db from 'main/database/kqBW200';
+import { LabParser } from './LabParser';
+import { ASCII_CODE } from './constants';
 
 class BW200Transform extends Transform {
   // buffer [STX...ETX]
@@ -29,8 +31,6 @@ class BW200Transform extends Transform {
 }
 
 export class BW200Parser extends LabParser {
-  transform = new BW200Transform();
-
   init() {
     this.transform = new BW200Transform();
   }
@@ -89,5 +89,7 @@ export class BW200Parser extends LabParser {
 
   save(data: any) {
     console.log('Save data for BW200', data);
+    const item = kqBW200Db.create(data);
+    console.log('Save data for BW200 successfully', item);
   }
 }

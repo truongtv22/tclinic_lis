@@ -1,20 +1,9 @@
 import { Transform } from 'stream';
 import { Connection } from '../index';
 
-export const ASCII_CODE = {
-  STX: 2, // 0x02,
-  ETX: 3, // 0x03,
-  EOT: 4, // 0x04,
-  ENQ: 5, // 0x05,
-  ACK: 6, // 0x06,
-  LF: 10, // 0x0a,
-  SUB: 26, // 0x1a,
-};
-
 export class LabParser {
   transform: Transform;
   connection: Connection;
-  eventListener: [] = [];
 
   constructor(connection: Connection) {
     this.connection = connection;
@@ -22,8 +11,14 @@ export class LabParser {
     this.setup();
   }
 
+  /**
+   * Initializes the transform before setup
+   */
   init() {}
 
+  /**
+   * Sets up the connection and transform to pipe data between them
+   */
   setup() {
     this.connection.port.pipe(this.transform);
 
@@ -40,15 +35,32 @@ export class LabParser {
     });
   }
 
+  /**
+   * Prepares the given buffer for further processing
+   *
+   * @param {Buffer} buffer - The buffer to be prepared
+   */
   prepare(buffer: Buffer) {}
 
+  /**
+   * Parses the given buffer and returns the result
+   *
+   * @param {Buffer} buffer - The buffer to be parsed
+   * @return {any} The parsed result
+   */
   parse(buffer: Buffer): any {}
 
+  /**
+   * Saves the given data
+   *
+   * @param {any} data - The data to be saved
+   */
   save(data: any) {}
 
+  /**
+   * Destroys the parser of the connection
+   */
   destroy() {
     console.log('Destroy parser', this.connection.id);
-    // this.transform.removeAllListeners('data');
-    // this.transform.end();
   }
 }

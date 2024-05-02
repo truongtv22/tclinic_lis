@@ -1,5 +1,6 @@
 import { Transform, TransformCallback } from 'stream';
-import { LabParser, ASCII_CODE } from './LabParser';
+import { LabParser } from './LabParser';
+import { ASCII_CODE } from './constants';
 
 class SysmexXP100Transform extends Transform {
   // buffer [ENQ...EOT]
@@ -29,8 +30,6 @@ class SysmexXP100Transform extends Transform {
 }
 
 export class SysmexXP100Parser extends LabParser {
-  transform = new SysmexXP100Transform();
-
   init() {
     this.transform = new SysmexXP100Transform();
   }
