@@ -1,4 +1,5 @@
 {
+  // "files": [],
   "include": [
     "src/main/**/*",
     "src/shared/**/*",
@@ -35,7 +36,7 @@
 
       "main/*": ["./src/main/*"],
       "renderer/*": ["./src/renderer/*"],
-      "shared/*": ["./src/shared/*"]
+      "shared/*": ["./src/shared/*"],
       // "components/*": ["src/renderer/components/*"],
       // "constants/*": ["src/renderer/constants/*"],
       // "layouts/*": ["src/renderer/layouts/*"],
@@ -47,5 +48,9 @@
       // "utils/*": ["src/renderer/utils/*"],
       // "hooks/*": ["src/renderer/hooks/*"]
     }
-  }
+  },
+  // "references": [
+  //   { "path": "./tsconfig.node.json" },
+  //   { "path": "./tsconfig.web.json" },
+  // ],
 }

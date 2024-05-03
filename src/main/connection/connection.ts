@@ -95,7 +95,7 @@ export class Connection {
           window.webContents?.send(
             IpcChannel.CONNECTION_ERROR,
             this.id,
-            error,
+            error.message,
             retry,
           );
         }

@@ -1,4 +1,5 @@
 import dayjs from 'dayjs';
+import { parseString } from 'shared/utils/date';
 import connect from './index';
 
 export default {
@@ -21,8 +22,8 @@ export default {
     const whereClause =
       whereConds.length > 0 ? `WHERE ${whereConds.join(' AND ')}` : '';
 
-    const startDate = dayjs(params.startDate).startOf('day').toISOString();
-    const endDate = dayjs(params.endDate).endOf('day').toISOString();
+    const startDate = parseString(dayjs(params.startDate).startOf('day'));
+    const endDate = parseString(dayjs(params.endDate).endOf('day'));
     const barcode = `%${params.barcode}%`;
     const status = +params.status;
 

@@ -3,7 +3,7 @@
 import { contextBridge } from 'electron';
 
 import { ipcRenderer } from 'shared/ipcs';
-import type { IpcEvents } from 'shared/ipcs';
+import type { IpcEvents, IpcCommands } from 'shared/ipcs';
 
 export const electronAPI = {
   ipcRenderer: {
@@ -29,6 +29,12 @@ export const electronAPI = {
       return () => {
         ipcRenderer.removeListener(channel, listener);
       };
+    },
+    invoke<K extends keyof IpcCommands>(
+      channel: K,
+      ...args: Parameters<IpcCommands[K]>
+    ) {
+      return ipcRenderer.invoke(channel, ...args);
     },
   },
 };

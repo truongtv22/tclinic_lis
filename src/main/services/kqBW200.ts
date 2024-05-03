@@ -9,7 +9,7 @@ export default {
       const result = kqBW200Db.queryAll(params);
       return { success: true, data: result.data };
     } catch (error) {
-      return { success: false, message: error };
+      return { success: false, message: error.message };
     }
   },
 
