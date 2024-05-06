@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { produce } from 'immer';
 import dayjs from 'dayjs';
 import {
-  App,
   Row,
   Col,
   Spin,
@@ -18,8 +17,10 @@ import {
   Popconfirm,
   InputNumber,
   AutoComplete,
+  Checkbox,
 } from 'antd';
 import {
+  DownOutlined,
   PlusOutlined,
   SaveOutlined,
   DeleteOutlined,
@@ -36,6 +37,8 @@ import {
   STOP_BITS,
   RTS_MODE,
   PARITY,
+  FLOW_CONTROL,
+  FLAG_CONTROL,
 } from 'shared/constants';
 import {
   getConnections,
@@ -99,6 +102,7 @@ export function HomePage() {
 
   const [selected, setSelected] = useState(null);
 
+  const [expand, setExpand] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -124,6 +128,7 @@ export function HomePage() {
 
   useEffect(() => {
     if (selected) {
+      // form.resetFields();
       form.setFieldsValue(selected);
     } else {
       form.resetFields();
@@ -136,16 +141,13 @@ export function HomePage() {
     }
   }, [isModalOpen]);
 
+  // useEffect(() => {
+  //   if (kieuketnoi === CONNECT_TYPE.SerialPort && !form.getFieldValue('control')) {
+  //     form.setFieldValue('control', { dtr: true, rts: true });
+  //   }
+  // }, [kieuketnoi]);
+
   useEffect(() => {
-    // const openSub = window.electron.serialport.on('open', () => {
-    //   setConnected(true);
-    // });
-    // const errorSub = window.electron.serialport.on('error', (error: any) => {
-    //   notification.error({
-    //     message: 'SerialPort',
-    //     description: error.message,
-    //   });
-    // });
     // const dataSub = window.electron.serialport.on('data', (data) => {
     //   const notifyKey = `open-${Date.now()}`;
     //   notification.open({
@@ -177,14 +179,8 @@ export function HomePage() {
     //     ),
     //   });
     // });
-    // const closeSub = window.electron.serialport.on('close', () => {
-    //   setConnected(false);
-    // });
     // return () => {
-    //   openSub();
-    //   errorSub();
     //   dataSub();
-    //   closeSub();
     // };
   }, []);
 
@@ -216,8 +212,9 @@ export function HomePage() {
     setSelected(item);
   };
 
-  const onSave = async (values: any) => {
+  const onSave = async () => {
     try {
+      const values = form.getFieldsValue(true);
       console.log('Submit form', values);
       setLoading(true);
       if (values.id) {
@@ -244,13 +241,13 @@ export function HomePage() {
   };
 
   const onOpen = () => {
-    const params = form.getFieldsValue();
-    openConnection(params.id);
+    const values = form.getFieldsValue(true);
+    openConnection(values.id);
   };
 
   const onClose = () => {
-    const params = form.getFieldsValue();
-    closeConnection(params.id);
+    const values = form.getFieldsValue(true);
+    closeConnection(values.id);
   };
 
   return (
@@ -485,7 +482,6 @@ export function HomePage() {
                 </Col>
               </Row>
             </Row>
-            <Form.Item name="id" hidden />
             <Form.Item
               name="comp"
               label="Tên thiết bị"
@@ -498,7 +494,6 @@ export function HomePage() {
                 <Form.Item
                   name="lab"
                   label="Loại máy"
-                  initialValue="BW200"
                   rules={[{ required: true, message: 'Không được để trống' }]}
                 >
                   <Select
@@ -514,7 +509,6 @@ export function HomePage() {
                 <Form.Item
                   name="kieuketnoi"
                   label="Kết nối"
-                  initialValue="SerialPort"
                   rules={[{ required: true, message: 'Không được để trống' }]}
                 >
                   <Select
@@ -641,6 +635,58 @@ export function HomePage() {
                     </Form.Item>
                   </Col>
                 </Row> */}
+                <div className="my-2">
+                  <div
+                    className="flex justify-between cursor-pointer"
+                    onClick={() => setExpand(!expand)}
+                  >
+                    <p className="text-base font-semibold">Cài đặt nâng cao</p>
+                    <DownOutlined
+                      rotate={expand ? 0 : -90}
+                      className="text-xs"
+                    />
+                  </div>
+                  {expand && (
+                    <div className="mt-2">
+                      <Form.Item
+                        label="Flow control"
+                        tooltip="Setting flow control"
+                        dependencies={FLOW_CONTROL}
+                      >
+                        {() =>
+                          FLOW_CONTROL.map((field) => (
+                            <Form.Item
+                              key={field}
+                              name={['control', field]}
+                              noStyle
+                              valuePropName="checked"
+                            >
+                              <Checkbox>{field}</Checkbox>
+                            </Form.Item>
+                          ))
+                        }
+                      </Form.Item>
+                      <Form.Item
+                        label="Flag control"
+                        tooltip="Set control flags on an open port is opened"
+                        dependencies={FLAG_CONTROL}
+                      >
+                        {() =>
+                          FLAG_CONTROL.map((field) => (
+                            <Form.Item
+                              key={field}
+                              name={['control', field]}
+                              noStyle
+                              valuePropName="checked"
+                            >
+                              <Checkbox>{field}</Checkbox>
+                            </Form.Item>
+                          ))
+                        }
+                      </Form.Item>
+                    </div>
+                  )}
+                </div>
               </>
             )}
             {kieuketnoi === CONNECT_TYPE.Folder && (
@@ -654,7 +700,7 @@ export function HomePage() {
                 </Row>
               </>
             )}
-            <Space>
+            <Space className="my-2">
               <Button
                 type="primary"
                 size="small"

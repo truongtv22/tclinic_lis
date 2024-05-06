@@ -54,3 +54,7 @@ export const PARITY = [
   { value: 'mark', label: 'Mark' },
   { value: 'space', label: 'Space' },
 ];
+
+export const FLOW_CONTROL = ['rtscts', 'xon', 'xoff', 'xany'];
+
+export const FLAG_CONTROL = ['brk', 'cts', 'dsr', 'dtr', 'rts'];

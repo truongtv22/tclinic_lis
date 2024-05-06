@@ -8,9 +8,11 @@ export function registerConnectionIpc() {
 
   // Listen open/close connection
   ipcMain.on(IpcChannel.OPEN_CONNECTION, (_, id) => {
+    console.log(`Send open connection ${id}`);
     connectionManager.openConnection(id);
   });
   ipcMain.on(IpcChannel.CLOSE_CONNECTION, (_, id) => {
+    console.log(`Send close connection ${id}`);
     connectionManager.closeConnection(id);
   });
 

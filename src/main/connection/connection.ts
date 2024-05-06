@@ -20,9 +20,22 @@ export interface ConnectionData {
   [key: string]: any;
 }
 
+export interface ConnectionControl {
+  rtscts: boolean;
+  xon: boolean;
+  xoff: boolean;
+  xany: boolean;
+  brk: boolean;
+  cts: boolean;
+  dsr: boolean;
+  dtr: boolean;
+  rts: boolean;
+}
+
 export class Connection {
   id: number;
   data: ConnectionData;
+  control?: ConnectionControl;
 
   port: SerialPort;
   parser: LabParser;
@@ -30,10 +43,10 @@ export class Connection {
   status = CONNECT_STATUS.NONE;
   statusError: any = null;
 
-  constructor(id: number, data: ConnectionData) {
+  constructor(id: number, data: ConnectionData, control?: ConnectionControl) {
     this.id = id;
     this.data = data;
-
+    this.control = control;
     this.init();
   }
 
@@ -43,13 +56,19 @@ export class Connection {
 
   get openOptions() {
     const options: any = {
-      autoOpen: false,
       path: this.data.comport,
       baudRate: this.data.baudrate,
       dataBits: this.data.databits,
       stopBits: this.data.stopbits,
       parity: this.data.parity,
+      autoOpen: false,
     };
+    if (this.control) {
+      options.rtscts = this.control.rtscts;
+      options.xon = this.control.xon;
+      options.xoff = this.control.xoff;
+      options.xany = this.control.xany;
+    }
     if (process.platform === 'win32') {
       options.rtsMode = this.data.rtsmode;
     }
@@ -58,6 +77,7 @@ export class Connection {
 
   init() {
     if (this.data.kieuketnoi === CONNECT_TYPE.SerialPort) {
+      console.log(`Init connection ${this.id}`, this.openOptions);
       this.port = new SerialPort(this.openOptions);
 
       switch (this.data.lab) {
@@ -108,10 +128,15 @@ export class Connection {
     }
   }
 
-  update(data: ConnectionData) {
+  update(data: ConnectionData, control?: ConnectionControl) {
     console.log(`Update connection ${this.id}`);
     this.data = data;
+    this.control = control;
     this.init();
+  }
+
+  setControl(control: ConnectionControl) {
+    this.control = control;
   }
 
   open(options: any = {}) {
@@ -122,6 +147,23 @@ export class Connection {
       const retryDelay = options.retryDelay || 2000;
 
       this.port.open((error) => {
+        if (!error && this.control) {
+          const setOptions: any = {
+            brk: this.control.brk,
+            cts: this.control.cts,
+            dsr: this.control.dsr,
+            dtr: this.control.dtr,
+            rts: this.control.rts,
+          };
+          console.log(`Set control of connection ${this.id}`, setOptions);
+          this.port.set(setOptions, (error) => {
+            if (!error) {
+              console.log(`Set control of connection ${this.id} successfully`);
+            } else {
+              console.log(`Error set control of connection ${this.id}`, error);
+            }
+          });
+        }
         if (error) {
           this.port.emit('error', error, options.retry);
           if (options.retry) {

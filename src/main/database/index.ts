@@ -54,6 +54,22 @@ export function initDatabase() {
     )`);
   }
 
+  if (!tables.includes('dbo.connectControl')) {
+    db.exec(`CREATE TABLE IF NOT EXISTS [dbo.connectControl] (
+      connect_id INTEGER PRIMARY KEY NOT NULL,
+      rtscts INTEGER DEFAULT 0,
+      xon INTEGER DEFAULT 0,
+      xoff INTEGER DEFAULT 0,
+      xany INTEGER DEFAULT 0,
+      brk INTEGER DEFAULT 0,
+      cts INTEGER DEFAULT 0,
+      dsr INTEGER DEFAULT 0,
+      dtr INTEGER DEFAULT 1,
+      rts INTEGER DEFAULT 1,
+      FOREIGN KEY (connect_id) REFERENCES [dbo.connectManage](id)
+    )`);
+  }
+
   if (!tables.includes('dbo.dmKhopma')) {
     db.exec(`CREATE TABLE IF NOT EXISTS [dbo.dmKhopma] (
       lab TEXT NOT NULL,
