@@ -1,6 +1,6 @@
 import connectManageDb from '../database/connectManage';
-import connectControlDb from '../database/connectControl';
-import { Connection, ConnectionData, ConnectionControl } from './connection';
+import connectConfigDb from '../database/connectConfig';
+import { Connection, ConnectionData, ConnectionConfig } from './connection';
 
 class ConnectionManager {
   connections: Record<number, Connection> = {};
@@ -19,8 +19,8 @@ class ConnectionManager {
 
   setConnections(connections: ConnectionData[]) {
     for (const item of connections) {
-      const control = connectControlDb.getById(item.id);
-      this.createConnection(item.id, item, control);
+      const config = connectConfigDb.getById(item.id);
+      this.createConnection(item.id, item, config);
     }
   }
 
@@ -48,18 +48,18 @@ class ConnectionManager {
     return this.connections[id] || null;
   }
 
-  createConnection(id: number, data: ConnectionData, control?: ConnectionControl) {
+  createConnection(id: number, data: ConnectionData, config?: ConnectionConfig) {
     const connection = this.connections[id];
     if (connection) return connection;
-    const newConnection = new Connection(id, data, control);
+    const newConnection = new Connection(id, data, config);
     this.connections[id] = newConnection;
     return newConnection;
   }
 
-  updateConnection(id: number, data: ConnectionData, control?: ConnectionControl) {
+  updateConnection(id: number, data: ConnectionData, config?: ConnectionConfig) {
     const connection = this.connections[id];
     if (connection) {
-      connection.update(data, control);
+      connection.update(data, config);
     }
     return connection;
   }

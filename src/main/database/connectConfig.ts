@@ -35,7 +35,7 @@ export default {
     const db = connect();
 
     const stmQueryById = db.prepare(
-      `SELECT * FROM [dbo.connectControl] WHERE connect_id = @connectId`,
+      `SELECT * FROM [dbo.connectConfig] WHERE connect_id = @connectId`,
     );
     const data = stmQueryById.get({ connectId });
     return this.format(data);
@@ -45,7 +45,7 @@ export default {
     const db = connect();
 
     const stmUpdate = db.prepare(
-      `INSERT OR REPLACE INTO [dbo.connectControl] (
+      `INSERT OR REPLACE INTO [dbo.connectConfig] (
           connect_id,
           rtscts,
           xon,
@@ -84,7 +84,7 @@ export default {
     });
 
     const stmQueryById = db.prepare(
-      `SELECT * FROM [dbo.connectControl] WHERE connect_id = @connectId`,
+      `SELECT * FROM [dbo.connectConfig] WHERE connect_id = @connectId`,
     );
     const data: any = stmQueryById.get({ connectId });
     return this.format(data);
@@ -94,10 +94,10 @@ export default {
     const db = connect();
 
     const stmQueryById = db.prepare(
-      `SELECT * FROM [dbo.connectControl] WHERE connect_id = @connectId`,
+      `SELECT * FROM [dbo.connectConfig] WHERE connect_id = @connectId`,
     );
     const stmDelete = db.prepare(
-      `DELETE FROM [dbo.connectControl] WHERE connect_id = @connectId`,
+      `DELETE FROM [dbo.connectConfig] WHERE connect_id = @connectId`,
     );
 
     const data = stmQueryById.get({ connectId });

@@ -1,7 +1,7 @@
 import { Transform, TransformCallback } from 'stream';
+import { ASCII_CODE } from 'shared/constants';
 import kqBW200Db from 'main/database/kqBW200';
 import { LabParser } from './LabParser';
-import { ASCII_CODE } from './constants';
 
 class BW200Transform extends Transform {
   // buffer [STX...ETX]

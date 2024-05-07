@@ -12,6 +12,7 @@ import {
   Access2Parser,
   SysmexXP100Parser,
 } from './parser';
+import Log from 'electron-log/main';
 
 export interface ConnectionData {
   id: number;
@@ -20,7 +21,7 @@ export interface ConnectionData {
   [key: string]: any;
 }
 
-export interface ConnectionControl {
+export interface ConnectionConfig {
   rtscts: boolean;
   xon: boolean;
   xoff: boolean;
@@ -35,7 +36,7 @@ export interface ConnectionControl {
 export class Connection {
   id: number;
   data: ConnectionData;
-  control?: ConnectionControl;
+  config?: ConnectionConfig;
 
   port: SerialPort;
   parser: LabParser;
@@ -43,10 +44,10 @@ export class Connection {
   status = CONNECT_STATUS.NONE;
   statusError: any = null;
 
-  constructor(id: number, data: ConnectionData, control?: ConnectionControl) {
+  constructor(id: number, data: ConnectionData, config?: ConnectionConfig) {
     this.id = id;
     this.data = data;
-    this.control = control;
+    this.config = config;
     this.init();
   }
 
@@ -63,11 +64,11 @@ export class Connection {
       parity: this.data.parity,
       autoOpen: false,
     };
-    if (this.control) {
-      options.rtscts = this.control.rtscts;
-      options.xon = this.control.xon;
-      options.xoff = this.control.xoff;
-      options.xany = this.control.xany;
+    if (this.config) {
+      options.rtscts = this.config.rtscts;
+      options.xon = this.config.xon;
+      options.xoff = this.config.xoff;
+      options.xany = this.config.xany;
     }
     if (process.platform === 'win32') {
       options.rtsMode = this.data.rtsmode;
@@ -77,6 +78,7 @@ export class Connection {
 
   init() {
     if (this.data.kieuketnoi === CONNECT_TYPE.SerialPort) {
+      Log.scope(`connection-${this.id}`).log('Init connection');
       console.log(`Init connection ${this.id}`, this.openOptions);
       this.port = new SerialPort(this.openOptions);
 
@@ -128,15 +130,15 @@ export class Connection {
     }
   }
 
-  update(data: ConnectionData, control?: ConnectionControl) {
+  update(data: ConnectionData, config?: ConnectionConfig) {
     console.log(`Update connection ${this.id}`);
     this.data = data;
-    this.control = control;
+    this.config = config;
     this.init();
   }
 
-  setControl(control: ConnectionControl) {
-    this.control = control;
+  setConfig(config: ConnectionConfig) {
+    this.config = config;
   }
 
   open(options: any = {}) {
@@ -147,13 +149,13 @@ export class Connection {
       const retryDelay = options.retryDelay || 2000;
 
       this.port.open((error) => {
-        if (!error && this.control) {
+        if (!error && this.config) {
           const setOptions: any = {
-            brk: this.control.brk,
-            cts: this.control.cts,
-            dsr: this.control.dsr,
-            dtr: this.control.dtr,
-            rts: this.control.rts,
+            brk: this.config.brk,
+            cts: this.config.cts,
+            dsr: this.config.dsr,
+            dtr: this.config.dtr,
+            rts: this.config.rts,
           };
           console.log(`Set control of connection ${this.id}`, setOptions);
           this.port.set(setOptions, (error) => {

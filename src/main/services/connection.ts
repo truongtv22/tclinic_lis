@@ -1,6 +1,6 @@
 import { connectionManager } from 'main/connection';
 import connectManageDb from 'main/database/connectManage';
-import connectControlDb from 'main/database/connectControl';
+import connectConfigDb from 'main/database/connectConfig';
 
 export default {
   getAll() {
@@ -8,8 +8,8 @@ export default {
       const data: any[] = connectManageDb.getAll();
       if (data) {
         data.forEach((item) => {
-          const control = connectControlDb.getById(item.id);
-          item.control = control;
+          const config = connectConfigDb.getById(item.id);
+          item.config = config;
         });
       }
       return { success: true, data };
@@ -40,11 +40,11 @@ export default {
     try {
       const data: any = connectManageDb.create(values);
       const result = { ...data };
-      if (values.control) {
-        const control: any = connectControlDb.update(data.id, values.control);
-        result.control = control;
+      if (values.config) {
+        const config: any = connectConfigDb.update(data.id, values.config);
+        result.config = config;
       }
-      connectionManager.createConnection(data.id, data, result.control);
+      connectionManager.createConnection(data.id, data, result.config);
       return { success: true, data };
     } catch (error) {
       console.log('Create connection error', error);
@@ -64,11 +64,11 @@ export default {
       }
       const data: any = connectManageDb.update(id, values);
       const result = { ...data };
-      if (values.control) {
-        const control: any = connectControlDb.update(data.id, values.control);
-        result.control = control;
+      if (values.config) {
+        const config: any = connectConfigDb.update(data.id, values.config);
+        result.config = config;
       }
-      connection.update(data, result.control);
+      connection.update(data, result.config);
       return { success: true, data: result };
     } catch (error) {
       console.log('Update connection error', error);
@@ -87,7 +87,7 @@ export default {
         };
       }
       connectManageDb.delete(id);
-      connectControlDb.delete(id);
+      connectConfigDb.delete(id);
       connectionManager.deleteConnection(id);
       return { success: true };
     } catch (error) {

@@ -40,4 +40,8 @@ export const electronAPI = {
 };
 export type ElectronAPI = typeof electronAPI;
 
+// ipcRenderer.on('__ELECTRON_LOG_IPC__', (_, message) => {
+//   console.log('ELECTRON_LOG_IPC', message);
+// });
+
 contextBridge.exposeInMainWorld('electron', electronAPI);

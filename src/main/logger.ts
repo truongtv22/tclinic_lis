@@ -1,28 +1,33 @@
-class Logger {
-  state: Record<string, [[string?, ...any[]]?]> = {};
+import Log, { LogMessage } from 'electron-log';
+
+class LogManager {
+  logs: Record<string, LogMessage[]> = {};
+
+  init() {
+    Log.transports.console;
+    Log.hooks.push((message, transport) => {
+      if (transport === Log.transports.console) {
+        if (message.scope && message.variables?.processType === 'main') {
+          if (!this.logs[message.scope]) this.logs[message.scope] = [];
+          this.logs[message.scope].push(message);
+        }
+      }
+      return message;
+    });
+  }
 
   scope(scope: string) {
     const self = this;
-    if (!this.state[scope]) this.state[scope] = [];
-    return {
-      getLogs() {
-        return self.state[scope];
+    return Object.assign(Log.scope, {
+      getLog() {
+        return self.logs[scope];
       },
 
-      log(...args: any[]) {
-        self.state[scope].push([new Date().toISOString(), ...args]);
+      clear() {
+        delete self.logs[scope];
       },
-
-      clear() {},
-    };
+    });
   }
 }
 
-// const logger = new Logger();
-
-console.log("s".replaceAll(/\u0001/g, '<NUL>').replaceAll(/\u0002/g, '<STX>'))
-
-// logger.scope('connection-1').log('Hello world');
-// logger.scope('connection-1').log('Hello world', 123);
-
-// console.log(JSON.stringify(logger.state,null, 2));
+export const logManager = new LogManager();

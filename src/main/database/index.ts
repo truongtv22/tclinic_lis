@@ -54,8 +54,8 @@ export function initDatabase() {
     )`);
   }
 
-  if (!tables.includes('dbo.connectControl')) {
-    db.exec(`CREATE TABLE IF NOT EXISTS [dbo.connectControl] (
+  if (!tables.includes('dbo.connectConfig')) {
+    db.exec(`CREATE TABLE IF NOT EXISTS [dbo.connectConfig] (
       connect_id INTEGER PRIMARY KEY NOT NULL,
       rtscts INTEGER DEFAULT 0,
       xon INTEGER DEFAULT 0,

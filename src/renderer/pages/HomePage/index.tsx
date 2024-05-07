@@ -55,6 +55,8 @@ import {
   useWindowIpc,
   useConnectionIpc,
 } from 'renderer/hooks';
+import Log from 'electron-log/renderer';
+Log.info('Log from the renderer process');
 
 const SelectFolder = ({
   value,
@@ -142,8 +144,8 @@ export function HomePage() {
   }, [isModalOpen]);
 
   // useEffect(() => {
-  //   if (kieuketnoi === CONNECT_TYPE.SerialPort && !form.getFieldValue('control')) {
-  //     form.setFieldValue('control', { dtr: true, rts: true });
+  //   if (kieuketnoi === CONNECT_TYPE.SerialPort && !form.getFieldValue('config')) {
+  //     form.setFieldValue('config', { dtr: true, rts: true });
   //   }
   // }, [kieuketnoi]);
 
@@ -657,7 +659,7 @@ export function HomePage() {
                           FLOW_CONTROL.map((field) => (
                             <Form.Item
                               key={field}
-                              name={['control', field]}
+                              name={['config', field]}
                               noStyle
                               valuePropName="checked"
                             >
@@ -675,7 +677,7 @@ export function HomePage() {
                           FLAG_CONTROL.map((field) => (
                             <Form.Item
                               key={field}
-                              name={['control', field]}
+                              name={['config', field]}
                               noStyle
                               valuePropName="checked"
                             >

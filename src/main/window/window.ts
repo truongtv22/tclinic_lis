@@ -1,6 +1,6 @@
 import path from 'path';
 import { BrowserWindow, ipcMain } from 'electron';
-import { StatefullBrowserWindow } from 'stateful-electron-window';
+import windowStateKeeper from 'electron-window-state';
 import { is } from '@electron-toolkit/utils';
 import { WINDOW_ID } from 'shared/constants';
 import { WebContents } from 'shared/ipcs';
@@ -30,9 +30,15 @@ export class Window {
   create() {
     if (this.instance) return;
     if (this.id === WINDOW_ID.MAIN) {
-      this.instance = new StatefullBrowserWindow({
-        width: 1270,
-        height: 860,
+      const windowState = windowStateKeeper({
+        defaultWidth: 1270,
+        defaultHeight: 860,
+      })
+      this.instance = new BrowserWindow({
+        x: windowState.x,
+        y: windowState.y,
+        width: windowState.width,
+        height: windowState.height,
         minWidth: 800,
         minHeight: 600,
         autoHideMenuBar: true,
@@ -42,6 +48,7 @@ export class Window {
           // nodeIntegration: true,
         },
       });
+      windowState.manage(this.instance);
 
       // and load the index.html of the app.
       if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {

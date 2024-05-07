@@ -1,6 +1,6 @@
 import { Transform, TransformCallback } from 'stream';
+import { ASCII_CODE } from 'shared/constants';
 import { LabParser } from './LabParser';
-import { ASCII_CODE } from './constants';
 
 class SysmexXP100Transform extends Transform {
   // buffer [ENQ...EOT]

@@ -1,4 +1,4 @@
-import { app } from 'electron';
+import { app, ipcMain } from 'electron';
 import Log from 'electron-log/main';
 import path from 'path';
 import installExtensions, {
@@ -9,11 +9,12 @@ import { WINDOW_ID } from 'shared/constants';
 import { initDatabase } from './database';
 import { registerIpcs } from './ipcs';
 import { windowManager } from './window';
+import { logManager } from './logger';
 
 Log.initialize();
 Log.transports.file.resolvePathFn = () =>
   path.join(app.getPath('userData'), 'logs/main.log');
-Object.assign(console, Log.functions);
+// Object.assign(console, Log.functions);
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -44,6 +45,7 @@ app.on('ready', () => {
   initDatabase();
   createWindow();
   registerIpcs();
+  logManager.init();
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
