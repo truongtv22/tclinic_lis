@@ -4,18 +4,24 @@ class WindowManager {
   windows: Record<string, Window> = {};
 
   getWindow(id: string) {
-    return this.windows[id] || null;
+    if (!this.windows[id]) return null;
+    if (!this.windows[id].instance) return null;
+    return this.windows[id];
   }
 
-  createWindow(id: string) {
+  createWindow(id: string, params?: any) {
     const window = this.windows[id];
     if (window) {
       window.focus();
     } else {
-      const newWindow = new Window(id);
+      const newWindow = new Window(id, params);
       newWindow.create();
+      newWindow.instance.on('closed', () => {
+        this.removeWindow(id);
+      });
       this.windows[id] = newWindow;
     }
+    return this.windows[id];
   }
 
   focusWindow(id: string) {

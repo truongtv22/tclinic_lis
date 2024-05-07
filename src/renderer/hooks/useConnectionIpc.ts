@@ -33,7 +33,7 @@ export const useConnectionIpc = () => {
     if (!retry) {
       notification.error({
         message: 'Lỗi kết nối thiết bị',
-        description: error.message,
+        description: error,
       });
     }
     dispatch(connectionActions.updateStatus([id, false]));

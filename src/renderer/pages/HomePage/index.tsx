@@ -55,8 +55,9 @@ import {
   useWindowIpc,
   useConnectionIpc,
 } from 'renderer/hooks';
-import Log from 'electron-log/renderer';
-Log.info('Log from the renderer process');
+// import Log from 'electron-log';
+// Log.info('Log from the renderer process');
+// Log.debug('Log from the renderer process 2');
 
 const SelectFolder = ({
   value,
@@ -723,7 +724,11 @@ export function HomePage() {
               >
                 Đóng cổng
               </Button>
-              <Button size="small" disabled={!selected} onClick={openViewLog}>
+              <Button
+                size="small"
+                disabled={!selected}
+                onClick={() => openViewLog(selected.id)}
+              >
                 Xem nhật ký
               </Button>
             </Space>

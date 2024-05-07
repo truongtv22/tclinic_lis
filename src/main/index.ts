@@ -1,5 +1,5 @@
 import { app, ipcMain } from 'electron';
-import Log from 'electron-log/main';
+import Log from 'electron-log';
 import path from 'path';
 import installExtensions, {
   REACT_DEVELOPER_TOOLS,
@@ -15,6 +15,8 @@ Log.initialize();
 Log.transports.file.resolvePathFn = () =>
   path.join(app.getPath('userData'), 'logs/main.log');
 // Object.assign(console, Log.functions);
+
+logManager.init();
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -45,7 +47,6 @@ app.on('ready', () => {
   initDatabase();
   createWindow();
   registerIpcs();
-  logManager.init();
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common

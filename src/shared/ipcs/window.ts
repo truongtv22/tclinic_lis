@@ -7,7 +7,7 @@ export enum WindowIpcChannel {
 
 export type WindowIpcEvents = {
   [WindowIpcChannel.MAIN_WINDOW_RELOAD]: () => void;
-  [WindowIpcChannel.OPEN_VIEW_WINDOW]: () => void;
+  [WindowIpcChannel.OPEN_VIEW_WINDOW]: (connectId: number) => void;
   [WindowIpcChannel.OPEN_APP_FOLDER]: () => void;
 };
 

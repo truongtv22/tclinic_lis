@@ -14,6 +14,11 @@ import {
   PURGE,
   REGISTER,
 } from 'redux-persist';
+import {
+  createStateSyncMiddleware,
+  // initMessageListener,
+  initStateWithPrevTab,
+} from 'redux-state-sync';
 
 import { rootSaga } from './sagas';
 import { createReducer } from './reducers';
@@ -21,7 +26,11 @@ import { createReducer } from './reducers';
 export function configureAppStore() {
   // Create the store with saga middleware
   const sagaMiddleware = createSagaMiddleware();
-  const middlewares = [sagaMiddleware] as Middleware[];
+  const syncMiddleware = createStateSyncMiddleware({
+    blacklist: [PERSIST, PURGE, ROUTINE_PROMISE_ACTION],
+  });
+  const middlewares = [sagaMiddleware, syncMiddleware] as Middleware[];
+  // const middlewares = [sagaMiddleware] as Middleware[];
 
   const enhancers = [
     createInjectorsEnhancer({
@@ -49,6 +58,8 @@ export function configureAppStore() {
     devTools: process.env.NODE_ENV !== 'production',
     enhancers: (getDefaultEnhancers) => getDefaultEnhancers().concat(enhancers),
   });
+  initStateWithPrevTab(store);
+  // initMessageListener(store);
   const persistor = persistStore(store);
 
   sagaMiddleware.run(rootSaga);

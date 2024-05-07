@@ -4,6 +4,7 @@
 import { persistReducer } from 'redux-persist';
 import { combineReducers } from '@reduxjs/toolkit';
 import autoMergeLevel2 from 'redux-persist/lib/stateReconciler/autoMergeLevel2';
+import { withReduxStateSync } from 'redux-state-sync';
 
 import { InjectedReducersType } from 'renderer/utils/types/injector-typings';
 import { createElectronStorage } from 'renderer/utils/electron-storage';
@@ -30,5 +31,5 @@ export function createReducer(injectedReducers: InjectedReducersType = {}) {
     [connectionSlice.name]: connectionSlice.reducer,
     ...injectedReducers,
   });
-  return persistReducer(persistConfig, rootReducer);
+  return persistReducer(persistConfig, withReduxStateSync(rootReducer));
 }

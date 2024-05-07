@@ -6,9 +6,11 @@ import {
   ConnectionIpcCommands,
 } from './connection';
 import { KqBW200IpcChannel, KqBW200IpcCommands } from './kqBW200';
+import { LoggerIpcChannel, LoggerIpcEvents } from './logger';
 
 export type IpcEvents = WindowIpcEvents &
   StorageIpcEvents &
+  LoggerIpcEvents &
   ConnectionIpcEvents;
 
 export type IpcCommands = WindowIpcCommands &
@@ -19,5 +21,6 @@ export const IpcChannel = {
   ...WindowIpcChannel,
   ...StorageIpcChannel,
   ...ConnectionIpcChannel,
+  ...LoggerIpcChannel,
   ...KqBW200IpcChannel,
 };
