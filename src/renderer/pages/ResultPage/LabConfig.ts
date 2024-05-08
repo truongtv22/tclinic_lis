@@ -4,7 +4,7 @@ import { formatDateTime } from 'shared/utils/date';
 export const THOIGIAN_COLUMNN: ProColumnType<any> = {
   title: 'Thời gian',
   dataIndex: 'date_time',
-  width: 160,
+  width: 169,
   fixed: 'left',
   renderText: formatDateTime,
 };

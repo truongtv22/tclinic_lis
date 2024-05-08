@@ -1,5 +1,7 @@
 import { Transform, TransformCallback } from 'stream';
-import { ASCII_CODE } from 'shared/constants';
+import { ASCII_CODE, LAB } from 'shared/constants';
+import kqSysmexXP100Db from 'main/database/kqSysmexXP100';
+import dmMaOnlineDb from 'main/database/dmMaOnline';
 import { LabParser } from './LabParser';
 
 class SysmexXP100Transform extends Transform {
@@ -73,8 +75,8 @@ export class SysmexXP100Parser extends LabParser {
 
     const result: any = {
       date_time: new Date().toISOString(),
+      barcode,
     };
-    result.barcode = barcode;
 
     // Extract other indexes
     for (let i = 5; i < lines.length; i++) {
@@ -95,6 +97,23 @@ export class SysmexXP100Parser extends LabParser {
   }
 
   save(data: any) {
-    console.log('Save data for SysmexXP100', data);
+    this.connection.logger.log('Save data for SysmexXP100', data);
+    const values: any = {
+      date_time: data.date_time,
+      barcode: data.barcode,
+    };
+
+    const dmChiso: any = dmMaOnlineDb.getByLab(LAB.SysmexXP100);
+    if (dmChiso) {
+      for (const chiso of dmChiso) {
+        if (chiso.ma_online in data) {
+          values[chiso.ma] = data[chiso.ma_online];
+        }
+      }
+    }
+
+    const item = kqSysmexXP100Db.create(values);
+    this.connection.logger.log('Save data for SysmexXP100 successfully', item);
+    return item;
   }
 }

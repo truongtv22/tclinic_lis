@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Spin, Card, Radio } from 'antd';
 import Split from '@uiw/react-split';
 
@@ -8,6 +8,7 @@ import { ResultLab } from './ResultLab';
 import { LabConfig } from './LabConfig';
 import { BW200Config } from './BW200Config';
 import { Access2Config } from './Access2Config';
+import { SysmexXP100Config } from './SysmexXP100Config';
 
 export function ResultPage() {
   const { connections, selected, setSelected } = useConnectionState();
@@ -16,12 +17,10 @@ export function ResultPage() {
     if (selected) {
       if (selected.lab === LAB.BW200) return new BW200Config();
       if (selected.lab === LAB.Access2) return new Access2Config();
+      if (selected.lab === LAB.SysmexXP100) return new SysmexXP100Config();
     }
     return new LabConfig();
   }, [selected]);
-
-  useEffect(() => {
-  }, [labConfig]);
 
   const [loading, setLoading] = useState(false);
 

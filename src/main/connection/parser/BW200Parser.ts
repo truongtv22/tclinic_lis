@@ -63,8 +63,8 @@ export class BW200Parser extends LabParser {
     barcode = barcode.padStart(4, '0'); // fill zero at start
 
     const result: any = {
-      barcode,
       date_time: new Date().toISOString(),
+      barcode,
     };
 
     // Extract other indexes
@@ -91,8 +91,8 @@ export class BW200Parser extends LabParser {
   save(data: any) {
     this.connection.logger.log('Save data for BW200', data);
     const values: any = {
-      barcode: data.barcode,
       date_time: data.date_time,
+      barcode: data.barcode,
     };
 
     const dmChiso: any = dmMaOnlineDb.getByLab(LAB.Access2);
