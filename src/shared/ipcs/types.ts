@@ -1,12 +1,13 @@
 import { WindowIpcChannel, WindowIpcEvents, WindowIpcCommands } from './window';
 import { StorageIpcChannel, StorageIpcEvents } from './storage';
+import { LoggerIpcChannel, LoggerIpcEvents } from './logger';
 import {
   ConnectionIpcChannel,
   ConnectionIpcEvents,
   ConnectionIpcCommands,
 } from './connection';
 import { KqBW200IpcChannel, KqBW200IpcCommands } from './kqBW200';
-import { LoggerIpcChannel, LoggerIpcEvents } from './logger';
+import { KqAccess2IpcChannel, KqAccess2IpcCommands } from './kqAccess2';
 
 export type IpcEvents = WindowIpcEvents &
   StorageIpcEvents &
@@ -15,7 +16,8 @@ export type IpcEvents = WindowIpcEvents &
 
 export type IpcCommands = WindowIpcCommands &
   ConnectionIpcCommands &
-  KqBW200IpcCommands;
+  KqBW200IpcCommands &
+  KqAccess2IpcCommands;
 
 export const IpcChannel = {
   ...WindowIpcChannel,
@@ -23,4 +25,5 @@ export const IpcChannel = {
   ...ConnectionIpcChannel,
   ...LoggerIpcChannel,
   ...KqBW200IpcChannel,
+  ...KqAccess2IpcChannel,
 };

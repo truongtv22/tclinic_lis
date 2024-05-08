@@ -39,10 +39,10 @@ export class Connection {
   data: ConnectionData;
   config?: ConnectionConfig;
 
-  log: Log.LogFunctions;
-
   port: SerialPort;
   parser: LabParser;
+  
+  logger: Log.LogFunctions;
 
   status = CONNECT_STATUS.NONE;
   statusError: any = null;
@@ -51,7 +51,7 @@ export class Connection {
     this.id = id;
     this.data = data;
     this.config = config;
-    this.log = Log.scope(`connection-${this.id}`);
+    this.logger = Log.scope(`connection-${this.id}`);
     this.init();
   }
 
@@ -82,7 +82,7 @@ export class Connection {
 
   init() {
     if (this.data.kieuketnoi === CONNECT_TYPE.SerialPort) {
-      this.log.log('Init connection', this.openOptions);
+      this.logger.log('Init connection', this.openOptions);
       this.port = new SerialPort(this.openOptions);
 
       switch (this.data.lab) {
@@ -102,7 +102,7 @@ export class Connection {
         if (window) {
           window.webContents?.send(IpcChannel.CONNECTION_OPENED, this.id);
         }
-        this.log.log('Connection opened');
+        this.logger.log('Connection opened');
       });
 
       this.port.on('close', () => {
@@ -111,7 +111,7 @@ export class Connection {
           window.webContents?.send(IpcChannel.CONNECTION_CLOSED, this.id);
         }
         this.destroy();
-        this.log.log('Connection closed');
+        this.logger.log('Connection closed');
       });
 
       this.port.on('error', (error: Error, retry?: boolean) => {
@@ -124,7 +124,7 @@ export class Connection {
             retry,
           );
         }
-        this.log.log('Connection error', error, retry);
+        this.logger.log('Connection error', error, retry);
       });
 
       this.port.on('data', (buffer: Buffer) => {
@@ -134,7 +134,7 @@ export class Connection {
   }
 
   update(data: ConnectionData, config?: ConnectionConfig) {
-    this.log.log('Update connection');
+    this.logger.log('Update connection');
     this.data = data;
     this.config = config;
     this.init();
@@ -145,7 +145,7 @@ export class Connection {
   }
 
   open(options: any = {}) {
-    this.log.log('Open connection');
+    this.logger.log('Open connection');
     if (this.data.kieuketnoi === CONNECT_TYPE.SerialPort) {
       const retryCount = options.retryCount || 0;
       const maxRetries = options.maxRetries || 2;
@@ -160,12 +160,12 @@ export class Connection {
             dtr: this.config.dtr,
             rts: this.config.rts,
           };
-          this.log.log('Set control', setOptions);
+          this.logger.log('Set control', setOptions);
           this.port.set(setOptions, (error) => {
             if (!error) {
-              this.log.log('Set control successfully', setOptions);
+              this.logger.log('Set control successfully', setOptions);
             } else {
-              this.log.log('Error set control', error);
+              this.logger.log('Error set control', error);
             }
           });
         }
@@ -176,11 +176,11 @@ export class Connection {
             if (retryCount < maxRetries) {
               // Retry after certain time
               setTimeout(() => {
-                this.log.log(`Retry attempt ${retryCount + 1}`);
+                this.logger.log(`Retry attempt ${retryCount + 1}`);
                 this.open({ retry: options.retry, retryCount: retryCount + 1 });
               }, retryDelay);
             } else {
-              this.log.log('Max retry attempts reached');
+              this.logger.log('Max retry attempts reached');
             }
           }
         }
@@ -189,7 +189,7 @@ export class Connection {
   }
 
   close() {
-    this.log.log('Close connection');
+    this.logger.log('Close connection');
     if (this.data.kieuketnoi === CONNECT_TYPE.SerialPort) {
       if (this.port && this.port.isOpen) {
         this.port.close();
@@ -198,14 +198,14 @@ export class Connection {
   }
 
   destroy() {
-    this.log.log('Destroy connection');
+    this.logger.log('Destroy connection');
     if (this.data.kieuketnoi === CONNECT_TYPE.SerialPort) {
       this.parser.destroy();
     }
   }
 
   saveLog(buffer: Buffer) {
-    this.log.log('Start save log');
+    this.logger.log('Start save log');
     const folderLog = path.join(app.getPath('userData'), 'logs', this.data.lab);
     const fileName = `${dayjs().format('YYYYMMDD')}.txt`;
     const filePath = path.join(folderLog, fileName);
@@ -215,14 +215,14 @@ export class Connection {
       fs.mkdirSync(folderLog, { recursive: true });
     }
 
-    this.log.log('Save content log', asciiToText(buffer.toString()));
+    this.logger.log('Save content log', asciiToText(buffer.toString()));
 
     // Write data to log file
     fs.appendFile(filePath, buffer.toString(), (error) => {
       if (error) {
-        this.log.log('Error write log file', error);
+        this.logger.log('Error write log file', error);
       } else {
-        this.log.log('Write log file successfully', filePath);
+        this.logger.log('Write log file successfully', filePath);
       }
     });
   }

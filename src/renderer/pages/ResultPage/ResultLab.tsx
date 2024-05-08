@@ -18,103 +18,10 @@ import {
 import classNames from 'classnames';
 import kqBW200Service from 'renderer/services/kqBW200';
 import { parseString, formatDateTime } from 'shared/utils/date';
+import { LabConfig } from './LabConfig';
 
-export function ResultLab() {
+export function ResultLab({ labConfig }: { labConfig: LabConfig }) {
   const [form] = ProForm.useForm();
-
-  const columns: ProColumns<any>[] = [
-    {
-      title: 'Thời gian',
-      dataIndex: 'date_time',
-      width: 160,
-      fixed: 'left',
-      renderText: formatDateTime,
-    },
-    {
-      title: 'Barcode',
-      dataIndex: 'barcode',
-      width: 80,
-      fixed: 'left',
-    },
-    Table.SELECTION_COLUMN,
-    {
-      title: 'URO',
-      dataIndex: 'URO',
-      width: 80,
-    },
-    {
-      title: 'BIL',
-      dataIndex: 'BIL',
-      width: 80,
-    },
-    {
-      title: 'KET',
-      dataIndex: 'KET',
-      width: 80,
-    },
-    {
-      title: 'BLD',
-      dataIndex: 'BLD',
-      width: 80,
-    },
-    {
-      title: 'PRO',
-      dataIndex: 'PRO',
-      width: 80,
-    },
-    {
-      title: 'NIT',
-      dataIndex: 'NIT',
-      width: 80,
-    },
-    {
-      title: 'LEU',
-      dataIndex: 'LEU',
-      width: 80,
-    },
-    {
-      title: 'GLU',
-      dataIndex: 'GLU',
-      width: 80,
-    },
-    {
-      title: 'SG',
-      dataIndex: 'SG',
-      width: 80,
-    },
-    {
-      title: 'PH',
-      dataIndex: 'PH',
-      width: 80,
-    },
-    {
-      title: 'VC',
-      dataIndex: 'VC',
-      width: 80,
-    },
-    {
-      valueType: 'option',
-      width: 65,
-      fixed: 'right',
-      render: (text, row, index, action, config) => (
-        <>
-          <Button
-            size="small"
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => action.startEditable(row.id)}
-          />
-          <Button
-            size="small"
-            type="link"
-            icon={<DeleteOutlined />}
-            danger
-            onClick={() => {}}
-          />
-        </>
-      ),
-    },
-  ];
 
   const formValues = {
     startDate: dayjs().subtract(7, 'day').startOf('day'),
@@ -126,17 +33,13 @@ export function ResultLab() {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
   useEffect(() => {
-    getKqBW200(formValues);
-  }, []);
+    getData(formValues);
+  }, [labConfig]);
 
-  const getKqBW200 = async (params: any = {}) => {
-    if (params.startDate) {
-      params.startDate = parseString(params.startDate);
-    }
-    if (params.endDate) {
-      params.endDate = parseString(params.endDate);
-    }
-    const result = await kqBW200Service.getAll(params);
+  const getData = async (params: any = {}) => {
+    if (params.startDate) params.startDate = parseString(params.startDate);
+    if (params.endDate) params.endDate = parseString(params.endDate);
+    const result = await labConfig.getAll(params);
     if (result.success && result.data) {
       setDataSource(result.data);
     }
@@ -150,20 +53,16 @@ export function ResultLab() {
           // variant="filled"
           form={form}
           initialValues={formValues}
-          onFinish={async (values) => {
-            getKqBW200(values);
-          }}
+          onFinish={getData}
           submitter={{
             searchConfig: {
               resetText: 'Làm mới',
               submitText: 'Tìm kiếm',
             },
-            render: (props, dom) => (
+            render: (_, dom) => (
               <div className="flex gap-2 justify-end">{dom}</div>
             ),
-            onReset: (values) => {
-              getKqBW200(values);
-            },
+            onReset: getData,
           }}
         >
           <Row gutter={8}>
@@ -224,7 +123,7 @@ export function ResultLab() {
         rowKey="id"
         value={dataSource}
         scroll={{ x: 'max-content' }}
-        columns={columns}
+        columns={labConfig.columns}
         options={{ density: false, reload: true, setting: true }}
         toolbar={{ className: '*:p-0' }}
         tableAlertRender={({ selectedRowKeys }) => (
@@ -245,7 +144,7 @@ export function ResultLab() {
           onChange: setSelectedRowKeys,
           columnTitle: 'Gửi HIS',
           columnWidth: 70,
-          getCheckboxProps: (row) => ({
+          getCheckboxProps: (row: any) => ({
             disabled: row.sendhis === 1,
           }),
           renderCell: (value, row, index, node) => {
@@ -256,7 +155,7 @@ export function ResultLab() {
           },
         }}
         onChange={(v) => {
-          console.log('v', v);
+          console.log('EditableProTable:onChange', v);
         }}
         form={
           {

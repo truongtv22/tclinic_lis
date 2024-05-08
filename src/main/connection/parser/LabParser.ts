@@ -23,15 +23,18 @@ export class LabParser {
     this.connection.port.pipe(this.transform);
 
     this.connection.port.on('data', (buffer: Buffer) => {
-      console.log('Prepare data from port to parser', this.connection.id);
+      this.connection.logger.log('Prepare data from port to parser');
       this.prepare(buffer);
     });
 
     this.transform.on('data', (buffer: Buffer) => {
-      console.log('Parse data from parser', this.connection.id);
+      this.connection.logger.log('Parse data from parser');
       const data = this.parse(buffer);
-      console.log('Save data from parser', this.connection.id);
-      if (data) this.save(data);
+      this.connection.logger.log('Save data from parser');
+      if (data) {
+        const item = this.save(data);
+        this.notify(item);
+      }
     });
   }
 
@@ -54,13 +57,16 @@ export class LabParser {
    * Saves the given data
    *
    * @param {any} data - The data to be saved
+   * @return {any} The saved result
    */
-  save(data: any) {}
+  save(data: any): any {}
+
+  notify(data: any) {}
 
   /**
    * Destroys the parser of the connection
    */
   destroy() {
-    console.log('Destroy parser', this.connection.id);
+    this.connection.logger.log('Destroy parser');
   }
 }

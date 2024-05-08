@@ -12,6 +12,8 @@ export enum ConnectionIpcChannel {
   CONNECTION_OPENED = 'connection-opened',
   CONNECTION_CLOSED = 'connection-closed',
   CONNECTION_ERROR = 'connection-error',
+
+  CONNECTION_DATA = 'connection-data',
 }
 
 export type ConnectionIpcEvents = {
@@ -25,6 +27,8 @@ export type ConnectionIpcEvents = {
     error: any,
     retry?: boolean,
   ) => void;
+
+  [ConnectionIpcChannel.CONNECTION_DATA]: (id: number, data: any) => void;
 };
 
 export type ConnectionIpcCommands = {

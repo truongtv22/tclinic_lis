@@ -1,34 +1,29 @@
-import { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useEffect, useMemo, useState } from 'react';
 import { Spin, Card, Radio } from 'antd';
 import Split from '@uiw/react-split';
-import { getConnections, selectConnections } from 'renderer/store/connection';
+
+import { LAB } from 'shared/constants';
+import { useConnectionState } from 'renderer/store/connection';
 import { ResultLab } from './ResultLab';
+import { LabConfig } from './LabConfig';
+import { BW200Config } from './BW200Config';
+import { Access2Config } from './Access2Config';
 
 export function ResultPage() {
-  const dispatch = useDispatch();
+  const { connections, selected, setSelected } = useConnectionState();
 
-  const connections = useSelector(selectConnections);
+  const labConfig = useMemo(() => {
+    if (selected) {
+      if (selected.lab === LAB.BW200) return new BW200Config();
+      if (selected.lab === LAB.Access2) return new Access2Config();
+    }
+    return new LabConfig();
+  }, [selected]);
+
+  useEffect(() => {
+  }, [labConfig]);
 
   const [loading, setLoading] = useState(false);
-  const [selected, setSelected] = useState(null);
-
-  useEffect(() => {
-    dispatch(getConnections());
-  }, []);
-
-  useEffect(() => {
-    if (selected) {
-      const found = connections.find((item) => item.id === selected.id);
-      if (found) {
-        setSelected(found);
-      } else {
-        setSelected(connections[0]);
-      }
-    } else {
-      setSelected(connections[0]);
-    }
-  }, [connections]);
 
   const onSelect = (item: any) => {
     setSelected(item);
@@ -60,7 +55,7 @@ export function ResultPage() {
           </div>
         </Card>
         <Card className="flex-1 overflow-hidden" size="small">
-          <ResultLab />
+          <ResultLab labConfig={labConfig} />
         </Card>
       </Split>
     </Spin>

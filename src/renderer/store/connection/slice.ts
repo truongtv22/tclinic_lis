@@ -82,7 +82,7 @@ export const connectionSlice = createSlice({
   selectors: {
     selectConnections: (state) => state.connectionList,
     selectConnectionStatus: (state) => state.connectionStatus,
-    selectConnection: (state, id) =>
+    selectConnection: (state, id: number) =>
       state.connectionList.find((item) => item.id === id),
   },
 });

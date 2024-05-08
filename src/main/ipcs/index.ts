@@ -1,14 +1,15 @@
 import { registerWindowIpc } from './window';
 import { registerStorageIpc } from './storage';
-import { registerKqBW200Ipc } from './kqBW200';
-import { registerConnectionIpc } from './connection';
 import { registerLoggerIpc } from './logger';
+import { registerConnectionIpc } from './connection';
+import { registerKqBW200Ipc } from './kqBW200';
+import { registerKqAccess2Ipc } from './kqAccess2';
 
 export const registerIpcs = () => {
   registerWindowIpc();
   registerStorageIpc();
-  registerKqBW200Ipc();
-  registerConnectionIpc();
   registerLoggerIpc();
+  registerConnectionIpc();
+  registerKqBW200Ipc();
+  registerKqAccess2Ipc();
 };
- 

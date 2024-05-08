@@ -98,4 +98,19 @@ export default {
     const data = stmQueryById.get({ id });
     return data;
   },
+
+  delete(id: number) {
+    const db = connect();
+
+    const stmQueryById = db.prepare(
+      `SELECT * FROM [dbo.KQ_BW200] WHERE id = @id`,
+    );
+    const stmDelete = db.prepare(`DELETE FROM [dbo.KQ_BW200] WHERE id = @id`);
+
+    const data = stmQueryById.get({ id });
+    if (!data) {
+      throw new Error('Không tìm thấy dữ liệu');
+    }
+    stmDelete.run({ id });
+  },
 };

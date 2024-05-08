@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
-import { Button, Card, Layout } from 'antd';
+import { Row, Col, Table, Button, Card, Layout } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 
 import { formatDateTime } from 'shared/utils/date';
@@ -43,12 +43,12 @@ export function LogPage() {
             </div>
             <div>
               {logs.map((item, index) => (
-                <div key={index} className="flex space-x-2">
-                  <div className="flex">
+                <div key={index} className="grid grid-cols-[200px_auto]">
+                  <div className="flex space-x-1">
                     <div>{formatDateTime(item.date)}</div>
                     <div className="uppercase">[{item.level}]</div>
                   </div>
-                  <div className="">
+                  <div className="overflow-auto">
                     {item.data.map((item: any, index: any) => (
                       <div key={index} className="whitespace-pre-wrap">
                         {typeof item === 'string'

@@ -100,6 +100,10 @@ export class Access2Parser extends LabParser {
   }
 
   save(data: any) {
-    console.log('Save data for Access2', data);
+    this.connection.logger.log('Save data for Access2', data);
+  }
+
+  notify(data: any) {
+    this.connection.logger.log('Notify data for Access2', data);
   }
 }

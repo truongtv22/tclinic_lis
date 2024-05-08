@@ -15,7 +15,6 @@ import {
   Select,
   Button,
   Popconfirm,
-  InputNumber,
   AutoComplete,
   Checkbox,
 } from 'antd';
@@ -41,12 +40,11 @@ import {
   FLAG_CONTROL,
 } from 'shared/constants';
 import {
-  getConnections,
   createConnection,
   updateConnection,
   deleteConnection,
-  selectConnections,
   selectConnectionStatus,
+  useConnectionState,
 } from 'renderer/store/connection';
 import {
   modal,
@@ -55,9 +53,6 @@ import {
   useWindowIpc,
   useConnectionIpc,
 } from 'renderer/hooks';
-// import Log from 'electron-log';
-// Log.info('Log from the renderer process');
-// Log.debug('Log from the renderer process 2');
 
 const SelectFolder = ({
   value,
@@ -96,14 +91,12 @@ export function HomePage() {
 
   const { openViewLog } = useWindowIpc();
 
-  const connections = useSelector(selectConnections);
+  const { connections, selected, setSelected } = useConnectionState();
   const connectionStatus = useSelector(selectConnectionStatus);
 
   const { openConnection, closeConnection } = useConnectionIpc();
 
   const kieuketnoi = Form.useWatch('kieuketnoi', form);
-
-  const [selected, setSelected] = useState(null);
 
   const [expand, setExpand] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -113,25 +106,7 @@ export function HomePage() {
   const [modalLoading, setModalLoading] = useState(false);
 
   useEffect(() => {
-    dispatch(getConnections());
-  }, []);
-
-  useEffect(() => {
     if (selected) {
-      const found = connections.find((item) => item.id === selected.id);
-      if (found) {
-        setSelected(found);
-      } else {
-        setSelected(connections[0]);
-      }
-    } else {
-      setSelected(connections[0]);
-    }
-  }, [connections]);
-
-  useEffect(() => {
-    if (selected) {
-      // form.resetFields();
       form.setFieldsValue(selected);
     } else {
       form.resetFields();
@@ -618,26 +593,6 @@ export function HomePage() {
                     </Form.Item>
                   </Col>
                 </Row>
-                {/* <Row gutter={8}>
-                  <Col sm={24} md={12}>
-                    <Form.Item
-                      name="readtimeout"
-                      label="ReadTimeout"
-                      initialValue={-1}
-                    >
-                      <InputNumber min={-1} placeholder="ReadTimeout" className="w-full" />
-                    </Form.Item>
-                  </Col>
-                  <Col sm={24} md={12}>
-                    <Form.Item
-                      name="writetimeout"
-                      label="WriteTimeout"
-                      initialValue={-1}
-                    >
-                      <InputNumber min={-1} placeholder="WriteTimeout" className="w-full" />
-                    </Form.Item>
-                  </Col>
-                </Row> */}
                 <div className="my-2">
                   <div
                     className="flex justify-between cursor-pointer"
@@ -729,7 +684,7 @@ export function HomePage() {
                 disabled={!selected}
                 onClick={() => openViewLog(selected.id)}
               >
-                Xem nhật ký
+                Xem log
               </Button>
             </Space>
           </Form>

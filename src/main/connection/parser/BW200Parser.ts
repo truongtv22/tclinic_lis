@@ -88,8 +88,13 @@ export class BW200Parser extends LabParser {
   }
 
   save(data: any) {
-    console.log('Save data for BW200', data);
+    this.connection.logger.log('Save data for BW200', data);
     const item = kqBW200Db.create(data);
-    console.log('Save data for BW200 successfully', item);
+    this.connection.logger.log('Save data for BW200 successfully', item);
+    return item;
+  }
+
+  notify(data: any) {
+    this.connection.logger.log('Notify data for BW200', data);
   }
 }
