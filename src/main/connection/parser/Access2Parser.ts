@@ -1,7 +1,8 @@
 import { Transform, TransformCallback } from 'stream';
-import { ASCII_CODE } from 'shared/constants';
+import { ASCII_CODE, LAB } from 'shared/constants';
 import { parseString } from 'shared/utils/date';
 import kqAccess2Db from 'main/database/kqAccess2';
+import dmMaOnlineDb from 'main/database/dmMaOnline';
 import { LabParser } from './LabParser';
 
 class Access2Transform extends Transform {
@@ -98,12 +99,34 @@ export class Access2Parser extends LabParser {
       chiso,
       giatri,
     };
-
     return result;
   }
 
   save(data: any) {
     this.connection.logger.log('Save data for Access2', data);
+    const chiso: any = dmMaOnlineDb.getByMa(LAB.Access2, data.chiso);
+    if (!chiso) {
+      this.connection.logger.log('Ma not found', data.chiso);
+      return;
+    }
+
+    const values = {
+      date_time: data.date_time,
+      barcode: data.barcode,
+      [chiso.ma]: data.giatri,
+    };
+
+    const params = {
+      date_time: data.date_time,
+      barcode: data.barcode,
+    };
+    let item: any = kqAccess2Db.query(params);
+    if (item) {
+      item = kqAccess2Db.update(item.id, values);
+    } else {
+      item = kqAccess2Db.create(values);
+    }
+    return item;
   }
 
   notify(data: any) {

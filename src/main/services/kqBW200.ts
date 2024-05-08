@@ -15,28 +15,27 @@ export default {
 
   async sendHis(id: number, data: any) {
     try {
+      const kqxetnghiem = [];
       const dmChiso = dmKhopmaDb.getByLab(LAB.BW200);
-      const chisoById: { [key: string]: string } = {};
-      for (const chiso of dmChiso) {
-        chisoById[chiso.maxn] = chiso.macs;
+      if (dmChiso) {
+        for (const chiso of dmChiso) {
+          if (chiso.maxn in data) {
+            kqxetnghiem.push({
+              chiso_id: chiso.macs,
+              maxn: chiso.maxn,
+              ketqua: data[chiso.maxn],
+            });
+          }
+        }
       }
 
-      const postData: { [key: string]: any } = {
+      const postData = {
         mamay: LAB.BW200,
         barcode: data.barcode_edit || data.barcode,
-        kqxetnghiem: [],
+        kqxetnghiem,
         ngaythuchien: new Date(data.date_time).toISOString(),
         loaidongbo: 'ONE',
       };
-      for (const chiso in chisoById) {
-        const chisoId = chisoById[chiso];
-        postData.kqxetnghiem.push({
-          chiso_id: chisoId,
-          maxn: chiso,
-          ketqua: data[chiso],
-        });
-      }
-
       const result = await axios.post(
         'https://demo.tclinic.io/api/xetnghiem/lis-sync',
         postData,

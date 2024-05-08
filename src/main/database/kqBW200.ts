@@ -3,6 +3,24 @@ import { parseString } from 'shared/utils/date';
 import connect from './index';
 
 export default {
+  columns: [
+    'date_time',
+    'barcode',
+    'sendhis',
+    'barcode_edit',
+    'URO',
+    'BIL',
+    'KET',
+    'BLD',
+    'PRO',
+    'NIT',
+    'LEU',
+    'GLU',
+    'SG',
+    'PH',
+    'VC',
+  ],
+
   queryAll(
     params: {
       startDate?: string;
@@ -45,33 +63,15 @@ export default {
 
     const stmAdd = db.prepare(
       `INSERT INTO [dbo.KQ_BW200] (
-          date_time,
-          barcode,
-          URO,
-          BIL,
-          KET,
-          BLD,
-          PRO,
-          NIT,
-          LEU,
-          GLU,
-          SG,
-          PH,
-          VC
+          ${Object.keys(values)
+            .filter((key) => this.columns.includes(key))
+            .map((key) => `${key}`)
+            .join(', ')}
         ) VALUES (
-          @date_time,
-          @barcode,
-          @URO,
-          @BIL,
-          @KET,
-          @BLD,
-          @PRO,
-          @NIT,
-          @LEU,
-          @GLU,
-          @SG,
-          @PH,
-          @VC
+          ${Object.keys(values)
+            .filter((key) => this.columns.includes(key))
+            .map((key) => `@${key}`)
+            .join(', ')}
         )`,
     );
     const result = stmAdd.run(values);
@@ -88,9 +88,14 @@ export default {
     const db = connect();
 
     const stmUpdate = db.prepare(
-      `UPDATE [dbo.KQ_BW200] SET sendhis = @sendhis WHERE id = @id`,
+      `UPDATE [dbo.KQ_BW200] SET
+          ${Object.keys(values)
+            .filter((key) => this.columns.includes(key))
+            .map((key) => `${key} = @${key}`)
+            .join(', ')}
+        WHERE id = @id`,
     );
-    stmUpdate.run({ id, sendhis: values.sendhis });
+    stmUpdate.run({ ...values, id });
 
     const stmQueryById = db.prepare(
       `SELECT * FROM [dbo.KQ_BW200] WHERE id = @id`,

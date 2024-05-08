@@ -3,6 +3,26 @@ import { parseString } from 'shared/utils/date';
 import connect from './index';
 
 export default {
+  columns: [
+    'date_time',
+    'barcode',
+    'sendhis',
+    'barcode_edit',
+    'PAPPA',
+    'AFP',
+    'BR153Ag',
+    'Ferritin',
+    'FRT4',
+    'HCG5',
+    'OV125Ag',
+    'PRL',
+    'PSAHyb',
+    'TotT3',
+    'TSH',
+    'uE3',
+    'HCG5d',
+  ],
+
   queryAll(
     params: {
       startDate?: string;
@@ -44,18 +64,18 @@ export default {
     const db = connect();
 
     const whereConds = [];
-    whereConds.push('date_time = @date_time');
+    whereConds.push('date(date_time) = @dateTime');
     whereConds.push('barcode = @barcode');
 
     const whereClause = `WHERE ${whereConds.join(' AND ')}`;
 
+    const dateTime = dayjs(params.date_time).format('YYYY-MM-DD');
+    const barcode = params.barcode;
+
     const stmQuery = db.prepare(
       `SELECT * FROM [dbo.KQ_Access2] ${whereClause}`,
     );
-    const data = stmQuery.get({
-      date_time: params.date_time,
-      barcode: params.barcode,
-    });
+    const data = stmQuery.get({ dateTime, barcode });
 
     return data;
   },
@@ -65,37 +85,15 @@ export default {
 
     const stmAdd = db.prepare(
       `INSERT INTO [dbo.KQ_Access2] (
-          date_time,
-          barcode,
-          PAPPA,
-          AFP,
-          BR153Ag,
-          Ferritin,
-          FRT4,
-          HCG5,
-          OV125Ag,
-          PRL,
-          PSAHyb,
-          TotT3,
-          TSH,
-          uE3,
-          HCG5d
+          ${Object.keys(values)
+            .filter((key) => this.columns.includes(key))
+            .map((key) => `${key}`)
+            .join(', ')}
         ) VALUES (
-          @date_time,
-          @barcode,
-          @PAPPA,
-          @AFP,
-          @BR153Ag,
-          @Ferritin,
-          @FRT4,
-          @HCG5,
-          @OV125Ag,
-          @PRL,
-          @PSAHyb,
-          @TotT3,
-          @TSH,
-          @uE3,
-          @HCG5d
+          ${Object.keys(values)
+            .filter((key) => this.columns.includes(key))
+            .map((key) => `@${key}`)
+            .join(', ')}
         )`,
     );
     const result = stmAdd.run(values);
@@ -108,13 +106,18 @@ export default {
     return data;
   },
 
-  update(id: number, values: any) {
+  update(id: number, values: any = {}) {
     const db = connect();
 
     const stmUpdate = db.prepare(
-      `UPDATE [dbo.KQ_Access2] SET sendhis = @sendhis WHERE id = @id`,
+      `UPDATE [dbo.KQ_Access2] SET
+          ${Object.keys(values)
+            .filter((key) => this.columns.includes(key))
+            .map((key) => `${key} = @${key}`)
+            .join(', ')}
+        WHERE id = @id`,
     );
-    stmUpdate.run({ id, sendhis: values.sendhis });
+    stmUpdate.run({ ...values, id });
 
     const stmQueryById = db.prepare(
       `SELECT * FROM [dbo.KQ_Access2] WHERE id = @id`,

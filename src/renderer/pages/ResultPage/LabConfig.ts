@@ -25,11 +25,12 @@ export class LabConfig {
     return {};
   }
 
-  column(key: string): ProColumnType<any> {
+  column(key: string, option?: ProColumnType): ProColumnType {
     return {
       title: key,
       dataIndex: key,
       width: 80,
+      ...option,
     };
   }
 

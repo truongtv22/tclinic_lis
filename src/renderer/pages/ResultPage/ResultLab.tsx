@@ -1,6 +1,6 @@
 import { cloneElement, useState, useEffect } from 'react';
 import dayjs from 'dayjs';
-import { Row, Col, Table, Space, Button } from 'antd';
+import { Row, Col, Space, Button } from 'antd';
 import {
   ProForm,
   ProFormText,
@@ -8,16 +8,10 @@ import {
   ProFormDatePicker,
   EditableProTable,
 } from '@ant-design/pro-components';
-import type { ProColumns } from '@ant-design/pro-components';
-import {
-  EditOutlined,
-  CloseOutlined,
-  SaveOutlined,
-  DeleteOutlined,
-} from '@ant-design/icons';
+import { CloseOutlined, SaveOutlined } from '@ant-design/icons';
 import classNames from 'classnames';
-import kqBW200Service from 'renderer/services/kqBW200';
-import { parseString, formatDateTime } from 'shared/utils/date';
+
+import { parseString } from 'shared/utils/date';
 import { LabConfig } from './LabConfig';
 
 export function ResultLab({ labConfig }: { labConfig: LabConfig }) {
@@ -216,6 +210,7 @@ export function ResultLab({ labConfig }: { labConfig: LabConfig }) {
         // },
         // }}
         pagination={{ position: ['bottomRight'] }}
+        columnEmptyText={false}
         recordCreatorProps={false}
       />
     </div>

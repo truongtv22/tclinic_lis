@@ -1,5 +1,10 @@
 export const STORAGE_KEY = 'TCLINIC_LIS_STORAGE';
 
+export const CONNECT_ACTIVE = {
+  ON: 1,
+  OFF: 0,
+}
+
 export const CONNECT_STATUS = {
   NONE: 'none',
   OPENING: 'opening',

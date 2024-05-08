@@ -19,8 +19,10 @@ class ConnectionManager {
 
   setConnections(connections: ConnectionData[]) {
     for (const item of connections) {
-      const config = connectConfigDb.getById(item.id);
-      this.createConnection(item.id, item, config);
+      if (item.active) {
+        const config = connectConfigDb.getById(item.id);
+        this.createConnection(item.id, item, config);
+      }
     }
   }
 
@@ -48,7 +50,11 @@ class ConnectionManager {
     return this.connections[id] || null;
   }
 
-  createConnection(id: number, data: ConnectionData, config?: ConnectionConfig) {
+  createConnection(
+    id: number,
+    data: ConnectionData,
+    config?: ConnectionConfig,
+  ) {
     const connection = this.connections[id];
     if (connection) return connection;
     const newConnection = new Connection(id, data, config);
@@ -56,7 +62,11 @@ class ConnectionManager {
     return newConnection;
   }
 
-  updateConnection(id: number, data: ConnectionData, config?: ConnectionConfig) {
+  updateConnection(
+    id: number,
+    data: ConnectionData,
+    config?: ConnectionConfig,
+  ) {
     const connection = this.connections[id];
     if (connection) {
       connection.update(data, config);

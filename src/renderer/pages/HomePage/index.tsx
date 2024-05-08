@@ -17,17 +17,21 @@ import {
   Popconfirm,
   AutoComplete,
   Checkbox,
+  Switch,
 } from 'antd';
 import {
   DownOutlined,
   PlusOutlined,
   SaveOutlined,
+  CheckOutlined,
+  CloseOutlined,
   DeleteOutlined,
   FolderAddOutlined,
   CloudUploadOutlined,
 } from '@ant-design/icons';
 import Split from '@uiw/react-split';
 import {
+  CONNECT_ACTIVE,
   LAB,
   CONNECT_TYPE,
   COM_PORT,
@@ -96,6 +100,7 @@ export function HomePage() {
 
   const { openConnection, closeConnection } = useConnectionIpc();
 
+  const active = Form.useWatch('active', form);
   const kieuketnoi = Form.useWatch('kieuketnoi', form);
 
   const [expand, setExpand] = useState(false);
@@ -403,63 +408,65 @@ export function HomePage() {
           </div>
         </Card>
         <Card className="flex-1" size="small">
-          <Form form={form} layout="vertical" onFinish={onSave}>
-            <Row
-              gutter={8}
-              align="middle"
-              justify="space-between"
-              className="mb-2"
+          <div className="flex mb-2 justify-between">
+            <p className="text-lg font-semibold">
+              {selected ? 'Thông tin kết nối' : 'Thêm mới thông tin kết nối'}
+            </p>
+            <div className="flex space-x-1">
+              <Button
+                type="primary"
+                size="small"
+                icon={<PlusOutlined />}
+                disabled={!selected}
+                onClick={onAdd}
+              >
+                Thêm
+              </Button>
+              <Button
+                type="primary"
+                size="small"
+                icon={<SaveOutlined />}
+                onClick={form.submit}
+              >
+                Lưu lại
+              </Button>
+              <Popconfirm
+                title="Xoá kết nối"
+                description="Bạn muốn xóa kết nối này không?"
+                okText="Xoá"
+                cancelText="Không"
+                onConfirm={() => onDelete(selected.id)}
+              >
+                <Button
+                  size="small"
+                  type="primary"
+                  danger
+                  icon={<DeleteOutlined />}
+                  disabled={!selected}
+                >
+                  Xoá
+                </Button>
+              </Popconfirm>
+            </div>
+          </div>
+          <Form
+            form={form}
+            layout="vertical"
+            disabled={!active}
+            onFinish={onSave}
+          >
+            <Form.Item
+              name="active"
+              getValueFromEvent={(v) =>
+                v ? CONNECT_ACTIVE.ON : CONNECT_ACTIVE.OFF
+              }
             >
-              <Col>
-                <p className="text-lg font-semibold">
-                  {selected
-                    ? 'Thông tin kết nối'
-                    : 'Thêm mới thông tin kết nối'}
-                </p>
-              </Col>
-              <Row gutter={4}>
-                <Col>
-                  <Button
-                    type="primary"
-                    size="small"
-                    icon={<PlusOutlined />}
-                    disabled={!selected}
-                    onClick={onAdd}
-                  >
-                    Thêm
-                  </Button>
-                </Col>
-                <Col>
-                  <Button
-                    htmlType="submit"
-                    type="primary"
-                    size="small"
-                    icon={<SaveOutlined />}
-                  >
-                    Lưu lại
-                  </Button>
-                </Col>
-                <Col>
-                  <Popconfirm
-                    title="Xoá kết nối"
-                    description="Bạn muốn xóa kết nối này không?"
-                    okText="Xoá"
-                    cancelText="Không"
-                    onConfirm={() => onDelete(selected.id)}
-                  >
-                    <Button
-                      size="small"
-                      type="primary"
-                      danger
-                      icon={<DeleteOutlined />}
-                      disabled={!selected}
-                    >
-                      Xoá
-                    </Button>
-                  </Popconfirm>
-                </Col>
-              </Row>
-            </Row>
+              <Switch
+                disabled={false}
+                checkedChildren={<CheckOutlined />}
+                unCheckedChildren={<CloseOutlined />}
+              />
+            </Form.Item>
             <Form.Item
               name="comp"
               label="Tên thiết bị"
@@ -663,7 +670,9 @@ export function HomePage() {
                 type="primary"
                 size="small"
                 disabled={
-                  !selected || (selected && !!connectionStatus[selected.id])
+                  !active ||
+                  !selected ||
+                  (selected && !!connectionStatus[selected.id])
                 }
                 onClick={onOpen}
               >
@@ -673,7 +682,9 @@ export function HomePage() {
                 type="primary"
                 size="small"
                 disabled={
-                  !selected || (selected && !connectionStatus[selected.id])
+                  !active ||
+                  !selected ||
+                  (selected && !connectionStatus[selected.id])
                 }
                 onClick={onClose}
               >

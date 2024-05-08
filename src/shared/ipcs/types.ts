@@ -8,6 +8,10 @@ import {
 } from './connection';
 import { KqBW200IpcChannel, KqBW200IpcCommands } from './kqBW200';
 import { KqAccess2IpcChannel, KqAccess2IpcCommands } from './kqAccess2';
+import {
+  KqSysmexXP100IpcChannel,
+  KqSysmexXP100IpcCommands,
+} from './kqSysmexXP100';
 
 export type IpcEvents = WindowIpcEvents &
   StorageIpcEvents &
@@ -17,7 +21,8 @@ export type IpcEvents = WindowIpcEvents &
 export type IpcCommands = WindowIpcCommands &
   ConnectionIpcCommands &
   KqBW200IpcCommands &
-  KqAccess2IpcCommands;
+  KqAccess2IpcCommands &
+  KqSysmexXP100IpcCommands;
 
 export const IpcChannel = {
   ...WindowIpcChannel,
@@ -26,4 +31,5 @@ export const IpcChannel = {
   ...LoggerIpcChannel,
   ...KqBW200IpcChannel,
   ...KqAccess2IpcChannel,
+  ...KqSysmexXP100IpcChannel,
 };

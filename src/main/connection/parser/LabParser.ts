@@ -30,10 +30,11 @@ export class LabParser {
     this.transform.on('data', (buffer: Buffer) => {
       this.connection.logger.log('Parse data from parser');
       const data = this.parse(buffer);
-      this.connection.logger.log('Save data from parser');
       if (data) {
-        const item = this.save(data);
-        this.notify(item);
+        const result = this.save(data);
+        this.notify(result);
+      } else {
+        this.connection.logger.log('Parse data from parser failed');
       }
     });
   }

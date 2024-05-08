@@ -23,6 +23,7 @@ export function initDatabase() {
   if (!tables.includes('dbo.connectManage')) {
     db.exec(`CREATE TABLE IF NOT EXISTS [dbo.connectManage] (
       id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      active INTEGER, /* trạng thái hoạt động */
       cong TEXT, /* tên kết nối */
       comp TEXT, /* tên máy tính */
       lab TEXT,

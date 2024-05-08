@@ -1,6 +1,7 @@
 import { Transform, TransformCallback } from 'stream';
-import { ASCII_CODE } from 'shared/constants';
+import { ASCII_CODE, LAB } from 'shared/constants';
 import kqBW200Db from 'main/database/kqBW200';
+import dmMaOnlineDb from 'main/database/dmMaOnline';
 import { LabParser } from './LabParser';
 
 class BW200Transform extends Transform {
@@ -89,7 +90,21 @@ export class BW200Parser extends LabParser {
 
   save(data: any) {
     this.connection.logger.log('Save data for BW200', data);
-    const item = kqBW200Db.create(data);
+    const values: any = {
+      barcode: data.barcode,
+      date_time: data.date_time,
+    };
+
+    const dmChiso: any = dmMaOnlineDb.getByLab(LAB.Access2);
+    if (dmChiso) {
+      for (const chiso of dmChiso) {
+        if (chiso.ma_online in data) {
+          values[chiso.ma] = data[chiso.ma_online];
+        }
+      }
+    }
+    
+    const item = kqBW200Db.create(values);
     this.connection.logger.log('Save data for BW200 successfully', item);
     return item;
   }
