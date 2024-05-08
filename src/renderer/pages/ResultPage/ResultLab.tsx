@@ -27,6 +27,7 @@ export function ResultLab({ labConfig }: { labConfig: LabConfig }) {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
   useEffect(() => {
+    form.resetFields();
     getData(formValues);
   }, [labConfig]);
 

@@ -26,10 +26,10 @@ import {
   CheckOutlined,
   CloseOutlined,
   DeleteOutlined,
-  FolderAddOutlined,
   CloudUploadOutlined,
 } from '@ant-design/icons';
 import Split from '@uiw/react-split';
+
 import {
   CONNECT_ACTIVE,
   LAB,
@@ -57,37 +57,7 @@ import {
   useWindowIpc,
   useConnectionIpc,
 } from 'renderer/hooks';
-
-const SelectFolder = ({
-  value,
-  onChange,
-}: {
-  value?: string;
-  onChange?: (value: string) => void;
-}) => {
-  const { selectFolder } = useWindowIpc();
-
-  const onSelect = async () => {
-    const folder = await selectFolder();
-    if (folder) {
-      onChange(folder);
-    }
-  };
-
-  return (
-    <div className="space-y-1">
-      <Button
-        icon={<FolderAddOutlined />}
-        type="dashed"
-        onClick={onSelect}
-        className="w-full"
-      >
-        Chọn thư mục
-      </Button>
-      <p>{value}</p>
-    </div>
-  );
-};
+import { SelectFolder } from 'renderer/components';
 
 export function HomePage() {
   const [form] = Form.useForm();
