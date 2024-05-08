@@ -40,6 +40,26 @@ export default {
     return { data, total: total.total };
   },
 
+  query(params: any = {}) {
+    const db = connect();
+
+    const whereConds = [];
+    whereConds.push('date_time = @date_time');
+    whereConds.push('barcode = @barcode');
+
+    const whereClause = `WHERE ${whereConds.join(' AND ')}`;
+
+    const stmQuery = db.prepare(
+      `SELECT * FROM [dbo.KQ_Access2] ${whereClause}`,
+    );
+    const data = stmQuery.get({
+      date_time: params.date_time,
+      barcode: params.barcode,
+    });
+
+    return data;
+  },
+
   create(values: any = {}) {
     const db = connect();
 

@@ -1,5 +1,7 @@
 import { Transform, TransformCallback } from 'stream';
 import { ASCII_CODE } from 'shared/constants';
+import { parseString } from 'shared/utils/date';
+import kqAccess2Db from 'main/database/kqAccess2';
 import { LabParser } from './LabParser';
 
 class Access2Transform extends Transform {
@@ -63,8 +65,9 @@ export class Access2Parser extends LabParser {
     const regex = /^.*ACCESS.*(?<date_time>[0-9]{14})$/;
     if (!regex.test(lines[0])) return;
 
-    const date_time = lines[0].match(regex)?.groups?.date_time;
+    let date_time = lines[0].match(regex)?.groups?.date_time;
     if (!date_time) return;
+    date_time = parseString(date_time);
 
     /**
      * Regex match `2P|1|HOANG PHUONG`
