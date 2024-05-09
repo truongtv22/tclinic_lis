@@ -1,6 +1,9 @@
 export interface Connection {
-  [key: string]: any;
   id: number;
+  active: number;
+  comp: string;
+  lab: string;
+  [key: string]: any;
 }
 
 export interface ConnectionState {

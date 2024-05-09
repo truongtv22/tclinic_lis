@@ -18,19 +18,19 @@ export default (): any => {
   useEffect(() => {
     window.electron.ipcRenderer.onRequest(
       () => {
-        console.log('onRequest->success');
+        // console.log('onRequest->success');
       },
       (error) => {
-        console.log('onRequest->error', error);
+        // console.log('onRequest->error', error);
       },
     );
 
     window.electron.ipcRenderer.onResponse(
       () => {
-        console.log('onResponse->success');
+        // console.log('onResponse->success');
       },
       (error) => {
-        console.log('onResponse->error', error);
+        // console.log('onResponse->error', error);
       },
     );
   }, []);
