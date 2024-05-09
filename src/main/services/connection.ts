@@ -1,6 +1,6 @@
-import { connectionManager } from "main/connection";
-import connectManageDb from "main/database/connectManage";
-import connectConfigDb from "main/database/connectConfig";
+import { connectionManager } from 'main/connection';
+import connectManageDb from 'main/database/connectManage';
+import connectConfigDb from 'main/database/connectConfig';
 
 export default {
   getAll() {
@@ -47,7 +47,7 @@ export default {
       connectionManager.createConnection(data.id, data, result.config);
       return { success: true, data };
     } catch (error) {
-      console.log("Create connection error", error);
+      console.log('Create connection error', error);
       return { success: false, message: error.message };
     }
   },
@@ -58,25 +58,21 @@ export default {
       if (connection && connection.isOpen) {
         return {
           success: false,
-          message: "Thiết bị đang kết nối, vui lòng đóng kết nối trước khi thực hiện hành động",
+          message:
+            'Thiết bị đang kết nối, vui lòng đóng kết nối trước khi thực hiện hành động',
         };
       }
       const data: any = connectManageDb.update(id, values);
-      console.log("connectManageDb.update data");
       const result = { ...data };
-      console.log("connectManageDb.update result", result);
       if (values.config) {
-        console.log("connectConfigDb.update");
         const config: any = connectConfigDb.update(data.id, values.config);
-        console.log("connectConfigDb.update", config);
         result.config = config;
       }
-      console.log("connection.update", data, result.config, connection);
+      // check loi khi chua active
       if (connection) connection.update(data, result.config);
-      console.log("connection.update->success");
       return { success: true, data: result };
     } catch (error) {
-      console.log("Update connection error", error);
+      console.log('Update connection error', error);
       return { success: false, message: error.message };
     }
   },
@@ -87,7 +83,8 @@ export default {
       if (connection && connection.isOpen) {
         return {
           success: false,
-          message: "Thiết bị đang kết nối, vui lòng đóng kết nối trước khi thực hiện hành động",
+          message:
+            'Thiết bị đang kết nối, vui lòng đóng kết nối trước khi thực hiện hành động',
         };
       }
       connectManageDb.delete(id);
@@ -95,7 +92,7 @@ export default {
       connectionManager.deleteConnection(id);
       return { success: true };
     } catch (error) {
-      console.log("Delete connection error", error);
+      console.log('Delete connection error', error);
       return { success: false, message: error.message };
     }
   },

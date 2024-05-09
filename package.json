@@ -1,6 +1,6 @@
 {
   "name": "tclinic-lis",
-  "productName": "tclinic-lis",
+  "productName": "tClinic LIS",
   "version": "1.0.0",
   "description": "tClinic LIS",
   "main": ".vite/build/main/index.js",
@@ -27,6 +27,7 @@
     "@electron-forge/maker-zip": "^7.2.0",
     "@electron-forge/plugin-auto-unpack-natives": "^7.2.0",
     "@electron-forge/plugin-vite": "^7.2.0",
+    "@electron-forge/publisher-github": "^7.4.0",
     "@electron-toolkit/tsconfig": "^1.0.1",
     "@types/better-sqlite3": "^7.6.10",
     "@types/lodash": "^4.14.202",
