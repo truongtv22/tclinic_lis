@@ -46,8 +46,8 @@ const config: ForgeConfig = {
   publishers: [
     new PublisherGithub({
       repository: {
-        owner: '',
-        name: '',
+        owner: 'truongtv22',
+        name: 'tclinic_lis',
       },
       prerelease: true,
     }),
