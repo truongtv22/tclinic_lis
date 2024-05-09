@@ -4,9 +4,12 @@ import { MakerZIP } from '@electron-forge/maker-zip';
 import { MakerDeb } from '@electron-forge/maker-deb';
 import { MakerRpm } from '@electron-forge/maker-rpm';
 import { VitePlugin } from '@electron-forge/plugin-vite';
+import { AutoUnpackNativesPlugin } from '@electron-forge/plugin-auto-unpack-natives';
+import { PublisherGithub } from '@electron-forge/publisher-github';
 
 const config: ForgeConfig = {
   packagerConfig: {
+    asar: true,
     icon: 'assets/icon/icon',
   },
   rebuildConfig: {},
@@ -23,11 +26,11 @@ const config: ForgeConfig = {
       build: [
         {
           // `entry` is just an alias for `build.lib.entry` in the corresponding file of `config`.
-          entry: 'src/electron/main.ts',
+          entry: 'src/main/index.ts',
           config: 'vite.main.config.ts',
         },
         {
-          entry: 'src/electron/preload.ts',
+          entry: 'src/preload/index.ts',
           config: 'vite.preload.config.ts',
         },
       ],
@@ -37,6 +40,16 @@ const config: ForgeConfig = {
           config: 'vite.renderer.config.ts',
         },
       ],
+    }),
+    new AutoUnpackNativesPlugin({}),
+  ],
+  publishers: [
+    new PublisherGithub({
+      repository: {
+        owner: '',
+        name: '',
+      },
+      prerelease: true,
     }),
   ],
 };
