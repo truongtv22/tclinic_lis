@@ -5,6 +5,7 @@ import installExtensions, {
   REACT_DEVELOPER_TOOLS,
   REDUX_DEVTOOLS,
 } from 'electron-devtools-installer';
+
 import { WINDOW_ID } from 'shared/constants';
 import { initDatabase } from './database';
 import { registerIpcs } from './ipcs';
