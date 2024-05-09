@@ -84,6 +84,7 @@ class ConnectionManager {
 
   openConnection(id: number, options = {}) {
     const connection = this.connections[id];
+    console.log('openConnection->connection', connection)
     if (connection) connection.open(options);
   }
 
