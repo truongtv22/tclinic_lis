@@ -1,10 +1,11 @@
-import { app } from 'electron';
+import { app, Notification } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import dayjs from 'dayjs';
 import { SerialPort } from 'serialport';
 import Log from 'electron-log';
-import { IpcChannel } from 'shared/ipcs';
+
+import { IpcChannel, IpcEvents } from 'shared/ipcs';
 import { WINDOW_ID, LAB, CONNECT_TYPE, CONNECT_STATUS } from 'shared/constants';
 import { asciiToText } from 'shared/utils/ascii';
 import { windowManager } from '../window';
@@ -17,6 +18,8 @@ import {
 
 export interface ConnectionData {
   id: number;
+  active: number;
+  comp: string;
   lab: string;
   kieuketnoi: string;
   [key: string]: any;
@@ -41,7 +44,7 @@ export class Connection {
 
   port: SerialPort;
   parser: LabParser;
-  
+
   logger: Log.LogFunctions;
 
   status = CONNECT_STATUS.NONE;
@@ -98,33 +101,24 @@ export class Connection {
       }
 
       this.port.on('open', () => {
-        const window = windowManager.getWindow(WINDOW_ID.MAIN);
-        if (window) {
-          window.webContents?.send(IpcChannel.CONNECTION_OPENED, this.id);
-        }
         this.logger.log('Connection opened');
+        this.sendMessage(IpcChannel.CONNECTION_OPENED, this.id);
       });
 
       this.port.on('close', () => {
-        const window = windowManager.getWindow(WINDOW_ID.MAIN);
-        if (window) {
-          window.webContents?.send(IpcChannel.CONNECTION_CLOSED, this.id);
-        }
-        this.destroy();
         this.logger.log('Connection closed');
+        this.sendMessage(IpcChannel.CONNECTION_CLOSED, this.id);
+        this.destroy();
       });
 
       this.port.on('error', (error: Error, retry?: boolean) => {
-        const window = windowManager.getWindow(WINDOW_ID.MAIN);
-        if (window) {
-          window.webContents?.send(
-            IpcChannel.CONNECTION_ERROR,
-            this.id,
-            error.message,
-            retry,
-          );
-        }
         this.logger.log('Connection error', error, retry);
+        this.sendMessage(
+          IpcChannel.CONNECTION_ERROR,
+          this.id,
+          error.message,
+          retry,
+        );
       });
 
       this.port.on('data', (buffer: Buffer) => {
@@ -225,5 +219,39 @@ export class Connection {
         this.logger.log('Write log file successfully', filePath);
       }
     });
+  }
+
+  notifyData(data: any) {
+    this.logger.log('Send data to client', data);
+    this.sendMessage(IpcChannel.CONNECTION_DATA, this.id, data);
+    this.notifyMessage(data);
+  }
+
+  sendMessage<K extends keyof IpcEvents>(
+    channel: K,
+    ...args: Parameters<IpcEvents[K]>
+  ) {
+    const window = windowManager.getWindow(WINDOW_ID.MAIN);
+    if (window) {
+      return window.webContents?.send(channel, ...args);
+    }
+  }
+
+  notifyMessage(data: any) {
+    const window = windowManager.getWindow(WINDOW_ID.MAIN);
+    if (!window.instance.isFocused()) {
+      const notification = new Notification({
+        title: 'Kết quả xét nghiệm',
+        body: `Nhận được kết quả từ ${this.data.comp}, bạn muốn xem kết quả này không?`,
+      });
+      notification.on('click', () => {
+        if (!window.instance.isFocused()) {
+          if (!window.instance.isMinimized()) window.instance.restore();
+          window.instance.focus();
+        }
+        this.sendMessage(IpcChannel.CONNECTION_DATA, this.id, data);
+      });
+      notification.show();
+    }
   }
 }

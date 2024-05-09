@@ -9,10 +9,10 @@ import {
   LogPage,
 } from 'renderer/pages';
 import { AppLayout, PageLayout } from 'renderer/layouts';
-import useGlobal from 'renderer/hooks/useGlobal';
+import { useApp } from 'renderer/hooks';
 
 export const AppRoutes = () => {
-  useGlobal();
+  useApp();
 
   return (
     <Routes>

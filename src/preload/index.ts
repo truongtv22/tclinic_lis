@@ -5,6 +5,17 @@ import { contextBridge } from 'electron';
 import { ipcRenderer } from 'shared/ipcs';
 import type { IpcEvents, IpcCommands } from 'shared/ipcs';
 
+const ipcHandler = {
+  request: {
+    onSuccess: () => {},
+    onError: (error: any) => {},
+  },
+  response: {
+    onSuccess: () => {},
+    onError: (error: any) => {},
+  },
+};
+
 export const electronAPI = {
   ipcRenderer: {
     ...ipcRenderer,
@@ -19,6 +30,7 @@ export const electronAPI = {
         ipcRenderer.removeListener(channel, listener);
       };
     },
+
     once<K extends keyof IpcEvents>(
       channel: K,
       func: (...args: Parameters<IpcEvents[K]>) => void,
@@ -30,18 +42,38 @@ export const electronAPI = {
         ipcRenderer.removeListener(channel, listener);
       };
     },
+
     invoke<K extends keyof IpcCommands>(
       channel: K,
       ...args: Parameters<IpcCommands[K]>
-    ) {
-      return ipcRenderer.invoke(channel, ...args);
+    ): Promise<ReturnType<IpcCommands[K]>> {
+      try {
+        ipcHandler.request.onSuccess();
+      } catch (error) {
+        ipcHandler.request.onError(error);
+      }
+
+      try {
+        const result = ipcRenderer.invoke(channel, ...args);
+        ipcHandler.response.onSuccess();
+        return result;
+      } catch (error) {
+        ipcHandler.response.onError(error);
+        throw error;
+      }
+    },
+
+    onRequest(onSuccess: () => void, onError: (error: any) => void) {
+      ipcHandler.request.onSuccess = onSuccess;
+      ipcHandler.request.onError = onError;
+    },
+
+    onResponse(onSuccess: () => void, onError: (error: any) => void) {
+      ipcHandler.response.onSuccess = onSuccess;
+      ipcHandler.response.onError = onError;
     },
   },
 };
 export type ElectronAPI = typeof electronAPI;
-
-// ipcRenderer.on('__ELECTRON_LOG_IPC__', (_, message) => {
-//   console.log('ELECTRON_LOG_IPC', message);
-// });
 
 contextBridge.exposeInMainWorld('electron', electronAPI);

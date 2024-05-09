@@ -1,5 +1,5 @@
 import { Transform } from 'stream';
-import { Connection } from '../index';
+import { Connection } from '../connection';
 
 export class LabParser {
   transform: Transform;
@@ -62,7 +62,9 @@ export class LabParser {
    */
   save(data: any): any {}
 
-  notify(data: any) {}
+  notify(data: any) {
+    this.connection.notifyData(data);
+  }
 
   /**
    * Destroys the parser of the connection

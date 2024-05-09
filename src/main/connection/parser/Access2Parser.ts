@@ -129,7 +129,7 @@ export class Access2Parser extends LabParser {
     return item;
   }
 
-  notify(data: any) {
-    this.connection.logger.log('Notify data for Access2', data);
-  }
+  // notify(data: any) {
+  //   this.connection.logger.log('Notify data for Access2', data);
+  // }
 }

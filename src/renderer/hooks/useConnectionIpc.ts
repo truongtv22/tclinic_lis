@@ -1,7 +1,7 @@
 import { useDispatch } from 'react-redux';
 import { IpcChannel } from 'shared/ipcs/types';
 import { connectionActions } from 'renderer/store/connection';
-import { notification } from './useGlobal';
+import { notification } from './useApp';
 import { useIpcListener } from './useIpcListener';
 
 export const useConnectionIpc = () => {

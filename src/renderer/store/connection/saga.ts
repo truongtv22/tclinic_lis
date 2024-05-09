@@ -1,6 +1,6 @@
 import { put, takeLatest } from 'redux-saga/effects';
 import connectionService from 'renderer/services/connection';
-import { message } from 'renderer/hooks/useGlobal';
+import { message } from 'renderer/hooks';
 import {
   getConnections,
   getStatusConnections,

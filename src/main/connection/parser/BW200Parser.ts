@@ -109,7 +109,7 @@ export class BW200Parser extends LabParser {
     return item;
   }
 
-  notify(data: any) {
-    this.connection.logger.log('Notify data for BW200', data);
-  }
+  // notify(data: any) {
+  //   this.connection.logger.log('Notify data for BW200', data);
+  // }
 }
