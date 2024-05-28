@@ -18,3 +18,7 @@ body,
 html body {
   width: 100% !important;
 }
+
+.ant-form-item-margin-offset {
+  margin: 0 !important;
+}

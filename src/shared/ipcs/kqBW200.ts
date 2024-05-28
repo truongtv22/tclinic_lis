@@ -3,7 +3,6 @@ export enum KqBW200IpcChannel {
   CREATE_KQ_BW200 = 'create-kq-bw200',
   UPDATE_KQ_BW200 = 'update-kq-bw200',
   DELETE_KQ_BW200 = 'delete-kq-bw200',
-  SEND_HIS_KQ_BW200 = 'send-his-kq-bw200',
 }
 
 export type KqBW200IpcCommands = {
@@ -26,13 +25,6 @@ export type KqBW200IpcCommands = {
     message?: string;
   };
   [KqBW200IpcChannel.DELETE_KQ_BW200]: (id: number) => {
-    success: boolean;
-    message?: string;
-  };
-  [KqBW200IpcChannel.SEND_HIS_KQ_BW200]: (
-    id: number,
-    data: any,
-  ) => {
     success: boolean;
     message?: string;
   };

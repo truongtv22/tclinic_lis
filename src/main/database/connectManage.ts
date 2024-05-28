@@ -1,6 +1,39 @@
 import { CONNECT_TYPE } from 'shared/constants';
 import connect from './index';
 
+type ConnectManage = {
+  id: number;
+  active: number;
+  cong: string;
+  comp: string;
+  lab: string;
+  functionname: string;
+  kieuketnoi: string;
+  comport: string;
+  baudrate: number;
+  rtsmode: string;
+  stopbits: number;
+  databits: number;
+  parity: string;
+  readtimeout: number;
+  writetimeout: number;
+  connect: number;
+  ipport: string;
+  autosendhis: number;
+  folder: string;
+  autosendagain: number;
+  ipaddress: string;
+  client: number;
+  closeport: number;
+  bantd: number;
+  sokytubarcode: number;
+  nhapbarcode: number;
+  decimalsymbol: string;
+  loaidongbo: string;
+  createtime: string;
+  updatetime: string;
+};
+
 export default {
   columns: [
     'active',
@@ -52,8 +85,7 @@ export default {
 
   getById(id: number) {
     const db = connect();
-
-    const stmQueryById = db.prepare(
+    const stmQueryById = db.prepare<{ id: number }, ConnectManage>(
       `SELECT * FROM [dbo.connectManage] WHERE id = @id`,
     );
     const data = stmQueryById.get({ id });
@@ -75,11 +107,13 @@ export default {
     const stmAdd = db.prepare(
       `INSERT INTO [dbo.connectManage] (
           ${Object.keys(values)
+            .concat('createtime', 'updatetime')
             .filter((key) => this.columns.includes(key))
             .map((key) => `${key}`)
             .join(', ')}
         ) VALUES (
           ${Object.keys(values)
+            .concat('createtime', 'updatetime')
             .filter((key) => this.columns.includes(key))
             .map((key) => `@${key}`)
             .join(', ')}
@@ -114,6 +148,7 @@ export default {
     const stmUpdate = db.prepare(
       `UPDATE [dbo.connectManage] SET
           ${Object.keys(values)
+            .concat('updatetime')
             .filter((key) => this.columns.includes(key))
             .map((key) => `${key} = @${key}`)
             .join(', ')}

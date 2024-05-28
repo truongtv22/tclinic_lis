@@ -95,7 +95,7 @@ export class BW200Parser extends LabParser {
       barcode: data.barcode,
     };
 
-    const dmChiso: any = dmMaOnlineDb.getByLab(LAB.Access2);
+    const dmChiso: any = dmMaOnlineDb.getByLab(LAB.BW200);
     if (dmChiso) {
       for (const chiso of dmChiso) {
         if (chiso.ma_online in data) {
@@ -108,8 +108,4 @@ export class BW200Parser extends LabParser {
     this.connection.logger.log('Save data for BW200 successfully', item);
     return item;
   }
-
-  // notify(data: any) {
-  //   this.connection.logger.log('Notify data for BW200', data);
-  // }
 }

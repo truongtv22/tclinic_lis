@@ -1,9 +1,11 @@
-import 'dotenv/config'
+import 'dotenv/config';
 import type { ForgeConfig } from '@electron-forge/shared-types';
 import { MakerSquirrel } from '@electron-forge/maker-squirrel';
 import { MakerZIP } from '@electron-forge/maker-zip';
 import { MakerDeb } from '@electron-forge/maker-deb';
 import { MakerRpm } from '@electron-forge/maker-rpm';
+import { MakerDMG } from '@electron-forge/maker-dmg';
+import { MakerWix } from '@electron-forge/maker-wix';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import { AutoUnpackNativesPlugin } from '@electron-forge/plugin-auto-unpack-natives';
 import { PublisherGithub } from '@electron-forge/publisher-github';
@@ -16,9 +18,13 @@ const config: ForgeConfig = {
   rebuildConfig: {},
   makers: [
     new MakerSquirrel({}),
-    new MakerZIP({}, ['darwin']),
+    new MakerZIP({}),
     new MakerRpm({}),
     new MakerDeb({}),
+    new MakerDMG({}),
+    new MakerWix({
+      manufacturer: 'ThinkLABs JSC',
+    }),
   ],
   plugins: [
     new VitePlugin({

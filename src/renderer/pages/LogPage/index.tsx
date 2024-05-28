@@ -1,7 +1,6 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { useSearchParams } from 'react-router-dom';
-import { Row, Col, Table, Button, Card, Layout } from 'antd';
+import { Button, Card, Layout } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 
 import { formatDateTime } from 'shared/utils/date';
@@ -9,7 +8,7 @@ import { useLoggerIpc } from 'renderer/hooks/useLoggerIpc';
 import { selectConnection } from 'renderer/store/connection';
 
 export function LogPage() {
-  const [searchParams] = useSearchParams();
+  const searchParams = new URLSearchParams(window.location.search);
 
   const connection = useSelector((state) =>
     selectConnection(state as any, +searchParams.get('connectId')),

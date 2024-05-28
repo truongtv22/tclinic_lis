@@ -1,7 +1,7 @@
+import Log from 'electron-log';
 import { ipcMain, IpcChannel } from 'shared/ipcs';
 import connectionService from 'main/services/connection';
 import { connectionManager } from 'main/connection';
-import Log from 'electron-log';
 
 export function registerConnectionIpc() {
   const logger = Log.scope('connectionIpc');

@@ -5,7 +5,9 @@ import { UserOutlined } from '@ant-design/icons';
 import { useLocation } from 'react-router-dom';
 
 import { IpcChannel } from 'shared/ipcs/types';
+import { useConnectionIpc } from 'renderer/hooks';
 import { appActions, selectIsAuth } from 'renderer/store/app';
+import { AlertBanner } from './AlertBanner';
 
 const menus = [
   { key: '/', label: 'Hệ thống' },
@@ -15,6 +17,8 @@ const menus = [
 ];
 
 export const PageLayout = () => {
+  useConnectionIpc();
+
   const dispatch = useDispatch();
 
   const navigate = useNavigate();
@@ -77,7 +81,8 @@ export const PageLayout = () => {
           </div>
         </Dropdown>
       </Layout.Header>
-      <Layout.Content className="pt-8 px-12 min-h-[calc(100vh-64px-70px)]">
+      <Layout.Content className="pt-8 px-12 min-h-[calc(100vh-56px-62px)] space-y-2">
+        <AlertBanner />
         <Outlet />
       </Layout.Content>
       <Layout.Footer className="text-center">

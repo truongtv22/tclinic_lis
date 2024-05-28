@@ -1,7 +1,7 @@
 {
   "name": "tclinic-lis",
   "productName": "tClinic LIS",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "tClinic LIS",
   "main": ".vite/build/main/index.js",
   "scripts": {
@@ -22,8 +22,10 @@
   "devDependencies": {
     "@electron-forge/cli": "^7.2.0",
     "@electron-forge/maker-deb": "^7.2.0",
+    "@electron-forge/maker-dmg": "^7.4.0",
     "@electron-forge/maker-rpm": "^7.2.0",
     "@electron-forge/maker-squirrel": "^7.2.0",
+    "@electron-forge/maker-wix": "^7.4.0",
     "@electron-forge/maker-zip": "^7.2.0",
     "@electron-forge/plugin-auto-unpack-natives": "^7.2.0",
     "@electron-forge/plugin-vite": "^7.2.0",
@@ -47,12 +49,15 @@
     "postcss": "^8.4.33",
     "postinstall-postinstall": "^2.1.0",
     "tailwindcss": "^3.4.3",
+    "tailwindcss-logical": "^3.0.1",
     "ts-node": "^10.0.0",
     "typescript": "~4.5.4",
     "unplugin-auto-expose": "^0.3.0"
   },
   "dependencies": {
-    "@ant-design/pro-components": "^2.7.0",
+    "@ant-design/pro-components": "^2.7.9",
+    "@blackglory/better-sqlite3-migrations": "^0.1.18",
+    "@ebay/nice-modal-react": "^1.2.13",
     "@electron-toolkit/utils": "^3.0.0",
     "@reduxjs/toolkit": "^2.1.0",
     "@table-nav/core": "^0.0.7",
@@ -70,10 +75,13 @@
     "electron-store": "^8.1.0",
     "electron-typed-ipc": "^0.1.0",
     "electron-window-state": "^5.0.3",
+    "ez-modal-react": "^1.0.4",
     "interprocess": "^0.2.6",
     "lodash": "^4.17.21",
+    "migration-files": "^0.4.3",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-fast-marquee": "^1.6.4",
     "react-redux": "^9.1.0",
     "react-router-dom": "^6.22.0",
     "redux-injectors": "^2.1.0",
@@ -89,7 +97,6 @@
   },
   "resolutions": {
     "@babel/traverse": "^7.23.9",
-    "@electron/asar": "3.2.10",
-    "node-gyp": "^10.0.0"
+    "@electron/asar": "3.2.10"
   }
 }

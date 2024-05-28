@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { produce } from 'immer';
-import dayjs from 'dayjs';
 import {
   Row,
   Col,
@@ -9,7 +7,6 @@ import {
   Card,
   Form,
   Radio,
-  Modal,
   Input,
   Space,
   Select,
@@ -26,12 +23,11 @@ import {
   CheckOutlined,
   CloseOutlined,
   DeleteOutlined,
-  CloudUploadOutlined,
 } from '@ant-design/icons';
 import Split from '@uiw/react-split';
 
 import {
-  CONNECT_ACTIVE,
+  BOOLEAN,
   LAB,
   CONNECT_TYPE,
   COM_PORT,
@@ -43,6 +39,7 @@ import {
   FLOW_CONTROL,
   FLAG_CONTROL,
 } from 'shared/constants';
+import { IpcChannel } from 'shared/ipcs/types';
 import {
   createConnection,
   updateConnection,
@@ -50,13 +47,7 @@ import {
   selectConnectionStatus,
   useConnectionState,
 } from 'renderer/store/connection';
-import {
-  modal,
-  message,
-  notification,
-  useWindowIpc,
-  useConnectionIpc,
-} from 'renderer/hooks';
+import { useWindowIpc } from 'renderer/hooks';
 import { SelectFolder } from 'renderer/components';
 
 export function HomePage() {
@@ -68,17 +59,11 @@ export function HomePage() {
   const { connections, selected, setSelected } = useConnectionState();
   const connectionStatus = useSelector(selectConnectionStatus);
 
-  const { openConnection, closeConnection } = useConnectionIpc();
-
   const active = Form.useWatch('active', form);
   const kieuketnoi = Form.useWatch('kieuketnoi', form);
 
   const [expand, setExpand] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [testResult, setTestResult] = useState<any>({});
-  const [modalLoading, setModalLoading] = useState(false);
 
   useEffect(() => {
     if (selected) {
@@ -89,73 +74,13 @@ export function HomePage() {
   }, [selected]);
 
   useEffect(() => {
-    if (!isModalOpen) {
-      setTestResult({});
+    if (
+      form.getFieldValue('kieuketnoi') === CONNECT_TYPE.SerialPort &&
+      !form.getFieldValue('config')
+    ) {
+      form.setFieldValue('config', { dtr: true, rts: true });
     }
-  }, [isModalOpen]);
-
-  // useEffect(() => {
-  //   if (kieuketnoi === CONNECT_TYPE.SerialPort && !form.getFieldValue('config')) {
-  //     form.setFieldValue('config', { dtr: true, rts: true });
-  //   }
-  // }, [kieuketnoi]);
-
-  useEffect(() => {
-    // const dataSub = window.electron.serialport.on('data', (data) => {
-    //   const notifyKey = `open-${Date.now()}`;
-    //   notification.open({
-    //     key: notifyKey,
-    //     message: 'Thông báo đồng bộ',
-    //     description:
-    //       'Bạn nhận được kết quả từ Máy xét nghiệm nước tiểu, bạn muốn xem kết quả trước khi đồng bộ tới HIS không?',
-    //     btn: (
-    //       <Space>
-    //         <Button
-    //           type="link"
-    //           size="small"
-    //           onClick={() => notification.destroy(notifyKey)}
-    //         >
-    //           Đóng
-    //         </Button>
-    //         <Button
-    //           size="small"
-    //           type="primary"
-    //           onClick={() => {
-    //             notification.destroy(notifyKey);
-    //             setIsModalOpen(true);
-    //             setTestResult(data);
-    //           }}
-    //         >
-    //           Kết quả xét nghiệm
-    //         </Button>
-    //       </Space>
-    //     ),
-    //   });
-    // });
-    // return () => {
-    //   dataSub();
-    // };
-  }, []);
-
-  useEffect(() => {
-    // const notifySub = window.electron.ipcRenderer.on(
-    //   'notification-data',
-    //   async (data) => {
-    //     const confirmed = await modal.confirm({
-    //       title: 'Kết quả xét nghiệm',
-    //       content:
-    //         'Bạn nhận được kết quả từ Máy xét nghiệm nước tiểu, bạn muốn xem kết quả xét nghiệm này không?',
-    //       okText: 'Đồng ý',
-    //       cancelText: 'Đóng',
-    //     });
-    //     if (confirmed) {
-    //       setIsModalOpen(true);
-    //       setTestResult(data);
-    //     }
-    //   },
-    // );
-    // return () => notifySub();
-  }, []);
+  }, [selected, kieuketnoi]);
 
   const onAdd = () => {
     setSelected(null);
@@ -195,165 +120,16 @@ export function HomePage() {
 
   const onOpen = () => {
     const values = form.getFieldsValue(true);
-    openConnection(values.id);
+    window.electron.ipcRenderer.send(IpcChannel.OPEN_CONNECTION, values.id);
   };
 
   const onClose = () => {
     const values = form.getFieldsValue(true);
-    closeConnection(values.id);
+    window.electron.ipcRenderer.send(IpcChannel.CLOSE_CONNECTION, values.id);
   };
 
   return (
     <Spin spinning={loading} tip="Đang tải">
-      <Modal
-        title="Kết quả xét nghiệm"
-        open={isModalOpen}
-        width={800}
-        onOk={() => setIsModalOpen(false)}
-        onCancel={() => setIsModalOpen(false)}
-        footer={[
-          <Button
-            key="cancel"
-            size="small"
-            disabled={modalLoading}
-            onClick={() => setIsModalOpen(false)}
-          >
-            Đóng
-          </Button>,
-          <Button
-            key="sync"
-            size="small"
-            type="primary"
-            icon={<CloudUploadOutlined />}
-            loading={modalLoading}
-            onClick={async () => {
-              // try {
-              //   setModalLoading(true);
-              //   const result = await window.electron.ipcRenderer.invoke(
-              //     'dong-bo-his',
-              //     testResult,
-              //   );
-              //   setIsModalOpen(false);
-              //   setModalLoading(false);
-              //   if (result.success) {
-              //     notification.success({
-              //       message: 'Đồng bộ HIS',
-              //       description: result.message,
-              //     });
-              //   } else {
-              //     notification.error({
-              //       message: 'Đồng bộ HIS',
-              //       description: result.message,
-              //     });
-              //   }
-              // } catch (error) {
-              //   setModalLoading(false);
-              //   notification.error({
-              //     message: 'Đồng bộ HIS',
-              //     description: error.message,
-              //   });
-              // }
-            }}
-          >
-            Đồng bộ HIS
-          </Button>,
-        ]}
-      >
-        <div className="space-y-4">
-          <div className="space-y-1">
-            <div className="text-base font-semibold">Thông tin thiết bị</div>
-            <div className="space-y-1">
-              <Row>
-                <Col span={12}>
-                  <p className="font-semibold">Thiết bị:</p>
-                  <p>Máy xét nghiệm nước tiểu</p>
-                </Col>
-                <Col span={12}>
-                  <p className="font-semibold">Loại máy:</p>
-                  <p>BW200</p>
-                </Col>
-              </Row>
-              <Row>
-                <Col span={12}>
-                  <p className="font-semibold">Mã Barcode:</p>
-                  <p>{testResult.barcode}</p>
-                </Col>
-                <Col span={12}>
-                  <p className="font-semibold">Chỉnh sửa Barcode:</p>
-                  <Input
-                    value={testResult.barcode_edit || ''}
-                    placeholder="Nhập mã barcode chỉnh sửa"
-                    onChange={(e) =>
-                      setTestResult(
-                        produce((draft: any) => {
-                          draft.barcode_edit = e.target.value;
-                        }),
-                      )
-                    }
-                  />
-                </Col>
-              </Row>
-              <Row>
-                <Col span={12}>
-                  <p className="font-semibold">Thời gian xét nghiệm:</p>
-                  <p>{dayjs(testResult.datetime).format('HH:mm DD-MM-YYYY')}</p>
-                </Col>
-              </Row>
-            </div>
-          </div>
-          <div className="space-y-1">
-            <div className="text-base font-semibold">Kết quả xét nghiệm</div>
-            <Row gutter={4}>
-              <Col span={12}>
-                <Row className="p-1 bg-gray-100">
-                  <Col span={6}>
-                    <p className="font-semibold">Chỉ số</p>
-                  </Col>
-                  <Col span={18}>
-                    <p className="font-semibold">Kết quả</p>
-                  </Col>
-                </Row>
-              </Col>
-              <Col span={12}>
-                <Row className="p-1 bg-gray-100">
-                  <Col span={6}>
-                    <p className="font-semibold">Chỉ số</p>
-                  </Col>
-                  <Col span={18}>
-                    <p className="font-semibold">Kết quả</p>
-                  </Col>
-                </Row>
-              </Col>
-            </Row>
-            <Row gutter={[4, 4]}>
-              {[
-                { index: 'URO', name: 'URO' },
-                { index: 'BIL', name: 'BIL' },
-                { index: 'KET', name: 'KET' },
-                { index: 'BLD', name: 'BLD' },
-                { index: 'PRO', name: 'PRO' },
-                { index: 'NIT', name: 'NIT' },
-                { index: 'LEU', name: 'LEU' },
-                { index: 'GLU', name: 'GLU' },
-                { index: 'SG', name: 'SG' },
-                { index: 'PH', name: 'PH' },
-                { index: 'VC', name: 'VC' },
-              ].map((item) => (
-                <Col key={item.index} span={12}>
-                  <Row className="px-1">
-                    <Col span={6}>
-                      <p>{item.name}</p>
-                    </Col>
-                    <Col span={18}>
-                      <p>{testResult[item.index] ?? '-'}</p>
-                    </Col>
-                  </Row>
-                </Col>
-              ))}
-            </Row>
-          </div>
-        </div>
-      </Modal>
       <Split lineBar className="space-x-2">
         <Card className="min-w-60 max-w-[50%]" size="small">
           <div className="space-y-2">
@@ -367,7 +143,13 @@ export function HomePage() {
                       checked={item.id === selected?.id}
                       onChange={() => onSelect(item)}
                     >
-                      <span className="line-clamp-2">{item.comp}</span>
+                      <span
+                        className={`line-clamp-2 ${
+                          item.active ? '' : 'text-gray-400'
+                        }`}
+                      >
+                        {item.comp}
+                      </span>
                     </Radio>
                   </div>
                 ))}
@@ -425,26 +207,29 @@ export function HomePage() {
             disabled={!active}
             onFinish={onSave}
           >
-            <Form.Item
-              name="active"
-              getValueFromEvent={(v) =>
-                v ? CONNECT_ACTIVE.ON : CONNECT_ACTIVE.OFF
-              }
-            >
-              <Switch
-                disabled={false}
-                checkedChildren={<CheckOutlined />}
-                unCheckedChildren={<CloseOutlined />}
-              />
-            </Form.Item>
-            <Form.Item
-              name="comp"
-              label="Tên thiết bị"
-              rules={[{ required: true, message: 'Không được để trống' }]}
-            >
-              <Input placeholder="Tên thiết bị" />
-            </Form.Item>
-            <Row gutter={8}>
+            <Row gutter={[8, 8]}>
+              <Col span={24}>
+                <Form.Item
+                  name="active"
+                  normalize={(v) => (v ? BOOLEAN.TRUE : BOOLEAN.FALSE)}
+                  initialValue={BOOLEAN.TRUE}
+                >
+                  <Switch
+                    disabled={!selected}
+                    checkedChildren={<CheckOutlined />}
+                    unCheckedChildren={<CloseOutlined />}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={24}>
+                <Form.Item
+                  name="comp"
+                  label="Tên thiết bị"
+                  rules={[{ required: true, message: 'Không được để trống' }]}
+                >
+                  <Input placeholder="Tên thiết bị" />
+                </Form.Item>
+              </Col>
               <Col sm={24} md={12}>
                 <Form.Item
                   name="lab"
@@ -475,10 +260,8 @@ export function HomePage() {
                   />
                 </Form.Item>
               </Col>
-            </Row>
-            {kieuketnoi === CONNECT_TYPE.SerialPort && (
-              <>
-                <Row gutter={8}>
+              {kieuketnoi === CONNECT_TYPE.SerialPort && (
+                <>
                   <Col sm={24} md={12}>
                     <Form.Item
                       name="comport"
@@ -506,13 +289,14 @@ export function HomePage() {
                       ]}
                     >
                       <AutoComplete
-                        options={BAUD_RATE.map((v) => ({ value: v, label: v }))}
+                        options={BAUD_RATE.map((v) => ({
+                          value: `${v}`,
+                          label: v,
+                        }))}
                         placeholder="BaudRate"
                       />
                     </Form.Item>
                   </Col>
-                </Row>
-                <Row gutter={8}>
                   <Col sm={24} md={12}>
                     <Form.Item
                       name="databits"
@@ -543,8 +327,6 @@ export function HomePage() {
                       />
                     </Form.Item>
                   </Col>
-                </Row>
-                <Row gutter={8}>
                   <Col sm={24} md={12}>
                     <Form.Item
                       name="rtsmode"
@@ -569,72 +351,76 @@ export function HomePage() {
                       <Select options={PARITY} placeholder="Parity" />
                     </Form.Item>
                   </Col>
-                </Row>
-                <div className="my-2">
-                  <div
-                    className="flex justify-between cursor-pointer"
-                    onClick={() => setExpand(!expand)}
-                  >
-                    <p className="text-base font-semibold">Cài đặt nâng cao</p>
-                    <DownOutlined
-                      rotate={expand ? 0 : -90}
-                      className="text-xs"
-                    />
-                  </div>
-                  {expand && (
-                    <div className="mt-2">
-                      <Form.Item
-                        label="Flow control"
-                        tooltip="Setting flow control"
-                        dependencies={FLOW_CONTROL}
-                      >
-                        {() =>
-                          FLOW_CONTROL.map((field) => (
-                            <Form.Item
-                              key={field}
-                              name={['config', field]}
-                              noStyle
-                              valuePropName="checked"
-                            >
-                              <Checkbox>{field}</Checkbox>
-                            </Form.Item>
-                          ))
-                        }
-                      </Form.Item>
-                      <Form.Item
-                        label="Flag control"
-                        tooltip="Set control flags on an open port is opened"
-                        dependencies={FLAG_CONTROL}
-                      >
-                        {() =>
-                          FLAG_CONTROL.map((field) => (
-                            <Form.Item
-                              key={field}
-                              name={['config', field]}
-                              noStyle
-                              valuePropName="checked"
-                            >
-                              <Checkbox>{field}</Checkbox>
-                            </Form.Item>
-                          ))
-                        }
-                      </Form.Item>
+                  <Col span={24} className="my-2 space-y-2">
+                    <div
+                      className="flex justify-between cursor-pointer"
+                      onClick={() => setExpand(!expand)}
+                    >
+                      <p className="text-base font-semibold">
+                        Cài đặt nâng cao
+                      </p>
+                      <DownOutlined
+                        rotate={expand ? 0 : -90}
+                        className="text-xs"
+                      />
                     </div>
-                  )}
-                </div>
-              </>
-            )}
-            {kieuketnoi === CONNECT_TYPE.Folder && (
-              <>
-                <Row gutter={8}>
+                    {expand && (
+                      <div className="space-y-2">
+                        <Form.Item
+                          label="Flow control"
+                          tooltip="Setting flow control"
+                          dependencies={FLOW_CONTROL}
+                        >
+                          {() => (
+                            <div className="space-x-2">
+                              {FLOW_CONTROL.map((field) => (
+                                <Form.Item
+                                  key={field}
+                                  name={['config', field]}
+                                  noStyle
+                                  valuePropName="checked"
+                                >
+                                  <Checkbox>{field}</Checkbox>
+                                </Form.Item>
+                              ))}
+                            </div>
+                          )}
+                        </Form.Item>
+                        <Form.Item
+                          label="Flag control"
+                          tooltip="Set control flags on an open port is opened"
+                          dependencies={FLAG_CONTROL}
+                        >
+                          {() => (
+                            <div className="space-x-2">
+                              {FLAG_CONTROL.map((field) => (
+                                <Form.Item
+                                  key={field}
+                                  name={['config', field]}
+                                  noStyle
+                                  valuePropName="checked"
+                                >
+                                  <Checkbox>{field}</Checkbox>
+                                </Form.Item>
+                              ))}
+                            </div>
+                          )}
+                        </Form.Item>
+                      </div>
+                    )}
+                  </Col>
+                </>
+              )}
+              {kieuketnoi === CONNECT_TYPE.Folder && (
+                <>
                   <Col sm={24} md={12}>
                     <Form.Item name="folder">
                       <SelectFolder />
                     </Form.Item>
                   </Col>
-                </Row>
-              </>
-            )}
+                </>
+              )}
+            </Row>
             <Space className="my-2">
               <Button
                 type="primary"

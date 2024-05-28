@@ -1,2 +1,2 @@
-export * from './connection'
-export * from './manager'
+export * from './connection';
+export * from './manager';

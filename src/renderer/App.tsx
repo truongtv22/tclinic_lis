@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { ConfigProvider, App } from 'antd';
+import { ConfigProvider, App, theme } from 'antd';
 import merge from 'lodash/merge';
 import { ProProvider, createIntl } from '@ant-design/pro-components';
 import viVN from 'antd/locale/vi_VN';
@@ -11,6 +11,7 @@ import { HashRouter } from 'react-router-dom';
 import { StyleProvider } from '@ant-design/cssinjs';
 import { PersistGate } from 'redux-persist/es/integration/react';
 import { Provider } from 'react-redux';
+import NiceModal from '@ebay/nice-modal-react';
 
 import { configureAppStore } from 'renderer/store/configureStore';
 import { AppRoutes } from 'renderer/routes';
@@ -29,6 +30,10 @@ const { store, persistor } = configureAppStore();
 const viVNIntl = createIntl(
   'vi_VN',
   merge(viVNLocale, {
+    alert: {
+      selected: 'Đã chọn',
+      item: 'kết quả',
+    },
     pagination: {
       total: {
         range: ' ',
@@ -37,6 +42,7 @@ const viVNIntl = createIntl(
       },
     },
     editableTable: {
+      onlyAddOneLine: 'Chỉ có thể thêm một dòng mới',
       onlyOneLineEditor: 'Chỉ cho phép chỉnh sửa từng dòng một',
       action: {
         save: 'Lưu',
@@ -53,6 +59,7 @@ export default function AppPage() {
       <PersistGate loading={null} persistor={persistor}>
         <ConfigProvider
           theme={{
+            algorithm: theme.compactAlgorithm,
             token: {
               borderRadius: 2,
             },
@@ -61,7 +68,7 @@ export default function AppPage() {
                 wireframe: true,
               },
               Form: {
-                itemMarginBottom: 8,
+                itemMarginBottom: 0,
                 verticalLabelPadding: '0 0 2px',
               },
             },
@@ -77,9 +84,11 @@ export default function AppPage() {
               }}
             >
               <StyleProvider hashPriority="high">
-                <HashRouter>
-                  <AppRoutes />
-                </HashRouter>
+                <NiceModal.Provider>
+                  <HashRouter>
+                    <AppRoutes />
+                  </HashRouter>
+                </NiceModal.Provider>
               </StyleProvider>
             </App>
           </ProProvider.Provider>

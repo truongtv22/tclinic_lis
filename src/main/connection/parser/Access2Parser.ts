@@ -113,6 +113,7 @@ export class Access2Parser extends LabParser {
     const values = {
       date_time: data.date_time,
       barcode: data.barcode,
+      sendhis: 0,
       [chiso.ma]: data.giatri,
     };
 
@@ -128,8 +129,4 @@ export class Access2Parser extends LabParser {
     }
     return item;
   }
-
-  // notify(data: any) {
-  //   this.connection.logger.log('Notify data for Access2', data);
-  // }
 }

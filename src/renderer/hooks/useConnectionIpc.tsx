@@ -1,11 +1,13 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { Space, Button } from 'antd';
+import NiceModal from '@ebay/nice-modal-react';
 
 import { IpcChannel } from 'shared/ipcs/types';
 import {
   connectionActions,
   selectConnections,
 } from 'renderer/store/connection';
+import { TestResultModal } from 'renderer/pages/base';
 import { modal, notification } from './useApp';
 import { useIpcListener } from './useIpcListener';
 
@@ -37,60 +39,61 @@ export const useConnectionIpc = () => {
     dispatch(connectionActions.updateStatus([id, false]));
   });
 
+  // useIpcListener(
+  //   IpcChannel.CONNECTION_DATA,
+  //   async (id, data) => {
+  //     const connection = connections.find((item) => item.id === id);
+
+  //     const notifyKey = `open-${Date.now()}`;
+  //     notification.open({
+  //       key: notifyKey,
+  //       message: 'Thông báo đồng bộ',
+  //       description: `Bạn nhận được kết quả từ ${connection.comp}, bạn muốn xem kết quả trước khi đồng bộ tới HIS không?`,
+  //       btn: (
+  //         <Space>
+  //           <Button
+  //             type="link"
+  //             size="small"
+  //             onClick={() => notification.destroy(notifyKey)}
+  //           >
+  //             Đóng
+  //           </Button>
+  //           <Button
+  //             size="small"
+  //             type="primary"
+  //             onClick={() => {
+  //               notification.destroy(notifyKey);
+  //               showTestResult(connection, data);
+  //             }}
+  //           >
+  //             Kết quả xét nghiệm
+  //           </Button>
+  //         </Space>
+  //       ),
+  //     });
+  //   },
+  //   [connections],
+  // );
+
   useIpcListener(
-    IpcChannel.CONNECTION_DATA,
+    IpcChannel.CONNECTION_DATA_NOTIFY,
     async (id, data) => {
       const connection = connections.find((item) => item.id === id);
 
       const confirmed = await modal.confirm({
         title: 'Kết quả xét nghiệm',
-        content:
-          'Bạn nhận được kết quả từ Máy xét nghiệm nước tiểu, bạn muốn xem kết quả xét nghiệm này không?',
+        content: `Bạn nhận được kết quả từ ${connection.comp}, bạn muốn xem kết quả xét nghiệm này không?`,
         okText: 'Đồng ý',
         cancelText: 'Đóng',
       });
       if (confirmed) {
+        showTestResult(connection, data);
       }
-
-      // const notifyKey = `open-${Date.now()}`;
-      // notification.open({
-      //   key: notifyKey,
-      //   message: 'Thông báo đồng bộ',
-      //   description: `Bạn nhận được kết quả từ ${connection.comp}, bạn muốn xem kết quả trước khi đồng bộ tới HIS không?`,
-      //   btn: (
-      //     <Space>
-      //       <Button
-      //         type="link"
-      //         size="small"
-      //         onClick={() => notification.destroy(notifyKey)}
-      //       >
-      //         Đóng
-      //       </Button>
-      //       <Button
-      //         size="small"
-      //         type="primary"
-      //         onClick={() => {
-      //           notification.destroy(notifyKey);
-      //           // setIsModalOpen(true);
-      //           // setTestResult(data);
-      //         }}
-      //       >
-      //         Kết quả xét nghiệm
-      //       </Button>
-      //     </Space>
-      //   ),
-      // });
     },
     [connections],
   );
 
-  const openConnection = (id: number) => {
-    window.electron.ipcRenderer.send(IpcChannel.OPEN_CONNECTION, id);
+  const showTestResult = async (connection: any, data: any) => {
+    NiceModal.show(TestResultModal, { connection, data });
   };
-
-  const closeConnection = (id: number) => {
-    window.electron.ipcRenderer.send(IpcChannel.CLOSE_CONNECTION, id);
-  };
-
-  return { openConnection, closeConnection };
 };

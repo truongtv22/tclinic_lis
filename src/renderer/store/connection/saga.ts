@@ -14,7 +14,6 @@ function* onGetConnections(): any {
   if (result.success) {
     yield put(getConnections.success(result.data));
   } else {
-    message.error(result.message);
     yield put(getConnections.failure(result.message));
   }
 }
@@ -24,7 +23,6 @@ function* onGetStatusConnections(): any {
   if (result.success) {
     yield put(getStatusConnections.success(result.data));
   } else {
-    message.error(result.message);
     yield put(getStatusConnections.failure(result.message));
   }
 }
@@ -36,7 +34,6 @@ function* onCreateConnection(action: any): any {
     message.success('Thêm mới kết nối thành công');
     yield put(createConnection.success(result.data));
   } else {
-    message.error(result.message);
     yield put(createConnection.failure(result.message));
   }
 }
@@ -48,7 +45,6 @@ function* onUpdateConnection(action: any): any {
     message.success('Cập nhật kết nối thành công');
     yield put(updateConnection.success([id, result.data]));
   } else {
-    message.error(result.message);
     yield put(updateConnection.failure(result.error));
   }
 }
@@ -60,7 +56,6 @@ function* onDeleteConnection(action: any): any {
     message.success('Xoá kết nối thành công');
     yield put(deleteConnection.success([id]));
   } else {
-    message.error(result.message);
     yield put(deleteConnection.failure(result.message));
   }
 }

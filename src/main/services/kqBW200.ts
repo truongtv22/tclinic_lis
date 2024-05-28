@@ -1,7 +1,5 @@
-import axios from 'axios';
-import { LAB } from 'shared/constants';
+import Log from 'electron-log';
 import kqBW200Db from 'main/database/kqBW200';
-import dmKhopmaDb from 'main/database/dmKhopma';
 
 export default {
   getAll(params = {}) {
@@ -13,49 +11,31 @@ export default {
     }
   },
 
-  async sendHis(id: number, data: any) {
+  create(values: any) {
     try {
-      const kqxetnghiem = [];
-      const dmChiso = dmKhopmaDb.getByLab(LAB.BW200);
-      if (dmChiso) {
-        for (const chiso of dmChiso) {
-          if (chiso.maxn in data) {
-            kqxetnghiem.push({
-              chiso_id: chiso.macs,
-              maxn: chiso.maxn,
-              ketqua: data[chiso.maxn],
-            });
-          }
-        }
-      }
-
-      const postData = {
-        mamay: LAB.BW200,
-        barcode: data.barcode_edit || data.barcode,
-        kqxetnghiem,
-        ngaythuchien: new Date(data.date_time).toISOString(),
-        loaidongbo: 'ONE',
-      };
-      const result = await axios.post(
-        'https://demo.tclinic.io/api/xetnghiem/lis-sync',
-        postData,
-      );
-      if (result.data && result.data.success) {
-        kqBW200Db.update(id, { sendhis: 1 });
-        return {
-          success: true,
-          message: result.data.message,
-        };
-      }
-      return {
-        success: true,
-        message: 'Đông bộ kết quả không thành công',
-      };
+      const data = kqBW200Db.create(values);
+      return { success: true, data };
     } catch (error) {
-      return {
-        success: false,
-        message: error.response?.data?.message || error.message,
-      };
+      return { success: false, message: error.message };
+    }
+  },
+
+  update(id: number, values: any) {
+    try {
+      const data = kqBW200Db.update(id, values);
+      return { success: true, data };
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
+  },
+
+  delete(id: number) {
+    try {
+      kqBW200Db.delete(id);
+      return { success: true };
+    } catch (error) {
+      Log.error(error);
+      return { success: false, message: error.message };
     }
   },
 };

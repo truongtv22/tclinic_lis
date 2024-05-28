@@ -1,17 +1,24 @@
 export const STORAGE_KEY = 'TCLINIC_LIS_STORAGE';
 
-export const CONNECT_ACTIVE = {
-  ON: 1,
-  OFF: 0,
-}
+export const BOOLEAN = {
+  TRUE: 1,
+  FALSE: 0,
+};
 
 export const CONNECT_STATUS = {
-  NONE: 'none',
-  OPENING: 'opening',
-  OPENED: 'opened',
-  CLOSING: 'closing',
-  CLOSED: 'close',
-  ERROR: 'error',
+  READY: 'READY', // Chưa kết nối
+  OPENING: 'OPENING', // Đang mở kết nối
+  OPENED: 'OPENED', // Đã kết nối
+  CLOSING: 'CLOSING', // Đang đóng kết nối
+  CLOSED: 'CLOSED', // Đã đóng kết nối
+  ERROR: 'ERROR', // Kết nối lỗi
+};
+
+export const CONNECT_DATA_STATUS = {
+  READ_DATA: 'READ_DATA', // Đang đọc dữ liệu
+  READ_DATA_END: 'READ_DATA_END', // Đã đọc xong dữ liệu
+  SEND_HIS: 'SEND_HIS', // Đang gửi kết quả xết nghiệm
+  SEND_HIS_END: 'SEND_HIS_END', // Gửi xong kết quả xết nghiệm
 };
 
 export const LAB = {

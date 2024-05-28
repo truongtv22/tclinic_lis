@@ -6,15 +6,12 @@ import { ipcRenderer } from 'shared/ipcs';
 import type { IpcEvents, IpcCommands } from 'shared/ipcs';
 
 const ipcHandler = {
-  request: {
-    onSuccess: () => {},
-    onError: (error: any) => {},
-  },
   response: {
-    onSuccess: () => {},
-    onError: (error: any) => {},
+    onSuccess: (result: any, chanel: any, ...args: any) => {},
+    onError: (error: any, chanel: any, ...args: any) => {},
   },
 };
+type IpcHandler = typeof ipcHandler;
 
 export const electronAPI = {
   ipcRenderer: {
@@ -43,32 +40,24 @@ export const electronAPI = {
       };
     },
 
-    invoke<K extends keyof IpcCommands>(
+    async invoke<K extends keyof IpcCommands>(
       channel: K,
       ...args: Parameters<IpcCommands[K]>
     ): Promise<ReturnType<IpcCommands[K]>> {
       try {
-        ipcHandler.request.onSuccess();
-      } catch (error) {
-        ipcHandler.request.onError(error);
-      }
-
-      try {
-        const result = ipcRenderer.invoke(channel, ...args);
-        ipcHandler.response.onSuccess();
+        const result = await ipcRenderer.invoke(channel, ...args);
+        ipcHandler.response.onSuccess(result, channel, [...args]);
         return result;
       } catch (error) {
-        ipcHandler.response.onError(error);
+        ipcHandler.response.onError(error, channel, [...args]);
         throw error;
       }
     },
 
-    onRequest(onSuccess: () => void, onError: (error: any) => void) {
-      ipcHandler.request.onSuccess = onSuccess;
-      ipcHandler.request.onError = onError;
-    },
-
-    onResponse(onSuccess: () => void, onError: (error: any) => void) {
+    onResponse(
+      onSuccess: IpcHandler['response']['onSuccess'],
+      onError: IpcHandler['response']['onError'],
+    ) {
       ipcHandler.response.onSuccess = onSuccess;
       ipcHandler.response.onError = onError;
     },

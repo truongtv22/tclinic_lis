@@ -18,7 +18,7 @@ export const useLoggerIpc = (scope: string) => {
         }),
       );
     }
-  });
+  }, []);
 
   const getLog = () => {
     const data = window.electron.ipcRenderer.sendSync(

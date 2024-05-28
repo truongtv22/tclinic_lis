@@ -31,7 +31,6 @@ export class Window {
   }
 
   create() {
-    // if (this.instance) return;
     if (this.id === WINDOW_ID.MAIN) {
       const windowState = windowStateKeeper({
         defaultWidth: 1270,
@@ -51,14 +50,9 @@ export class Window {
           // nodeIntegration: true,
         },
       });
-      windowState.manage(this.instance);
+      this.loadPage();
 
-      // and load the index.html of the app.
-      if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-        this.instance.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
-      } else {
-        this.instance.loadFile(path.join(__dirname, `../renderer/index.html`));
-      }
+      windowState.manage(this.instance);
     }
     if (this.id === WINDOW_ID.VIEW) {
       this.instance = new BrowserWindow({
@@ -70,18 +64,7 @@ export class Window {
           sandbox: false,
         },
       });
-      const query = this.params ? querystring.stringify(this.params) : '';
-
-      // and load the index.html of the app.
-      if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-        this.instance.loadURL(
-          `${MAIN_WINDOW_VITE_DEV_SERVER_URL}/#/view?${query}`,
-        );
-      } else {
-        this.instance.loadFile(
-          path.join(__dirname, `../renderer/index.html/#/view?${query}`),
-        );
-      }
+      this.loadPage();
     }
 
     // Open the DevTools.
@@ -107,17 +90,18 @@ export class Window {
       }
     }
     if (this.id === WINDOW_ID.VIEW) {
-      const query = this.params ? querystring.stringify(this.params) : '';
+      const search = this.params ? querystring.stringify(this.params) : '';
 
       // and load the index.html of the app.
       if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
         this.instance.loadURL(
-          `${MAIN_WINDOW_VITE_DEV_SERVER_URL}/#/view?${query}`,
+          `${MAIN_WINDOW_VITE_DEV_SERVER_URL}?${search}#/view`,
         );
       } else {
-        this.instance.loadFile(
-          path.join(__dirname, `../renderer/index.html/#/view?${query}`),
-        );
+        this.instance.loadFile(path.join(__dirname, `../renderer/index.html`), {
+          hash: 'view',
+          search,
+        });
       }
     }
   }
@@ -134,7 +118,7 @@ export class Window {
   reload() {
     this.instance?.reload();
   }
-  
+
   show() {
     this.instance?.show();
   }

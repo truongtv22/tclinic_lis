@@ -16,21 +16,12 @@ export default (): any => {
   notification = staticFunction.notification;
 
   useEffect(() => {
-    window.electron.ipcRenderer.onRequest(
-      () => {
-        // console.log('onRequest->success');
-      },
-      (error) => {
-        // console.log('onRequest->error', error);
-      },
-    );
-
     window.electron.ipcRenderer.onResponse(
-      () => {
-        // console.log('onResponse->success');
+      (result) => {
+        if (!result.success) message.error(result.message);
       },
       (error) => {
-        // console.log('onResponse->error', error);
+        message.error(error.message || error);
       },
     );
   }, []);

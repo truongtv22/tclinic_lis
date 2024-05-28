@@ -1,15 +1,19 @@
-import Log, { LogMessage } from 'electron-log';
+import Logger, { LogMessage } from 'electron-log';
 import { WINDOW_ID } from 'shared/constants';
 import { IpcChannel } from 'shared/ipcs';
-import { windowManager } from './window';
+import { windowManager } from '../window';
 
 class LogManager {
   logs: Record<string, LogMessage[]> = {};
 
   init() {
-    Log.hooks.push((message, transport) => {
-      if (transport === Log.transports.console) {
-        if (message.scope && message.variables?.processType === 'main') {
+    Logger.hooks.push((message, transport) => {
+      if (transport === Logger.transports.console) {
+        if (
+          message.scope &&
+          message.scope.includes('connection-') &&
+          message.variables?.processType === 'main'
+        ) {
           if (!this.logs[message.scope]) this.logs[message.scope] = [];
           this.logs[message.scope].unshift(message);
 
@@ -29,7 +33,7 @@ class LogManager {
 
   scope(scope: string) {
     const self = this;
-    const scopeInstance = Log.scope(scope);
+    const scopeInstance = Logger.scope(scope);
     return Object.assign(scopeInstance, {
       getLogs() {
         return self.logs[scope];

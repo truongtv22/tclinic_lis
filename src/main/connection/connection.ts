@@ -1,14 +1,17 @@
-import { app, Notification } from 'electron';
+import { app } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import dayjs from 'dayjs';
 import { SerialPort } from 'serialport';
 import Log from 'electron-log';
 
-import { IpcChannel, IpcEvents } from 'shared/ipcs';
+import { IpcChannel } from 'shared/ipcs';
 import { WINDOW_ID, LAB, CONNECT_TYPE, CONNECT_STATUS } from 'shared/constants';
 import { asciiToText } from 'shared/utils/ascii';
+import { sendMessage } from '../utils';
 import { windowManager } from '../window';
+import { notificationManager } from '../notification';
+import syncHisService from '../services/syncHis';
 import {
   LabParser,
   BW200Parser,
@@ -47,7 +50,7 @@ export class Connection {
 
   logger: Log.LogFunctions;
 
-  status = CONNECT_STATUS.NONE;
+  status = CONNECT_STATUS.READY;
   statusError: any = null;
 
   constructor(id: number, data: ConnectionData, config?: ConnectionConfig) {
@@ -102,23 +105,18 @@ export class Connection {
 
       this.port.on('open', () => {
         this.logger.log('Connection opened');
-        this.sendMessage(IpcChannel.CONNECTION_OPENED, this.id);
+        sendMessage(IpcChannel.CONNECTION_OPENED, this.id);
       });
 
       this.port.on('close', () => {
         this.logger.log('Connection closed');
-        this.sendMessage(IpcChannel.CONNECTION_CLOSED, this.id);
+        sendMessage(IpcChannel.CONNECTION_CLOSED, this.id);
         this.destroy();
       });
 
       this.port.on('error', (error: Error, retry?: boolean) => {
         this.logger.log('Connection error', error, retry);
-        this.sendMessage(
-          IpcChannel.CONNECTION_ERROR,
-          this.id,
-          error.message,
-          retry,
-        );
+        sendMessage(IpcChannel.CONNECTION_ERROR, this.id, error.message, retry);
       });
 
       this.port.on('data', (buffer: Buffer) => {
@@ -223,35 +221,25 @@ export class Connection {
 
   notifyData(data: any) {
     this.logger.log('Send data to client', data);
-    this.sendMessage(IpcChannel.CONNECTION_DATA, this.id, data);
+    syncHisService.autoSendHis(this.id, data.id, data);
+    sendMessage(IpcChannel.CONNECTION_DATA, this.id, data);
     this.notifyMessage(data);
-  }
-
-  sendMessage<K extends keyof IpcEvents>(
-    channel: K,
-    ...args: Parameters<IpcEvents[K]>
-  ) {
-    const window = windowManager.getWindow(WINDOW_ID.MAIN);
-    if (window) {
-      return window.webContents?.send(channel, ...args);
-    }
   }
 
   notifyMessage(data: any) {
     const window = windowManager.getWindow(WINDOW_ID.MAIN);
     if (!window.instance.isFocused()) {
-      const notification = new Notification({
+      const notification = notificationManager.showNotification({
         title: 'Kết quả xét nghiệm',
         body: `Nhận được kết quả từ ${this.data.comp}, bạn muốn xem kết quả này không?`,
       });
       notification.on('click', () => {
         if (!window.instance.isFocused()) {
-          if (!window.instance.isMinimized()) window.instance.restore();
+          if (window.instance.isMinimized()) window.instance.restore();
           window.instance.focus();
         }
-        this.sendMessage(IpcChannel.CONNECTION_DATA, this.id, data);
+        sendMessage(IpcChannel.CONNECTION_DATA_NOTIFY, this.id, data);
       });
-      notification.show();
     }
   }
 }

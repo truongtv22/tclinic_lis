@@ -1,5 +1,4 @@
 import { IpcChannel } from 'shared/ipcs/types';
-import { useIpcListener } from './useIpcListener';
 
 export const useWindowIpc = () => {
   const openViewLog = (connectId: number) => {

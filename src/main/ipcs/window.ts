@@ -1,8 +1,7 @@
-import { app, shell, dialog, BrowserWindow } from 'electron';
+import { app, shell, dialog } from 'electron';
 import { ipcMain, IpcChannel } from 'shared/ipcs';
 import { WINDOW_ID } from 'shared/constants';
 import { windowManager, Window } from '../window';
-import { logManager } from '../logger';
 
 export function registerWindowIpc() {
   let viewWindow: Window | null = null;
@@ -21,9 +20,6 @@ export function registerWindowIpc() {
     } else {
       viewWindow = windowManager.createWindow(WINDOW_ID.VIEW, { connectId });
     }
-    // viewWindow = windowManager.createWindow(WINDOW_ID.VIEW, { connectId });
-    // const logs = logManager.scope(`connection-${connectId}`).getLogs()
-    // console.log('logs', logs);
   });
 
   ipcMain.on(IpcChannel.OPEN_APP_FOLDER, (event) => {

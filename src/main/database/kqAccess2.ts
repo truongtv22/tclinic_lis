@@ -34,18 +34,28 @@ export default {
     const db = connect();
 
     const whereConds = [];
-    if (params.startDate) whereConds.push(`date_time >= @startDate`);
-    if (params.endDate) whereConds.push(`date_time <= @endDate`);
-    if (params.barcode) whereConds.push(`barcode LIKE @barcode`);
-    if (params.status > -1) whereConds.push(`sendhis = @status`);
+    const whereValues: any = {};
+    if (params.startDate) {
+      whereConds.push(`date_time >= @startDate`);
+      whereValues.startDate = parseString(
+        dayjs(params.startDate).startOf('day'),
+      );
+    }
+    if (params.endDate) {
+      whereConds.push(`date_time <= @endDate`);
+      whereValues.endDate = parseString(dayjs(params.endDate).endOf('day'));
+    }
+    if (params.barcode) {
+      whereConds.push(`barcode LIKE @barcode OR barcode_edit LIKE @barcode`);
+      whereValues.barcode = `%${params.barcode}%`;
+    }
+    if (params.status > -1) {
+      whereConds.push(`sendhis = @status`);
+      whereValues.status = +params.status;
+    }
 
     const whereClause =
       whereConds.length > 0 ? `WHERE ${whereConds.join(' AND ')}` : '';
-
-    const startDate = parseString(dayjs(params.startDate).startOf('day'));
-    const endDate = parseString(dayjs(params.endDate).endOf('day'));
-    const barcode = `%${params.barcode}%`;
-    const status = +params.status;
 
     const stmTotal = db.prepare(
       `SELECT COUNT(*) total FROM [dbo.KQ_Access2] ${whereClause}`,
@@ -54,8 +64,8 @@ export default {
       `SELECT * FROM [dbo.KQ_Access2] ${whereClause} ORDER BY date_time DESC`,
     );
 
-    const total: any = stmTotal.get({ startDate, endDate, barcode, status });
-    const data = stmList.all({ startDate, endDate, barcode, status });
+    const total: any = stmTotal.get(whereValues);
+    const data = stmList.all(whereValues);
 
     return { data, total: total.total };
   },

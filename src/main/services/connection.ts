@@ -68,8 +68,8 @@ export default {
         const config: any = connectConfigDb.update(data.id, values.config);
         result.config = config;
       }
-      // check loi khi chua active
       if (connection) connection.update(data, result.config);
+      else connectionManager.createConnection(data.id, data, result.config);
       return { success: true, data: result };
     } catch (error) {
       console.log('Update connection error', error);
